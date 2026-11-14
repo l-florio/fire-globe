@@ -4,8 +4,8 @@ Reads the normalized Parquet written by data_pipeline/firms_pipeline.py
 (parquet/sensor=<S>/year=<Y>/*.parquet) with DuckDB. About 0.1 s per query, no index needed.
 
 GET /api/detections?sensor=VIIRS_SNPP&month=2024-08 | &date=2024-08-20 [&bbox=w,s,e,n][&limit=150000][&types=0,-1]
-  200 application/octet-stream: Float32 records of 6 values
-      [lon, lat, frp_MW, day_of_month, hour_utc, flags]
+  200 application/octet-stream: Float32 records of 7 values
+      [lon, lat, frp_MW, day_of_month, hour_utc, flags, type]  (type: FIRMS type, -1 unknown)
       flags: bit0 night, bits1-2 confidence (0 low, 1 nominal, 2 high), bits3-4 satellite (1 Terra, 2 Aqua, 0 other)
   bbox defaults to the whole world
   headers: X-Total (matches in the rectangle), X-Returned (records sent; the strongest FRP first when capped)
@@ -151,13 +151,14 @@ class Store:
                    coalesce(acq_time, 0) // 100 + (coalesce(acq_time, 0) % 100) / 60.0,
                    (CASE WHEN daynight = 'N' THEN 1 ELSE 0 END)
                    + 2 * (CASE confidence_class WHEN 'high' THEN 2 WHEN 'nominal' THEN 1 ELSE 0 END)
-                   + 8 * (CASE satellite WHEN 'Terra' THEN 1 WHEN 'Aqua' THEN 2 ELSE 0 END)
+                   + 8 * (CASE satellite WHEN 'Terra' THEN 1 WHEN 'Aqua' THEN 2 ELSE 0 END),
+                   coalesce(type, -1)
             FROM {src} WHERE {where}
             ORDER BY frp DESC NULLS LAST LIMIT {limit}
         """).fetchnumpy()
         import numpy as np
 
-        arr = np.column_stack([np.asarray(v, dtype=np.float32) for v in rows.values()]) if total else np.zeros((0, 6), np.float32)
+        arr = np.column_stack([np.asarray(v, dtype=np.float32) for v in rows.values()]) if total else np.zeros((0, 7), np.float32)
         return total, arr.astype("<f4").tobytes()
 
 
@@ -329,7 +330,7 @@ def make_handler(store: Store):
                 total, body = store.detections(sensor, period, bbox, limit, types)
             except ValueError:
                 return self.error(400, "invalid date")
-            self.send(200, body, "application/octet-stream", {"X-Total": str(total), "X-Returned": str(len(body) // 24)})
+            self.send(200, body, "application/octet-stream", {"X-Total": str(total), "X-Returned": str(len(body) // 28)})
 
     return H
 

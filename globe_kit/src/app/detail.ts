@@ -7,7 +7,7 @@ import { fmtInt, t as tr } from './i18n';
 export const DETAIL_HEIGHT_M = 2_500_000;
 /** FRP (MW) mapped to the top of the color ramp for single detections. */
 export const DETECTION_FRP_TOP = 1000;
-const STRIDE = 6; // lon, lat, frp, day, hour_utc, flags
+const STRIDE = 7; // lon, lat, frp, day, hour_utc, flags, FIRMS type (-1 unknown)
 const LIMIT = 150_000;
 
 export type Step = 'month' | 'day';
@@ -31,6 +31,7 @@ export interface DetectionRecord {
   night: boolean;
   confidence: 'low' | 'nominal' | 'high';
   satellite: string; // Terra, Aqua or the VIIRS satellite
+  kind: 'vegetation' | 'volcano' | 'industrial' | 'offshore';
 }
 
 export interface DetailEvents {
@@ -55,6 +56,7 @@ export function createDetail(viewer: Cesium.Viewer, labels: Record<string, strin
   let day = 0; // month step only, 0 = all days
   let pass: Pass = 'all';
   let sat: Sat = 'all';
+  let types = '0,-1'; // FIRMS type list sent to the data source
   let active = false;
   let ctrl: AbortController | undefined;
   let timer: number | undefined;
@@ -73,7 +75,9 @@ export function createDetail(viewer: Cesium.Viewer, labels: Record<string, strin
     },
   });
   const t = (frp: number) => Math.log1p(Math.max(0, frp)) / Math.log1p(DETECTION_FRP_TOP);
-  const rasterOpacity = () => (step === 'day' ? 0 : active ? 0.3 : 0.9);
+  // The raster holds vegetation fires only: dimmed when the filter shows no vegetation (volcanoes, static, offshore).
+  const noVeg = () => !types.split(',').some((x) => x === '0' || x === '-1');
+  const rasterOpacity = () => (step === 'day' ? 0 : noVeg() ? 0.1 : active ? 0.3 : 0.9);
 
   function setActive(on: boolean) {
     if (on !== active) {
@@ -145,7 +149,7 @@ export function createDetail(viewer: Cesium.Viewer, labels: Record<string, strin
     try {
       const results = await Promise.all(
         sides.map(async (sd) => {
-          const r = await ds.detections(sd.sensor, per, bbox, LIMIT, my.signal);
+          const r = await ds.detections(sd.sensor, per, bbox, LIMIT, my.signal, types);
           if (r.outside) outside = r.outside;
           return { sd, buf: r.buf, total: r.total };
         }),
@@ -217,6 +221,7 @@ export function createDetail(viewer: Cesium.Viewer, labels: Record<string, strin
             night: (flags & 1) === 1,
             confidence: (['low', 'nominal', 'high'] as const)[(flags >> 1) & 3] ?? 'low',
             satellite: sat === 1 ? 'Terra' : sat === 2 ? 'Aqua' : name,
+            kind: (['vegetation', 'volcano', 'industrial', 'offshore'] as const)[d[o + 6]] ?? 'vegetation',
           });
         }
       });
@@ -251,6 +256,13 @@ export function createDetail(viewer: Cesium.Viewer, labels: Record<string, strin
         data[k] = undefined;
       }
       schedule(50);
+    },
+    /** FIRMS `type` list of the sources to show (reloads the detections when it changes). */
+    setTypes(next: string) {
+      if (next === types) return;
+      types = next;
+      for (const s of sides) s.raster.setOpacity(rasterOpacity());
+      if (active) schedule(0);
     },
     setFilters(f: { day?: number; pass?: Pass; sat?: Sat }) {
       if (f.day !== undefined) day = f.day;

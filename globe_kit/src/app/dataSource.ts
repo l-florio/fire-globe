@@ -22,7 +22,7 @@ function areaFetch(path: string, sensor: string, area: Area, extra: string) {
   });
 }
 
-/** Detections as Float32 records of 6 values: lon, lat, frp_MW, day_of_month, hour_utc, flags. */
+/** Detections as Float32 records of 7 values: lon, lat, frp_MW, day_of_month, hour_utc, flags, FIRMS type (-1 unknown). */
 export interface Detections {
   buf: Float32Array;
   total: number;
@@ -51,7 +51,7 @@ export interface DataSource {
   kind: 'api' | 'static';
   /** Shown to the user, e.g. which region has single detections. */
   note: string;
-  detections(sensor: string, period: { month?: string; date?: string }, bbox: number[] | null, limit: number, signal?: AbortSignal): Promise<Detections>;
+  detections(sensor: string, period: { month?: string; date?: string }, bbox: number[] | null, limit: number, signal?: AbortSignal, types?: string): Promise<Detections>;
   calendar(sensor: string, area: Area, types: string): Promise<CalendarResult>;
   exportCsv(sensor: string, area: Area, from: string, to: string, types: string): Promise<Blob>;
   /** Harmonized series by country or GFED region, for one calendar month (1-12) of every year. */
@@ -64,10 +64,10 @@ export function apiSource(): DataSource {
   return {
     kind: 'api',
     note: t('data.note.api'),
-    async detections(sensor, period, bbox, limit, signal) {
+    async detections(sensor, period, bbox, limit, signal, types = '0,-1') {
       const p = period.date ? `date=${period.date}` : `month=${period.month}`;
       const b = bbox ? `&bbox=${bbox.map((v) => v.toFixed(3)).join(',')}` : '';
-      const r = await fetch(`/api/detections?sensor=${sensor}&${p}${b}&limit=${limit}`, { signal });
+      const r = await fetch(`/api/detections?sensor=${sensor}&${p}${b}&limit=${limit}&types=${types}`, { signal });
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       return { buf: new Float32Array(await r.arrayBuffer()), total: Number(r.headers.get('X-Total') ?? 0) };
     },

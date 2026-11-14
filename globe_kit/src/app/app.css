@@ -194,6 +194,11 @@ body {
   }
 }
 
+.note.warn {
+  color: #ffd27a;
+  border-left: 3px solid #ff9f1a;
+  padding-left: 8px;
+}
 .note.detail {
   color: var(--gk-text);
 }

@@ -1,5 +1,5 @@
 import { createChartPanel } from './chart';
-import type { QueryResult, Row } from './engine';
+import type { QueryErrorKind, QueryResult, Row } from './engine';
 import { createGrid, type GridOptions } from './grid';
 import { h, saveBlob, stamp, toCsv } from './util';
 import { buildXlsx } from './xlsx';
@@ -23,7 +23,11 @@ const TEXT = {
   rowsCap: 'first {n} rows (cap reached)',
   matching: '{n} rows match, only the first {c} are loaded',
   time: '{ms} ms',
-  error: 'Error: {m}',
+  syntax: 'Syntax error: {m}',
+  syntaxAt: 'Syntax error (line {l}, column {c}): {m}',
+  syntaxLine: 'Syntax error (line {l}): {m}',
+  runtime: 'Query error: {m}',
+  emptyOk: 'Query OK: 0 rows (no data matches the filters)',
   idle: 'Run a query to see rows here.',
   file: 'fire_{n}_{d}',
 } as const;
@@ -41,7 +45,10 @@ export interface Results {
   el: HTMLElement;
   running(on: boolean): void;
   show(result: QueryResult, meta: ResultMeta): void;
-  error(message: string): void;
+  /** kind 'refused' (read-only guard) and 'input' (a filter needs fixing) show the message as given. */
+  error(message: string, kind?: QueryErrorKind | 'input', at?: { line?: number; col?: number }): void;
+  /** A neutral note (query cancelled). */
+  info(message: string): void;
   resize(): void;
 }
 
@@ -64,15 +71,32 @@ export function createResults(o: { onGlobe: (row: Row) => void; onCancel: () => 
   const xlsxBtn = h('button', { type: 'button', title: TEXT.xlsxTitle }, TEXT.xlsx);
   const cancelBtn = h('button', { type: 'button', hidden: true }, TEXT.cancel);
   const bar = h('div', { class: 'ex-bar ex-rbar' }, seg, status, menu, csvBtn, xlsxBtn, cancelBtn);
+  const msgBox = h('div', { class: 'ex-msgbox', hidden: true });
   const sqlText = h('pre', { class: 'ex-sqlshow' });
   const sqlBox = h('details', { class: 'ex-sqlbox', hidden: true }, h('summary', {}, TEXT.sql), sqlText);
   const gridHost = h('div', { class: 'ex-grid' });
   const chart = createChartPanel();
   chart.el.hidden = true;
   const body = h('div', { class: 'ex-rbody' }, gridHost, chart.el);
-  const el = h('section', { class: 'ex-results' }, bar, sqlBox, body);
+  const el = h('section', { class: 'ex-results' }, bar, msgBox, sqlBox, body);
 
   const grid = createGrid(gridHost, () => refresh());
+
+  /** A new element each time, so that assistive technology announces the alert or status reliably. */
+  function say(kind: 'error' | 'info', text: string) {
+    msgBox.replaceChildren(
+      kind === 'error'
+        ? h('p', { class: 'ex-msg ex-msg-error', role: 'alert' }, h('span', { class: 'ex-msg-icon', 'aria-hidden': 'true' }, '!'), text)
+        : h('p', { class: 'ex-msg ex-msg-info', role: 'status' }, h('span', { class: 'ex-msg-icon', 'aria-hidden': 'true' }, 'i'), text),
+    );
+    msgBox.hidden = false;
+    body.hidden = true;
+  }
+  function clearMessage() {
+    msgBox.replaceChildren();
+    msgBox.hidden = true;
+    body.hidden = false;
+  }
 
   function refresh() {
     const c = grid.counts();
@@ -127,7 +151,10 @@ export function createResults(o: { onGlobe: (row: Row) => void; onCancel: () => 
     el,
     running(on) {
       cancelBtn.hidden = !on;
-      if (on) status.textContent = TEXT.loading;
+      if (on) {
+        status.textContent = TEXT.loading;
+        clearMessage();
+      }
     },
     show(r, m) {
       result = r;
@@ -138,9 +165,22 @@ export function createResults(o: { onGlobe: (row: Row) => void; onCancel: () => 
       chartDirty = true;
       refresh();
       setView(view);
+      if (r.rows.length === 0) say('info', TEXT.emptyOk);
+      else clearMessage();
     },
-    error(message) {
-      status.textContent = TEXT.error.replace('{m}', message);
+    error(message, kind = 'runtime', at = {}) {
+      status.textContent = '';
+      const text =
+        kind === 'syntax'
+          ? (at.line !== undefined && at.col !== undefined ? TEXT.syntaxAt.replace('{l}', String(at.line)).replace('{c}', String(at.col)) : at.line !== undefined ? TEXT.syntaxLine.replace('{l}', String(at.line)) : TEXT.syntax).replace('{m}', message)
+          : kind === 'runtime'
+            ? TEXT.runtime.replace('{m}', message)
+            : message;
+      say('error', text);
+    },
+    info(message) {
+      status.textContent = '';
+      say('info', message);
     },
     resize() {
       if (view === 'table') grid.redraw();

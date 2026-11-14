@@ -1,5 +1,8 @@
 /* Data explorer, full page (see tablePage.css); everything here is scoped to .explorer. */
 .explorer {
+  /* 3:1 or better against the dark panels: borders of controls and popups */
+  --ex-edge: #6b7f9e;
+  --ex-hover: #22324d;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -199,8 +202,12 @@
   padding: 3px 9px;
   line-height: 1;
 }
-.explorer .ex-sqlview,
 .explorer .ex-editor {
+  width: 100%;
+  min-width: 0;
+}
+.explorer .ex-textarea,
+.explorer .ex-sqlview {
   width: 100%;
   font: 12px/1.45 ui-monospace, Consolas, 'Courier New', monospace;
   resize: vertical;
@@ -290,9 +297,11 @@
   max-height: 50vh;
   overflow-y: auto;
   padding: 8px;
-  background: #101826;
-  border: 1px solid var(--gk-border);
+  background: #141e30;
+  color: var(--gk-text);
+  border: 1px solid var(--ex-edge);
   border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -361,8 +370,8 @@
 .explorer .tabulator .tabulator-header .tabulator-col,
 .explorer .tabulator .tabulator-header .tabulator-frozen {
   background: #101826;
-  color: var(--gk-muted);
-  border-color: var(--gk-border);
+  color: var(--gk-text);
+  border-color: var(--ex-edge);
 }
 .explorer .tabulator .tabulator-header .tabulator-col .tabulator-col-content {
   padding: 4px 6px;
@@ -384,10 +393,6 @@
   width: 50%;
   min-width: 0;
   flex: 1;
-}
-.explorer .tabulator .tabulator-header .tabulator-col .tabulator-arrow {
-  border-bottom-color: var(--gk-muted);
-  border-top-color: var(--gk-muted);
 }
 .explorer .tabulator .tabulator-tableholder .tabulator-table {
   background: transparent;
@@ -435,6 +440,224 @@
 .explorer .ex-sig-within {
   color: var(--gk-muted);
   font-weight: 400;
+}
+
+/* header cells: hover and keyboard focus stay readable */
+@media (hover: hover) and (pointer: fine) {
+  .explorer .tabulator .tabulator-header .tabulator-col.tabulator-sortable.tabulator-col-sorter-element:hover,
+  .explorer .tabulator .tabulator-header .tabulator-col.tabulator-sortable.tabulator-col-sorter-element:hover .tabulator-frozen {
+    background: var(--ex-hover);
+    color: #fff;
+  }
+}
+.explorer .tabulator .tabulator-header .tabulator-col.tabulator-moving {
+  background: var(--ex-hover);
+  border: 1px solid var(--gk-accent);
+  color: #fff;
+}
+.explorer .tabulator .tabulator-header .tabulator-col:focus-visible,
+.explorer .tabulator .tabulator-header .tabulator-col:focus-within {
+  outline: 2px solid var(--gk-accent);
+  outline-offset: -2px;
+}
+.explorer .tabulator .tabulator-header .tabulator-col .tabulator-col-content .tabulator-header-popup-button:hover {
+  opacity: 1;
+  color: var(--gk-accent);
+}
+/* sort arrows: dim when unsorted (still >= 3:1), accent when active, white on hover */
+.explorer .tabulator .tabulator-header .tabulator-col.tabulator-sortable[aria-sort='none'] .tabulator-col-content .tabulator-col-sorter {
+  color: #8b9ab0;
+}
+.explorer .tabulator .tabulator-header .tabulator-col.tabulator-sortable[aria-sort='none'] .tabulator-col-content .tabulator-col-sorter .tabulator-arrow {
+  border-bottom-color: #8b9ab0;
+}
+.explorer .tabulator .tabulator-header .tabulator-col.tabulator-sortable[aria-sort='ascending'] .tabulator-col-content .tabulator-col-sorter,
+.explorer .tabulator .tabulator-header .tabulator-col.tabulator-sortable[aria-sort='descending'] .tabulator-col-content .tabulator-col-sorter {
+  color: var(--gk-accent);
+}
+.explorer .tabulator .tabulator-header .tabulator-col.tabulator-sortable[aria-sort='ascending'] .tabulator-col-content .tabulator-col-sorter .tabulator-arrow {
+  border-bottom-color: var(--gk-accent);
+}
+.explorer .tabulator .tabulator-header .tabulator-col.tabulator-sortable[aria-sort='descending'] .tabulator-col-content .tabulator-col-sorter .tabulator-arrow {
+  border-top-color: var(--gk-accent);
+}
+@media (hover: hover) and (pointer: fine) {
+  .explorer .tabulator .tabulator-header .tabulator-col.tabulator-sortable[aria-sort='none'] .tabulator-col-content .tabulator-col-sorter.tabulator-col-sorter-element .tabulator-arrow:hover,
+  .explorer .tabulator .tabulator-header .tabulator-col.tabulator-sortable[aria-sort='ascending'] .tabulator-col-content .tabulator-col-sorter.tabulator-col-sorter-element .tabulator-arrow:hover {
+    border-bottom-color: #fff;
+  }
+  .explorer .tabulator .tabulator-header .tabulator-col.tabulator-sortable[aria-sort='descending'] .tabulator-col-content .tabulator-col-sorter.tabulator-col-sorter-element .tabulator-arrow:hover {
+    border-top-color: #fff;
+  }
+}
+/* header filters */
+.explorer .tabulator .tabulator-header .tabulator-col .tabulator-header-filter input,
+.explorer .tabulator .tabulator-header .tabulator-col .tabulator-header-filter select {
+  background: #0b111c;
+  color: var(--gk-text);
+  border: 1px solid var(--ex-edge);
+  border-radius: 4px;
+}
+.explorer .tabulator .tabulator-header .tabulator-col .tabulator-header-filter input::placeholder {
+  color: #8b9ab0;
+  opacity: 1;
+}
+.explorer .tabulator .tabulator-header .tabulator-col .tabulator-header-filter input:hover {
+  border-color: #9fb2cf;
+}
+.explorer .tabulator .tabulator-header .tabulator-col .tabulator-header-filter input:focus {
+  outline: 2px solid var(--gk-accent);
+  outline-offset: 0;
+  border-color: var(--gk-accent);
+}
+.explorer .tabulator .tabulator-header .tabulator-col .tabulator-header-filter svg {
+  stroke: var(--gk-text);
+  fill: var(--gk-text);
+}
+.explorer .tabulator .tabulator-header .tabulator-col .tabulator-header-filter svg:hover {
+  stroke: var(--gk-accent);
+  fill: var(--gk-accent);
+}
+.explorer .tabulator .tabulator-col-resize-handle:hover {
+  background: var(--gk-accent);
+}
+.explorer .tabulator .tabulator-row .tabulator-cell:focus-visible {
+  outline: 2px solid var(--gk-accent);
+  outline-offset: -2px;
+}
+
+/* Tabulator popups (header-filter value lists, menus, tooltips) can live outside .explorer, so they are styled by class only */
+.tabulator-popup-container {
+  background: #141e30;
+  color: #e8edf5;
+  border: 1px solid #6b7f9e;
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+  font-family: var(--gk-font, system-ui, sans-serif);
+  font-size: 12px;
+}
+.tabulator-popup-container.tabulator-tooltip {
+  background: #0b111c;
+  color: #fff;
+  border-color: #9fb2cf;
+  padding: 4px 7px;
+  line-height: 1.35;
+}
+.tabulator-menu .tabulator-menu-item {
+  color: #e8edf5;
+  padding: 6px 10px;
+}
+.tabulator-menu .tabulator-menu-item.tabulator-menu-item-disabled {
+  color: #8b9ab0;
+  opacity: 1;
+}
+.tabulator-menu .tabulator-menu-item.tabulator-menu-item-submenu::after {
+  border-color: #e8edf5;
+}
+.tabulator-menu .tabulator-menu-separator {
+  border-top: 1px solid #6b7f9e;
+}
+@media (hover: hover) and (pointer: fine) {
+  .tabulator-menu .tabulator-menu-item:not(.tabulator-menu-item-disabled):hover {
+    background: #22324d;
+    color: #fff;
+  }
+}
+.tabulator-edit-list {
+  max-height: min(260px, 50vh);
+  font-size: 12px;
+}
+.tabulator-edit-list .tabulator-edit-list-item {
+  position: relative;
+  padding: 5px 8px 5px 22px;
+  color: #e8edf5;
+  border-left: 3px solid transparent;
+}
+.tabulator-edit-list .tabulator-edit-list-placeholder,
+.tabulator-edit-list .tabulator-edit-list-group {
+  color: #c4cfde;
+  border-bottom-color: #6b7f9e;
+}
+@media (hover: hover) and (pointer: fine) {
+  .tabulator-edit-list .tabulator-edit-list-item:hover {
+    background: #22324d;
+    color: #fff;
+  }
+}
+.tabulator-edit-list .tabulator-edit-list-item.focused {
+  background: #22324d;
+  color: #fff;
+  outline: 2px solid #ff8a3d;
+  outline-offset: -2px;
+}
+/* selected values: tinted, accent bar and a check mark (not colour alone) */
+.tabulator-edit-list .tabulator-edit-list-item.active,
+.tabulator-edit-list .tabulator-edit-list-item.active.focused {
+  background: #5a3414;
+  color: #fff;
+  font-weight: 600;
+  border-left-color: #ff8a3d;
+}
+.tabulator-edit-list .tabulator-edit-list-item.active::before {
+  content: '\2713';
+  position: absolute;
+  left: 6px;
+  color: #ffb26e;
+}
+.tabulator-edit-list .tabulator-edit-list-item.active.focused {
+  outline-color: #fff;
+}
+@media (hover: hover) and (pointer: fine) {
+  .tabulator-edit-list .tabulator-edit-list-item.active:hover {
+    background: #6e3f19;
+  }
+}
+
+/* result messages: an error is never mistaken for an empty result */
+.ex-msgbox {
+  flex: none;
+}
+.explorer .ex-msg {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid;
+  font-size: 13px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.explorer .ex-msg-icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font: 700 12px/1 var(--gk-font);
+}
+.explorer .ex-msg-error {
+  background: #3a1612;
+  border-color: #ff7a66;
+  color: #ffe3dd;
+}
+.explorer .ex-msg-error .ex-msg-icon {
+  background: #ff7a66;
+  color: #2a0d09;
+}
+.explorer .ex-msg-info {
+  background: #101826;
+  border-color: var(--ex-edge);
+  color: var(--gk-text);
+}
+.explorer .ex-msg-info .ex-msg-icon {
+  background: #9aa7ba;
+  color: #0b111c;
+  font-style: italic;
 }
 
 @media (max-width: 760px) {

@@ -733,6 +733,13 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
         src: typesSel.value,
       };
     },
+    /** Set the Sources select from the globe filter (the grid cannot split volcano and industrial: combined). */
+    setSources(v: string) {
+      if (!(v in TYPES) || typesSel.value === v || typesSel.disabled) return;
+      typesSel.value = v;
+      if (!el.hidden) void load();
+      panel.onChange?.();
+    },
     /** Restore the calendar from a shareable link. */
     async applyState(s: { area?: string; sensor?: string; variable?: string; colour?: string; from?: string; to?: string; src?: string }) {
       panel.toggle(true);

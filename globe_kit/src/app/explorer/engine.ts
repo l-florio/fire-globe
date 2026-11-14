@@ -5,9 +5,44 @@ import { ql } from './util';
 
 const TEXT = {
   noManifest: 'The data catalog (static.json) could not be loaded.',
-  notSelect: 'Query refused: only read-only SELECT queries are allowed.',
-  oneStatement: 'Query refused: only one statement is allowed.',
+  notSelect: 'Refused: only read-only SELECT queries are allowed.',
+  oneStatement: 'Refused: only one statement is allowed.',
 } as const;
+
+/**
+ * refused: blocked by the read-only guard, never sent to DuckDB; syntax: DuckDB's parser rejected the text;
+ * runtime: the query parsed but failed while binding or running (unknown table or column, type error, network...).
+ */
+export type QueryErrorKind = 'refused' | 'syntax' | 'runtime';
+
+export class QueryError extends Error {
+  constructor(
+    message: string,
+    readonly kind: QueryErrorKind,
+    /** 1-based line and column of a syntax error, when DuckDB reports a position. */
+    readonly line?: number,
+    readonly col?: number,
+  ) {
+    super(message);
+  }
+}
+
+/** DuckDB's parser message without its "Parser Error:" label and echoed "LINE n:" excerpt; position from either source. */
+function parserError(sql: string, j: { error_message?: string; position?: string | number }): QueryError {
+  const raw = (j.error_message ?? '').trim();
+  let msg = raw.replace(/^[A-Za-z ]*Error:\s*/, '');
+  const m = /\s*LINE (\d+):/.exec(msg);
+  let line = m ? Number(m[1]) : undefined;
+  let col: number | undefined;
+  if (m) msg = msg.slice(0, m.index).trim();
+  const pos = j.position === undefined ? NaN : Number(j.position);
+  if (Number.isFinite(pos) && pos >= 0 && pos <= sql.length) {
+    const upto = sql.slice(0, pos).split(/\r?\n/);
+    line = upto.length;
+    col = upto[upto.length - 1].length + 1;
+  }
+  return new QueryError(msg || raw || 'syntax error', 'syntax', line, col);
+}
 
 export type Row = Record<string, unknown>;
 export interface ResultCol {
@@ -132,12 +167,12 @@ export async function createEngine(baseUrl: string): Promise<Engine> {
 
   /** DuckDB's own parser: json_serialize_sql only accepts SELECT statements and lists every statement it finds. */
   async function checkWithDuckDb(sql: string): Promise<void> {
-    const stmt = await conn.prepare('SELECT json_serialize_sql(?) AS j');
+    const stmt = await conn.prepare('SELECT json_serialize_sql(CAST(? AS VARCHAR)) AS j');
     try {
       const t = await stmt.query(sql);
-      const j = JSON.parse(String(t.getChild('j')!.get(0))) as { error: boolean; error_type?: string; error_message?: string; statements?: unknown[] };
-      if (j.error) throw new Error(j.error_type === 'parser' && j.error_message ? j.error_message : TEXT.notSelect);
-      if (j.statements?.length !== 1) throw new Error(TEXT.oneStatement);
+      const j = JSON.parse(String(t.getChild('j')!.get(0))) as { error: boolean; error_type?: string; error_message?: string; position?: string | number; statements?: unknown[] };
+      if (j.error) throw j.error_type === 'parser' && j.error_message ? parserError(sql, j) : new QueryError(TEXT.notSelect, 'refused');
+      if (j.statements?.length !== 1) throw new QueryError(TEXT.oneStatement, 'refused');
     } finally {
       await stmt.close();
     }
@@ -153,9 +188,13 @@ export async function createEngine(baseUrl: string): Promise<Engine> {
   const run = (sql: string, cap = ROW_CAP) =>
     serial(async () => {
       const t0 = performance.now();
-      await ensureViews(sql);
-      const t = await conn.query(expand(capped(sql, cap)));
-      return { ...toResult(t, cap), ms: performance.now() - t0 };
+      try {
+        await ensureViews(sql);
+        const t = await conn.query(expand(capped(sql, cap)));
+        return { ...toResult(t, cap), ms: performance.now() - t0 };
+      } catch (e) {
+        throw e instanceof QueryError ? e : new QueryError(e instanceof Error ? e.message : String(e), 'runtime');
+      }
     });
 
   return {
@@ -163,7 +202,7 @@ export async function createEngine(baseUrl: string): Promise<Engine> {
     run,
     runUser: async (sql, cap) => {
       const refused = guardSql(sql);
-      if (refused) throw new Error(refused);
+      if (refused) throw new QueryError(refused, 'refused');
       const query = expand(sql.replace(TRAILING_SEMICOLON, ''));
       await serial(() => checkWithDuckDb(query));
       return run(query, cap);

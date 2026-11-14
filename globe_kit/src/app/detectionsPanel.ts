@@ -9,9 +9,10 @@ const TEXT = {
   empty: t('det.empty'),
   shown: (n: number, total: number) => (n < total ? t('det.strongestOf', { n: fmtInt(n), total: fmtInt(total) }) : tn('det.count', total)),
   hint: t('det.hint'),
-  cols: [t('det.col.date'), t('det.col.utc'), t('det.col.sat'), t('det.col.frp'), t('det.col.conf'), t('det.col.pass'), t('det.col.pos')],
+  cols: [t('det.col.date'), t('det.col.utc'), t('det.col.type'), t('det.col.sat'), t('det.col.frp'), t('det.col.conf'), t('det.col.pass'), t('det.col.pos')],
   day: t('det.day'),
   night: t('det.night'),
+  kind: { vegetation: t('det.kind.vegetation'), volcano: t('det.kind.volcano'), industrial: t('det.kind.industrial'), offshore: t('det.kind.offshore') },
   conf: { low: t('det.conf.low'), nominal: t('det.conf.nominal'), high: t('det.conf.high') },
 };
 
@@ -49,7 +50,7 @@ export function createDetectionsPanel(o: DetectionsPanelOptions) {
     tbody.innerHTML = rows
       .map(
         (d, i) => `<tr data-i="${i}" tabindex="0">
-          <td>${d.date}</td><td>${hhmm(d.hourUtc)}</td><td>${d.satellite}</td><td>${fmtFixed(d.frp, 1)}</td>
+          <td>${d.date}</td><td>${hhmm(d.hourUtc)}</td><td>${TEXT.kind[d.kind]}</td><td>${d.satellite}</td><td>${fmtFixed(d.frp, 1)}</td>
           <td>${TEXT.conf[d.confidence]}</td><td>${d.night ? TEXT.night : TEXT.day}</td><td>${d.lat.toFixed(3)}, ${d.lon.toFixed(3)}</td></tr>`,
       )
       .join('');
@@ -69,9 +70,9 @@ export function createDetectionsPanel(o: DetectionsPanelOptions) {
   el.querySelector<HTMLButtonElement>('.cal-x')!.onclick = () => panel.toggle(false);
   el.querySelector<HTMLButtonElement>('[data-a=csv]')!.onclick = () => {
     const full = o.list(Infinity); // every loaded detection after the filters, not only the listed ones
-    const head = 'acq_date,acq_time_utc,satellite,frp_mw,confidence,daynight,latitude,longitude';
+    const head = 'acq_date,acq_time_utc,type,satellite,frp_mw,confidence,daynight,latitude,longitude';
     const lines = full.rows.map((d) =>
-      [d.date, hhmm(d.hourUtc).replace(':', ''), d.satellite, d.frp.toFixed(2), d.confidence, d.night ? 'N' : 'D', d.lat.toFixed(5), d.lon.toFixed(5)].join(','),
+      [d.date, hhmm(d.hourUtc).replace(':', ''), d.kind, d.satellite, d.frp.toFixed(2), d.confidence, d.night ? 'N' : 'D', d.lat.toFixed(5), d.lon.toFixed(5)].join(','),
     );
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([[head, ...lines].join('\n') + '\n'], { type: 'text/csv' }));

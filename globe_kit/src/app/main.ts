@@ -115,6 +115,10 @@ async function main() {
     .join('');
 
   let mode: Mode = 'BOTH';
+  /** Globe sources filter -> FIRMS type list for single detections, and the nearest calendar equivalent. */
+  const SRC_TYPES: Record<string, string> = { veg: '0,-1', all: '0,1,2,3,-1', volcano: '1', static: '2', offshore: '3' };
+  const SRC_CAL: Record<string, string> = { veg: 'veg', all: 'all', volcano: 'static', static: 'static', offshore: 'static' };
+  const srcSel = $<HTMLSelectElement>('sources');
   let step: Step = 'month';
   // Local service when it runs, else static Parquet files queried in the browser (DuckDB-WASM).
   // Resolved in the background: the globe and the controls do not wait for DuckDB-WASM.
@@ -253,6 +257,7 @@ async function main() {
         cf: cal?.from,
         ct: cal?.to,
         src: cal && cal.src !== 'veg' ? cal.src : undefined,
+        gsrc: srcSel.value !== 'veg' ? srcSel.value : undefined,
       });
     }, 300);
   }
@@ -268,6 +273,8 @@ async function main() {
     $('data-badge').textContent = t(mode === 'HARM' ? 'badge.harm' : 'badge.raw');
     $('sub-text').textContent = t(mode === 'HARM' ? 'sub.harm' : 'sub.raw');
     metricSel.disabled = mode === 'HARM';
+    srcSel.disabled = mode === 'HARM'; // harmonized series are built on vegetation fires only
+    srcSel.title = t(mode === 'HARM' ? 'ctl.sources.harm' : 'ctl.sources.title');
     if (mode === 'HARM' && step === 'day') {
       step = 'month';
       slider.setKeys(allKeys());
@@ -295,7 +302,7 @@ async function main() {
     }
     slider.setKeys(allKeys());
     refreshControls();
-    detailNote.textContent = t(mode === 'HARM' ? 'note.harmDetections' : 'note.zoom');
+    refreshZoomNote();
     // Single detections exist for the sensors, not for the harmonized series.
     detail?.setSides(
       shown().filter((s) => !isHarm(s)).map((s, k) => ({
@@ -319,6 +326,12 @@ async function main() {
   const filters = $<HTMLDivElement>('filters');
   const gainWrap = $<HTMLLabelElement>('gain-wrap');
   let pass: Pass = 'all';
+  /** Hint shown while no single detections are loaded; warns when the raster cannot follow the Sources filter. */
+  function refreshZoomNote() {
+    const rasterLimited = mode !== 'HARM' && srcSel.value !== 'veg';
+    detailNote.classList.toggle('warn', rasterLimited);
+    detailNote.textContent = t(mode === 'HARM' ? 'note.harmDetections' : rasterLimited ? 'note.srcRaster' : 'note.zoom');
+  }
   const refreshControls = () => {
     for (const btn of stepSeg.querySelectorAll<HTMLButtonElement>('button')) {
       btn.setAttribute('aria-checked', String(btn.dataset.step === step));
@@ -406,6 +419,12 @@ async function main() {
     detail?.setFilters({ pass });
     refreshControls();
   };
+  srcSel.onchange = () => {
+    detail?.setTypes(SRC_TYPES[srcSel.value] ?? SRC_TYPES.veg);
+    calPanel?.setSources(SRC_CAL[srcSel.value] ?? 'veg');
+    if (!detail?.active) refreshZoomNote();
+    syncUrl();
+  };
   satSel.onchange = () => detail?.setFilters({ sat: satSel.value as Sat });
   modeSeg.onclick = (e) => {
     const m = (e.target as HTMLElement).closest('button')?.dataset.mode as Mode | undefined;
@@ -440,11 +459,11 @@ async function main() {
       onMode(on) {
         refreshControls();
         refreshLegend();
-        if (!on)
-          detailNote.textContent = t(mode === 'HARM' ? 'note.harmDetections' : 'note.zoom');
+        if (!on) refreshZoomNote();
       },
       onStatus(text, busy) {
         if (!text) return;
+        detailNote.classList.remove('warn');
         detailNote.textContent = text;
         // Loaded detections: a button opens the list (strongest first, linked to the globe).
         if (detail?.active && !busy) {
@@ -556,6 +575,12 @@ async function main() {
     step = 'day';
     slider.setKeys(allKeys());
     refreshControls();
+  }
+  if (st.gsrc && st.gsrc in SRC_TYPES && st.gsrc !== 'veg') {
+    srcSel.value = st.gsrc;
+    detail.setTypes(SRC_TYPES[st.gsrc]);
+    calPanel.setSources(SRC_CAL[st.gsrc]);
+    refreshZoomNote();
   }
   if (st.mode || st.harm || st.viirs || st.metric) applySelection();
   if (st.t) {

@@ -1,10 +1,10 @@
 const TEXT = {
-  empty: 'Write a query first.',
-  multi: 'Query refused: only one statement is allowed.',
-  notSelect: 'Query refused: only read-only SELECT queries (or WITH ... SELECT) are allowed.',
-  keyword: 'Query refused: {k} is not allowed, only read-only SELECT queries run here. Quote a column with that name ("name").',
-  unterminated: 'Query refused: an unterminated string, quoted name or comment.',
-  escapeString: "Query refused: E'...' strings are not supported; use a plain '...' string.",
+  empty: 'Refused: write a query first.',
+  multi: 'Refused: only one statement is allowed.',
+  notSelect: 'Refused: only read-only SELECT queries (or WITH ... SELECT) are allowed.',
+  keyword: 'Refused: {k} is not allowed, only read-only SELECT queries run here. Quote a column with that name ("name").',
+  unterminated: 'Refused: an unterminated string, quoted name or comment.',
+  escapeString: "Refused: E'...' strings are not supported; use a plain '...' string.",
 } as const;
 
 const FORBIDDEN = [

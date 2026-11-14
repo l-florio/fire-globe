@@ -80,7 +80,8 @@ export async function staticSource(baseUrl: string): Promise<DataSource | undefi
     kind: 'static',
     note: `Online version: calendar worldwide on the 0.25 degree grid; single detections ${regionText === 'worldwide' ? 'worldwide' : `for ${regionText}`}.`,
 
-    async detections(sensor, period, bbox, limit): Promise<Detections> {
+    async detections(sensor, period, bbox, limit, _signal, types = '0,-1'): Promise<Detections> {
+      const typeList = types.split(',').map(Number).filter((x) => Number.isInteger(x) && x >= -1 && x <= 3);
       const key = period.date ?? period.month ?? '';
       const fileMeta = pointFiles(sensor, Number(key.slice(0, 4)), Number(key.slice(0, 4)));
       const region = fileMeta.length ? regionOf(fileMeta[0]) : WORLD;
@@ -99,15 +100,15 @@ export async function staticSource(baseUrl: string): Promise<DataSource | undefi
         d0 = `${key}-01`;
         d1 = `${key}-${String(new Date(Date.UTC(y, m, 0)).getUTCDate()).padStart(2, '0')}`;
       }
-      const where = `d BETWEEN DATE '${d0}' AND DATE '${d1}' AND lat BETWEEN ${box[1]} AND ${box[3]} AND ${lonCond} AND type IN (0, -1)`;
+      const where = `d BETWEEN DATE '${d0}' AND DATE '${d1}' AND lat BETWEEN ${box[1]} AND ${box[3]} AND ${lonCond} AND type IN (${typeList.length ? typeList.join(', ') : '0, -1'})`;
       const src = `read_parquet(${list(files)})`;
       const total = Number((await conn.query(`SELECT count(*) AS c FROM ${src} WHERE ${where}`)).getChild('c')!.get(0));
       const t = await conn.query(`
-        SELECT lon, lat, frp, CAST(day(d) AS FLOAT) AS dd, CAST(hhmm // 100 + (hhmm % 100) / 60.0 AS FLOAT) AS hh, CAST(flags AS FLOAT) AS fl
+        SELECT lon, lat, frp, CAST(day(d) AS FLOAT) AS dd, CAST(hhmm // 100 + (hhmm % 100) / 60.0 AS FLOAT) AS hh, CAST(flags AS FLOAT) AS fl, CAST(type AS FLOAT) AS ty
         FROM ${src} WHERE ${where} ORDER BY frp DESC LIMIT ${limit}`);
-      const cols = ['lon', 'lat', 'frp', 'dd', 'hh', 'fl'].map((c) => t.getChild(c)!.toArray() as Float32Array);
-      const buf = new Float32Array(t.numRows * 6);
-      for (let i = 0; i < t.numRows; i++) for (let k = 0; k < 6; k++) buf[i * 6 + k] = cols[k][i];
+      const cols = ['lon', 'lat', 'frp', 'dd', 'hh', 'fl', 'ty'].map((c) => t.getChild(c)!.toArray() as Float32Array);
+      const buf = new Float32Array(t.numRows * 7);
+      for (let i = 0; i < t.numRows; i++) for (let k = 0; k < 7; k++) buf[i * 7 + k] = cols[k][i];
       return { buf, total };
     },
 

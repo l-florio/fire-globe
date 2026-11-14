@@ -29,6 +29,15 @@
           <button type="button" role="radio" data-step="day" data-i18n="ctl.day">Day</button>
         </div>
       </div>
+      <label id="src-wrap"><span data-i18n="ctl.sources">Sources</span>
+        <select id="sources" data-i18n-title="ctl.sources.title" title="Single detections follow this filter exactly; the monthly map at global zoom shows vegetation fires only">
+          <option value="veg" data-i18n="ctl.sources.veg">Vegetation fires (default)</option>
+          <option value="all" data-i18n="ctl.sources.all">All detections</option>
+          <option value="volcano" data-i18n="ctl.sources.volcano">Volcanoes only</option>
+          <option value="static" data-i18n="ctl.sources.static">Industrial and other static sources only</option>
+          <option value="offshore" data-i18n="ctl.sources.offshore">Offshore only</option>
+        </select>
+      </label>
       <label id="harm-wrap" hidden><span data-i18n="ctl.harmSeries">Harmonized series</span>
         <select id="harm"></select>
       </label>

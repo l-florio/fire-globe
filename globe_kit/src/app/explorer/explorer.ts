@@ -1,11 +1,11 @@
-import './explorer.css';
 import { createBuilder } from './builder';
 import { ROW_CAP, type Catalog } from './datasets';
-import { createEngine, type Engine, type Row } from './engine';
+import { createEngine, QueryError, type Engine, type Row } from './engine';
 import { createResults, type ResultMeta } from './results';
 import { createScopeForm } from './scope';
 import { createSqlMode } from './sqlmode';
 import { h } from './util';
+import './explorer.css'; // last, so that it overrides the Tabulator stylesheet imported by the grid
 
 const TEXT = {
   title: 'Data explorer',
@@ -116,7 +116,7 @@ export function createExplorer(o: ExplorerOptions): HTMLElement {
         req++;
         engine.cancel();
         results.running(false);
-        results.error(TEXT.cancelled);
+        results.info(TEXT.cancelled);
       },
     });
 
@@ -134,7 +134,9 @@ export function createExplorer(o: ExplorerOptions): HTMLElement {
         if (my !== req) return;
         results.show(r, { ...meta, sql, total, cap: ROW_CAP, onGlobe });
       } catch (e) {
-        if (my === req) results.error(message(e));
+        if (my !== req) return;
+        if (e instanceof QueryError) results.error(e.message, e.kind, { line: e.line, col: e.col });
+        else results.error(message(e));
       } finally {
         if (my === req) results.running(false);
       }
@@ -148,7 +150,7 @@ export function createExplorer(o: ExplorerOptions): HTMLElement {
       const ds = form.dataset();
       const scope = form.scope();
       const err = ds.check(scope);
-      if (err) return results.error(err);
+      if (err) return results.error(err, 'input');
       const rel = ds.relation(scope);
       void exec(rel + (ds.order ? `\nORDER BY ${ds.order}` : ''), { title: ds.id, layoutKey: ds.id, defaultCols: ds.defaultCols, docs: docsOf() }, { countSql: rel });
     }
@@ -157,7 +159,7 @@ export function createExplorer(o: ExplorerOptions): HTMLElement {
       const ds = form.dataset();
       const err = ds.check(form.scope());
       const built = builder.build();
-      if (err || built.error) return results.error((err ?? built.error)!);
+      if (err || built.error) return results.error((err ?? built.error)!, 'input');
       void exec(built.sql, { title: `${ds.id}_query`, layoutKey: built.raw ? ds.id : undefined, defaultCols: built.raw ? ds.defaultCols : undefined, docs: docsOf() });
     }
 
@@ -206,6 +208,7 @@ export function createExplorer(o: ExplorerOptions): HTMLElement {
         const shown = new Set(panes[m]);
         for (const e of Object.values(panes).flat()) e.hidden = !shown.has(e);
         if (m === 'builder') builder.refresh();
+        if (m === 'sql') sqlMode.activate();
         results.resize();
       },
       resize: () => results.resize(),

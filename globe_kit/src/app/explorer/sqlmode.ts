@@ -1,9 +1,10 @@
 import type { Catalog } from './datasets';
+import type { CmEditor } from './sqleditor';
 import { h } from './util';
 
 const TEXT = {
   editor: 'SQL query',
-  hint: 'Queries are read-only (one SELECT statement) and run locally in your browser with DuckDB; nothing is sent to a server. Ctrl+Enter runs the query.',
+  hint: 'Queries are read-only (one SELECT statement) and run locally in your browser with DuckDB; nothing is sent to a server. Suggestions appear while you type: Up/Down to move, Tab or Enter to accept, Esc to close, Ctrl+Space to open them. Ctrl+Enter runs the query.',
   help: 'Tables and columns',
   insert: 'Insert {n} into the query',
   macro: 'In file paths, {data}/ stands for the data folder. Views are created when a query mentions them. Filter on m, lat, lon (grids) or date, lat, lon (points) so that only the needed parts are downloaded.',
@@ -48,16 +49,37 @@ export interface SqlMode {
   sql(): string;
   setSql(sql: string): void;
   focus(): void;
+  /** SQL mode was shown: load the code editor on first use, re-measure it afterwards. */
+  activate(): void;
 }
 
+
 export function createSqlMode(o: { catalog: Catalog; onRun: (sql: string) => void }): SqlMode {
-  const editor = h('textarea', { class: 'ex-editor', rows: 7, spellcheck: 'false', 'aria-label': TEXT.editor, placeholder: TEXT.placeholder });
-  const insert = (text: string) => {
-    const a = editor.selectionStart;
-    editor.setRangeText(text, a, editor.selectionEnd, 'end');
-    editor.focus();
+  const hintId = 'ex-sql-hint';
+  // A plain textarea from the start; it is swapped for the CodeMirror editor (highlighting, suggestions) once that
+  // chunk has loaded, and stays in use if it cannot be loaded.
+  const area = h('textarea', { class: 'ex-textarea', rows: 7, spellcheck: 'false', 'aria-label': TEXT.editor, 'aria-describedby': hintId, placeholder: TEXT.placeholder });
+  const host = h('div', { class: 'ex-editor' }, area);
+  let cm: CmEditor | undefined;
+  let loading = false;
+  const get = () => (cm ? cm.get() : area.value);
+  const set = (text: string) => {
+    if (cm) cm.set(text);
+    else area.value = text;
   };
-  const run = () => o.onRun(editor.value);
+  const focus = () => (cm ? cm.focus() : area.focus());
+  const run = () => o.onRun(get());
+  area.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      run();
+    }
+  });
+  const insert = (text: string) => {
+    if (cm) cm.insert(text);
+    else area.setRangeText(text, area.selectionStart, area.selectionEnd, 'end');
+    focus();
+  };
 
   const tables = o.catalog.docs.map((d) =>
     h(
@@ -73,27 +95,37 @@ export function createSqlMode(o: { catalog: Catalog; onRun: (sql: string) => voi
     'div',
     { class: 'ex-row ex-examples' },
     h('span', { class: 'ex-flabel' }, TEXT.examples),
-    ...EXAMPLES.map(([label, sql]) =>
+    ...EXAMPLES.map(([label, text]) =>
       h('button', { type: 'button', onclick: () => {
-        editor.value = sql;
-        editor.focus();
+        set(text);
+        focus();
       } }, label),
     ),
   );
-  editor.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-      e.preventDefault();
-      run();
+  const el = h('div', { class: 'ex-sqlmode' }, help, examples, host, h('p', { class: 'ex-note', id: hintId }, TEXT.hint));
+
+  async function load() {
+    loading = true;
+    try {
+      const { createCmEditor } = await import('./sqleditor');
+      const text = area.value;
+      const hadFocus = document.activeElement === area;
+      area.hidden = true;
+      cm = createCmEditor({ parent: host, catalog: o.catalog, doc: text, label: TEXT.editor, describedBy: hintId, placeholder: TEXT.placeholder, onRun: run });
+      if (hadFocus) cm.focus();
+    } catch {
+      loading = false; // the textarea keeps working
     }
-  });
-  const el = h('div', { class: 'ex-sqlmode' }, help, examples, editor, h('p', { class: 'ex-note' }, TEXT.hint));
+  }
 
   return {
     el,
-    sql: () => editor.value,
-    setSql(sql) {
-      editor.value = sql;
+    sql: get,
+    setSql: set,
+    focus,
+    activate() {
+      if (cm) cm.measure();
+      else if (!loading) void load();
     },
-    focus: () => editor.focus(),
   };
 }

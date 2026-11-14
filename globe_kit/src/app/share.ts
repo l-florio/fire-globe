@@ -4,7 +4,8 @@
  * The hash is updated in place while the user works (no new history entries), so the address bar is always a
  * link to the current view. Keys: t (time key), mode, harm, viirs, metric, step, view, cam (lon,lat,height m),
  * cal (calendar open), area (see calendarPanel areaSpec), cs / cv / cm (calendar sensor, variable, colour),
- * cf / ct (calendar period, YYYY-MM), src (calendar sources: veg | all | static; veg is the default).
+ * cf / ct (calendar period, YYYY-MM), src (calendar sources: veg | all | static; veg is the default),
+ * gsrc (globe sources: veg | all | volcano | static | offshore; veg is the default).
  */
 export type ShareState = Record<string, string | undefined>;
 
