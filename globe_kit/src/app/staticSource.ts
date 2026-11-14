@@ -3,17 +3,24 @@ import mvpWasm from '@duckdb/duckdb-wasm/dist/duckdb-mvp.wasm?url';
 import mvpWorker from '@duckdb/duckdb-wasm/dist/duckdb-browser-mvp.worker.js?url';
 import ehWasm from '@duckdb/duckdb-wasm/dist/duckdb-eh.wasm?url';
 import ehWorker from '@duckdb/duckdb-wasm/dist/duckdb-browser-eh.worker.js?url';
-import type { Area } from '../globe';
-import type { CalendarResult, DataSource, Detections, MonthRow } from './dataSource';
+import { cellIdSql, type Area } from '../globe';
+import { areaFor, type CalendarResult, type DataSource, type Detections, type MonthRow, type RegionRow } from './dataSource';
 
 interface StaticManifest {
   region: [number, number, number, number];
   grid: Record<string, { band: number; south: number; north: number; path: string }[]>;
   points: Record<string, { year: number; path: string; rows: number; region?: [number, number, number, number] }[]>;
+  /** Harmonized regional values; a later file replaces the earlier ones from its first month (m) on. */
+  regions?: { path: string; from: number }[];
 }
 
 /** SQL condition for a bbox or a circle (great-circle distance), same rule as the local service. */
 function areaSql(a: Area, lat = 'lat', lon = 'lon'): string {
+  if (a.kind === 'cells') {
+    const [w, s, e, n] = a.bbox;
+    const box = areaSql({ kind: 'bbox', west: w, south: s, east: e, north: n }, lat, lon);
+    return `(${box} AND ${cellIdSql(lat, lon, a.res)} IN (${a.ids.join(',')}))`;
+  }
   if (a.kind === 'circle') {
     const dlat = a.km / 111;
     const dlon = Math.min(180, a.km / (111 * Math.max(0.01, Math.cos(((Math.min(89, Math.abs(a.lat) + dlat)) * Math.PI) / 180))));
@@ -25,6 +32,7 @@ function areaSql(a: Area, lat = 'lat', lon = 'lon'): string {
 }
 
 function latRange(a: Area): [number, number] {
+  if (a.kind === 'cells') return [a.bbox[1], a.bbox[3]];
   return a.kind === 'bbox' ? [a.south, a.north] : [a.lat - a.km / 111, a.lat + a.km / 111];
 }
 
@@ -105,7 +113,8 @@ export async function staticSource(baseUrl: string): Promise<DataSource | undefi
       return { buf, total };
     },
 
-    async calendar(sensor, area, types): Promise<CalendarResult> {
+    async calendar(sensor, place, types): Promise<CalendarResult> {
+      const area = areaFor(sensor, place);
       const [s, n] = latRange(area);
       const files = (man.grid[sensor] ?? []).filter((f) => f.north >= s && f.south <= n).map((f) => f.path);
       if (!files.length) return { source: 'grid', months: [] };
@@ -123,6 +132,26 @@ export async function staticSource(baseUrl: string): Promise<DataSource | undefi
         source: harm ? 'harmonized' : 'grid',
         months: ym.map((m, i) => [m, nn[i], Math.round(ff[i] * 10) / 10, ...(oo ? [oo[i]] : [])] as MonthRow),
       };
+    },
+
+    async regions(series, type, moy): Promise<RegionRow[]> {
+      const files = man.regions ?? [];
+      if (!files.length) return [];
+      // Each month comes from the last file whose range starts at or before it.
+      const parts = files.map(
+        (f, i) =>
+          `SELECT id, m, v, lo, hi, o FROM read_parquet('${url(f.path)}') WHERE series = '${series}' AND rt = '${type}' AND m % 12 = ${moy - 1} AND m >= ${f.from}` +
+          (files.slice(i + 1).length ? ` AND m < ${Math.min(...files.slice(i + 1).map((g) => g.from))}` : ''),
+      );
+      const t = await conn.query(`
+        SELECT id, printf('%04d-%02d', 2000 + m // 12, m % 12 + 1) AS ym, CAST(v AS DOUBLE) AS v, CAST(lo AS DOUBLE) AS lo,
+               CAST(hi AS DOUBLE) AS hi, CAST(o AS INTEGER) AS o
+        FROM (${parts.join(' UNION ALL ')}) ORDER BY id, m`);
+      const c = ['id', 'ym', 'v', 'lo', 'hi', 'o'].map((k) => t.getChild(k)!.toArray() as ArrayLike<unknown>);
+      const out: RegionRow[] = [];
+      for (let i = 0; i < t.numRows; i++)
+        out.push([c[0][i] as string, c[1][i] as string, c[2][i] as number, c[3][i] as number, c[4][i] as number, c[5][i] as number]);
+      return out;
     },
 
     async exportCsv(sensor, area, from, to, types): Promise<Blob> {

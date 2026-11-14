@@ -1,12 +1,16 @@
 import * as Cesium from 'cesium';
 import { viewRectangle } from './pointLayer';
+import { cellCorners, cellsFrame, cellsKm2, outerRings, type CellArea } from './cells';
 
-/** An area of interest: a lon/lat box or a circle (centre in degrees, radius in km). */
+/** An area of interest: a lon/lat box, a circle (centre in degrees, radius in km) or a set of grid cells (a place). */
 export type Area =
   | { kind: 'bbox'; west: number; south: number; east: number; north: number }
-  | { kind: 'circle'; lat: number; lon: number; km: number };
+  | { kind: 'circle'; lat: number; lon: number; km: number }
+  | CellArea;
 
+/** Query string for GET endpoints (cells areas are sent in a POST body instead, see areaBody). */
 export function areaQuery(a: Area): string {
+  if (a.kind === 'cells') return `cells=${a.res}:${a.ids.length}`;
   return a.kind === 'bbox'
     ? `bbox=${[a.west, a.south, a.east, a.north].map((v) => v.toFixed(4)).join(',')}`
     : `circle=${a.lat.toFixed(4)},${a.lon.toFixed(4)},${a.km}`;
@@ -14,12 +18,15 @@ export function areaQuery(a: Area): string {
 
 export function areaLabel(a: Area): string {
   const f = (v: number) => v.toFixed(2);
+  if (a.kind === 'cells')
+    return `${a.label} (about ${Math.round(cellsKm2(a)).toLocaleString('en')} km2, ${a.ids.length} cells of ${a.res} deg)`;
   return a.kind === 'bbox'
     ? `Box ${f(a.south)}..${f(a.north)} N, ${f(a.west)}..${f(a.east)} E (about ${Math.round(areaKm2(a)).toLocaleString('en')} km2)`
     : `${a.km} km around ${f(a.lat)} N, ${f(a.lon)} E`;
 }
 
 export function areaKm2(a: Area): number {
+  if (a.kind === 'cells') return cellsKm2(a);
   if (a.kind === 'circle') return Math.PI * a.km * a.km;
   const r = 6371;
   const w = (((a.east - a.west) % 360) + 360) % 360 || 360;
@@ -33,6 +40,8 @@ export function areaKm2(a: Area): number {
 export function createAreaPicker(viewer: Cesium.Viewer, color = Cesium.Color.fromCssColorString('#ffb020')) {
   const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
   let shape: Cesium.Entity | undefined;
+  /** Cells and outline of a place area. */
+  const extra = viewer.scene.primitives.add(new Cesium.PrimitiveCollection({ destroyPrimitives: true })) as Cesium.PrimitiveCollection;
   let rubber: Cesium.Rectangle | undefined;
   let cancelDraw: (() => void) | undefined;
 
@@ -44,6 +53,7 @@ export function createAreaPicker(viewer: Cesium.Viewer, color = Cesium.Color.fro
   function clear() {
     if (shape) viewer.entities.remove(shape);
     shape = undefined;
+    extra.removeAll();
     viewer.scene.requestRender();
   }
 
@@ -56,6 +66,31 @@ export function createAreaPicker(viewer: Cesium.Viewer, color = Cesium.Color.fro
       outlineWidth: 2,
       height: 0,
     };
+    if (a.kind === 'cells') {
+      // The cells that are actually counted, filled, plus the outline of the place when known.
+      const fill = color.withAlpha(0.22);
+      const cells = new Cesium.Primitive({
+        geometryInstances: cellCorners(a).map(
+          ([x, y]) =>
+            new Cesium.GeometryInstance({
+              geometry: new Cesium.RectangleGeometry({ rectangle: Cesium.Rectangle.fromDegrees(x, y, x + a.res, y + a.res), height: 0 }),
+              attributes: { color: Cesium.ColorGeometryInstanceAttribute.fromColor(fill) },
+            }),
+        ),
+        appearance: new Cesium.PerInstanceColorAppearance({ flat: true, translucent: true }),
+        asynchronous: true,
+      });
+      extra.add(cells);
+      if (a.geojson) {
+        const lines = new Cesium.PolylineCollection();
+        for (const ring of outerRings(a.geojson))
+          if (ring.length > 1)
+            lines.add({ positions: Cesium.Cartesian3.fromDegreesArray(ring.flatMap(([x, y]) => [x, y])), width: 2, material: Cesium.Material.fromType('Color', { color }) });
+        extra.add(lines);
+      }
+      viewer.scene.requestRender();
+      return;
+    }
     shape =
       a.kind === 'bbox'
         ? viewer.entities.add({
@@ -139,7 +174,9 @@ export function createAreaPicker(viewer: Cesium.Viewer, color = Cesium.Color.fro
   /** Fly so that the area fills the view. */
   function zoomTo(a: Area) {
     const rect =
-      a.kind === 'bbox'
+      a.kind === 'cells'
+        ? Cesium.Rectangle.fromDegrees(...cellsFrame(a))
+        : a.kind === 'bbox'
         ? Cesium.Rectangle.fromDegrees(a.west, a.south, a.east, a.north)
         : Cesium.Rectangle.fromDegrees(
             a.lon - a.km / (111 * Math.cos(Cesium.Math.toRadians(a.lat))),

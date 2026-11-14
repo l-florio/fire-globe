@@ -43,6 +43,11 @@ def main() -> int:
             missing = [f["path"] for f in local if not (pub / "data" / f["path"]).exists()]
             errors += [f"{kind}: {p} missing" for p in missing[:5]]
             print(f"{kind} {s}: {len(files)} files ({len(files) - len(local)} external)")
+    for f in static.get("regions", []):
+        if not (pub / "data" / f["path"]).exists():
+            errors.append(f"regions: {f['path']} missing")
+    if not static.get("regions"):
+        errors.append("regions (Table view) missing")
     if static.get("intervals") and not (pub / "data" / static["intervals"]).exists():
         errors.append("interval table missing")
 

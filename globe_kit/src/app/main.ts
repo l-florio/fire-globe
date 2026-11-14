@@ -12,7 +12,8 @@ import {
   type BasemapId,
 } from '../globe';
 import { createCalendarPanel } from './calendarPanel';
-import { detectSource } from './dataSource';
+import { createTablePanel } from './tablePanel';
+import { detectSource, lazySource } from './dataSource';
 import { createDetail, DETECTION_FRP_TOP, type Pass, type Sat, type Step } from './detail';
 import './app.css';
 
@@ -98,11 +99,13 @@ async function main() {
   let mode: Mode = 'BOTH';
   let step: Step = 'month';
   // Local service when it runs, else static Parquet files queried in the browser (DuckDB-WASM).
-  const ds = await detectSource().catch((e) => {
+  // Resolved in the background: the globe and the controls do not wait for DuckDB-WASM.
+  const dsReady = detectSource().catch((e) => {
     console.warn('No data source for detections', e);
     return undefined;
   });
-  const apiOk = !!ds;
+  const ds = lazySource(dsReady);
+  let apiOk = true;
   let swapped = false; // false: MODIS left, VIIRS right
 
   /** Sensors on screen: [left] in single mode, [left, right] in compare mode. */
@@ -239,6 +242,8 @@ async function main() {
     }
     slider.setKeys(allKeys());
     refreshControls();
+    detailNote.textContent =
+      mode === 'HARM' ? 'Single detections are shown in the MODIS and VIIRS views.' : 'Zoom in below 2,500 km to see individual detections.';
     // Single detections exist for the sensors, not for the harmonized series.
     detail?.setSides(
       shown().filter((s) => !isHarm(s)).map((s, k) => ({
@@ -251,6 +256,7 @@ async function main() {
 
   // eslint-disable-next-line prefer-const
   let calPanel: ReturnType<typeof createCalendarPanel> | undefined;
+  let table: ReturnType<typeof createTablePanel> | undefined;
   // eslint-disable-next-line prefer-const
   let detail: ReturnType<typeof createDetail> | undefined;
   const daySel = $<HTMLSelectElement>('day');
@@ -299,6 +305,7 @@ async function main() {
     onChange: async (key) => {
       refreshLabels(key);
       calPanel?.select(key);
+      table?.select(key);
       detail?.setPeriod(step, key);
       if (step === 'day') return;
       fillDays(key);
@@ -310,6 +317,16 @@ async function main() {
   });
 
   // ---- wiring
+  // Collapsible control panel: starts collapsed on phones so the globe stays visible.
+  const panelEl = $<HTMLElement>('panel');
+  const panelToggle = $<HTMLButtonElement>('panel-toggle');
+  const setPanel = (open: boolean) => {
+    panelEl.classList.toggle('collapsed', !open);
+    panelToggle.textContent = open ? 'Hide' : 'Controls';
+    panelToggle.setAttribute('aria-expanded', String(open));
+  };
+  setPanel(!window.matchMedia('(max-width: 760px)').matches);
+  panelToggle.onclick = () => setPanel(panelEl.classList.contains('collapsed'));
   stepSeg.onclick = (e) => {
     const s = (e.target as HTMLElement).closest('button')?.dataset.step as Step | undefined;
     if (!s || s === step) return;
@@ -365,7 +382,11 @@ async function main() {
       onMode(on) {
         refreshControls();
         refreshLegend();
-        if (!on) detailNote.textContent = 'Zoom in below 2,500 km to see individual detections.';
+        if (!on)
+          detailNote.textContent =
+            mode === 'HARM'
+              ? 'Single detections are shown in the MODIS and VIIRS views.'
+              : 'Zoom in below 2,500 km to see individual detections.';
       },
       onStatus(text) {
         if (text) detailNote.textContent = text;
@@ -391,8 +412,41 @@ async function main() {
   calBtn.disabled = !apiOk;
   calBtn.title = apiOk ? `Calendar of fire activity for an area, with CSV export. ${ds!.note}` : 'Needs the data service or the static data files';
   calBtn.onclick = () => calPanel?.toggle();
+  void dsReady.then((d) => {
+    apiOk = !!d;
+    calBtn.disabled = !apiOk;
+    calBtn.title = apiOk ? `Calendar of fire activity for an area, with CSV export. ${d!.note}` : 'Needs the data service or the static data files';
+    refreshControls();
+  });
   document.body.appendChild(calBtn);
   calPanel.select(slider.key);
+
+  // ---- Globe | Table view
+  const tabs = document.createElement('div');
+  tabs.id = 'view-tabs';
+  tabs.className = 'seg seg2';
+  tabs.setAttribute('role', 'tablist');
+  tabs.innerHTML = '<button type="button" role="tab" data-v="globe">Globe</button><button type="button" role="tab" data-v="table" title="Harmonized data by country or region, as a table">Table</button>';
+  const setView = (v: 'globe' | 'table') => {
+    for (const b of tabs.querySelectorAll('button')) b.setAttribute('aria-selected', String(b.dataset.v === v));
+    document.body.classList.toggle('view-table', v === 'table');
+    table?.show(v === 'table');
+  };
+  table = createTablePanel({
+    data: ds!,
+    onPick: (type, id, name) => {
+      setView('globe');
+      if (type === 'gfed') calPanel?.pickRegion(id);
+      else calPanel?.searchPlace(name, 'country');
+    },
+  });
+  table.select(slider.key);
+  tabs.onclick = (e) => {
+    const v = (e.target as HTMLElement).closest('button')?.dataset.v as 'globe' | 'table' | undefined;
+    if (v) setView(v);
+  };
+  document.body.appendChild(tabs);
+  setView('globe');
   detail.setPeriod(step, slider.key);
   refreshControls();
 

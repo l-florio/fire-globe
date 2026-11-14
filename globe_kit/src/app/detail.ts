@@ -95,7 +95,8 @@ export function createDetail(viewer: Cesium.Viewer, labels: Record<string, strin
 
   async function load() {
     const zoomedIn = cameraHeight(viewer) <= DETAIL_HEIGHT_M;
-    if (!period || (step === 'month' && !zoomedIn)) return setActive(false);
+    // No sensor with single detections on screen (e.g. the harmonized series): nothing to load.
+    if (!period || !sides.length || (step === 'month' && !zoomedIn)) return setActive(false);
     const rect = viewRectangle(viewer);
     setActive(true);
     ctrl?.abort();

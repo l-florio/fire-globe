@@ -41,7 +41,7 @@ def _area(r: list[float]) -> float:
 
 
 def merge_static(manifests: list[dict]) -> dict:
-    out = {k: v for k, v in manifests[-1].items() if k not in ("grid", "points", "region")}
+    out = {k: v for k, v in manifests[-1].items() if k not in ("grid", "points", "region", "regions")}
     out["grid"], out["points"] = {}, {}
     for m in manifests:
         for s, files in m.get("grid", {}).items():
@@ -57,6 +57,9 @@ def merge_static(manifests: list[dict]) -> dict:
             out["points"][s] = sorted(best.values(), key=lambda f: f["year"])
         if m.get("intervals"):
             out["intervals"] = m["intervals"]
+        if m.get("regions"):
+            have = {f["path"] for f in out.get("regions", [])}
+            out["regions"] = out.get("regions", []) + [f for f in m["regions"] if f["path"] not in have]
     return out
 
 

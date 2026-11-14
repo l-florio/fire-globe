@@ -6,4 +6,5 @@ export { RAMPS, lut, cssGradient, type Stop } from './colormaps';
 import './globe.css';
 export { PointLayer, viewRectangle, cameraHeight, type PointLayerOptions, type PointInput } from './pointLayer';
 export { createAreaPicker, areaQuery, areaLabel, areaKm2, type Area } from './areaPicker';
+export { cellsFromGeoJson, coarsen, cellId, cellIdSql, type CellArea } from './cells';
 export { createCalendarHeatmap, type CalendarOptions, type MonthStats } from './calendar';

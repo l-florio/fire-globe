@@ -1372,5 +1372,12 @@
   ]
  },
  "harmonized": false,
- "intervals": "interval_table.json"
+ "intervals": "interval_table.json",
+ "regions": [
+  {
+   "path": "regions/harm_region.hist.parquet",
+   "from": 36,
+   "bytes": 688398
+  }
+ ]
 }

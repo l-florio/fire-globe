@@ -113,6 +113,24 @@ def main() -> None:
             if files:
                 manifest["grid"][sensor] = files
                 print(f"grid {sensor}: {len(files)} files, {sum(x['bytes'] for x in files) / 1e6:.1f} MB (harmonized)")
+        # Regional totals (countries and GFED regions) with 90% intervals, for the Table view.
+        hr = harm.with_name("harm_region.parquet")
+        if hr.exists():
+            d = out / "regions"
+            d.mkdir(parents=True, exist_ok=True)
+            f = d / f"harm_region.{a.tag}.parquet"
+            m0 = con.execute(f"""
+                COPY (SELECT series, region_type AS rt, region_id AS id,
+                             CAST((year(month) - 2000) * 12 + month(month) - 1 AS SMALLINT) AS m,
+                             CAST(value AS FLOAT) AS v, CAST(lo90 AS FLOAT) AS lo, CAST(hi90 AS FLOAT) AS hi,
+                             CAST(CASE origin WHEN 'aqua_obs' THEN 0 WHEN 'viirs_conv' THEN 1 ELSE 2 END AS TINYINT) AS o
+                      FROM read_parquet('{hr.as_posix()}')
+                      WHERE region_type IN ('country', 'gfed') AND year(month) BETWEEN {a.from_year} AND {a.to_year}
+                      ORDER BY series, rt, m, id)
+                TO '{f.as_posix()}' (FORMAT PARQUET, COMPRESSION ZSTD)""")
+            first = con.execute(f"SELECT min(m) FROM read_parquet('{f.as_posix()}')").fetchone()[0]
+            manifest["regions"] = [{"path": f.relative_to(out).as_posix(), "from": int(first or 0), "bytes": f.stat().st_size}]
+            print(f"regions: {f.stat().st_size / 1e6:.2f} MB from month {first}")
         it = harm.with_name("interval_table.json")
         if it.exists():
             shutil.copy(it, out / "interval_table.json")
