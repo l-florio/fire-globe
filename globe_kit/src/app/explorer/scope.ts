@@ -1,21 +1,22 @@
 import type { Catalog, DatasetDef, Opt, Scope } from './datasets';
 import { RE_MONTH, field, h, select } from './util';
+import { t } from '../i18n';
 
 const TEXT = {
-  dataset: 'Dataset',
-  series: 'Series',
-  regionType: 'Regions',
-  sensor: 'Sensor',
-  from: 'From',
-  to: 'To',
-  monthFmt: 'YYYY-MM',
-  dateFmt: 'YYYY-MM-DD',
-  bbox: 'Area (degrees)',
-  west: 'West',
-  south: 'South',
-  east: 'East',
-  north: 'North',
-  optional: '(optional)',
+  dataset: t('ex.scope.dataset'),
+  series: t('ex.scope.series'),
+  regionType: t('ex.scope.regionType'),
+  sensor: t('ex.scope.sensor'),
+  from: t('ex.scope.from'),
+  to: t('ex.scope.to'),
+  monthFmt: t('ex.scope.monthFmt'),
+  dateFmt: t('ex.scope.dateFmt'),
+  bbox: t('ex.scope.bbox'),
+  west: t('ex.scope.west'),
+  south: t('ex.scope.south'),
+  east: t('ex.scope.east'),
+  north: t('ex.scope.north'),
+  optional: t('ex.scope.optional'),
 } as const;
 
 const DEFAULT_MONTH = '2024-01';

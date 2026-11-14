@@ -1,10 +1,11 @@
+import { t } from '../i18n';
 const TEXT = {
-  empty: 'Refused: write a query first.',
-  multi: 'Refused: only one statement is allowed.',
-  notSelect: 'Refused: only read-only SELECT queries (or WITH ... SELECT) are allowed.',
-  keyword: 'Refused: {k} is not allowed, only read-only SELECT queries run here. Quote a column with that name ("name").',
-  unterminated: 'Refused: an unterminated string, quoted name or comment.',
-  escapeString: "Refused: E'...' strings are not supported; use a plain '...' string.",
+  empty: t('ex.sqlguard.empty'),
+  multi: t('ex.sqlguard.multi'),
+  notSelect: t('ex.sqlguard.notSelect'),
+  keyword: t('ex.sqlguard.keyword'),
+  unterminated: t('ex.sqlguard.unterminated'),
+  escapeString: t('ex.sqlguard.escapeString'),
 } as const;
 
 const FORBIDDEN = [

@@ -1,41 +1,92 @@
 import { RE_DATE, RE_MONTH, monthIndex, ql, toNum } from './util';
+import { locale, t } from '../i18n';
 
 const TEXT = {
-  seriesLong: 'Long-term, Aqua-equivalent (2003+)',
-  seriesDetail: 'Detail, VIIRS 375 m (2013+)',
-  country: 'Countries',
-  gfed: 'GFED regions',
-  originAqua: 'Aqua MODIS (measured)',
-  originConv: 'VIIRS converted to Aqua-equivalent',
-  originNative: 'VIIRS 375 m (S-NPP level)',
+  seriesLong: t('ex.datasets.seriesLong'),
+  seriesDetail: t('ex.datasets.seriesDetail'),
+  country: t('ex.datasets.country'),
+  gfed: t('ex.datasets.gfed'),
+  originAqua: t('ex.datasets.originAqua'),
+  originConv: t('ex.datasets.originConv'),
+  originNative: t('ex.datasets.originNative'),
+  above: t('ex.datasets.above'),
+  below: t('ex.datasets.below'),
+  within: t('ex.datasets.within'),
+  partial: t('ex.datasets.partial'),
+  sensorModis: t('ex.datasets.sensorModis'),
+  sensorSnpp: t('ex.datasets.sensorSnpp'),
+  sensorN20: t('ex.datasets.sensorN20'),
+  sensorN21: t('ex.datasets.sensorN21'),
+  dsRegions: t('ex.datasets.dsRegions'),
+  dsHarmGrid: t('ex.datasets.dsHarmGrid'),
+  dsGrid: t('ex.datasets.dsGrid'),
+  dsPoints: t('ex.datasets.dsPoints'),
+  docRegions: t('ex.datasets.docRegions'),
+  docHarmGrid: t('ex.datasets.docHarmGrid'),
+  docGrid: t('ex.datasets.docGrid'),
+  docPoints: t('ex.datasets.docPoints'),
+  errNoRegions: t('ex.datasets.errNoRegions'),
+  errNoFiles: t('ex.datasets.errNoFiles'),
+  errPeriod: t('ex.datasets.errPeriod'),
+  errOrder: t('ex.datasets.errOrder'),
+  errSpanMonths: t('ex.datasets.errSpanMonths'),
+  errSpanDays: t('ex.datasets.errSpanDays'),
+  errBbox: t('ex.datasets.errBbox'),
+  errYear: t('ex.datasets.errYear'),
+  errMonthOnly: t('ex.datasets.errMonthOnly'),
+  cdSeries: t('ex.datasets.cdSeries'),
+  cdRegionType: t('ex.datasets.cdRegionType'),
+  cdRegion: t('ex.datasets.cdRegion'),
+  cdRegionId: t('ex.datasets.cdRegionId'),
+  cdPeriod: t('ex.datasets.cdPeriod'),
+  cdYear: t('ex.datasets.cdYear'),
+  cdMonth: t('ex.datasets.cdMonth'),
+  cdDetections: t('ex.datasets.cdDetections'),
+  cdLo90: t('ex.datasets.cdLo90'),
+  cdHi90: t('ex.datasets.cdHi90'),
+  cdOrigin: t('ex.datasets.cdOrigin'),
+  cdUsual: t('ex.datasets.cdUsual'),
+  cdRatio: t('ex.datasets.cdRatio'),
+  cdPercentile: t('ex.datasets.cdPercentile'),
+  cdSignal: t('ex.datasets.cdSignal'),
+  cdM: t('ex.datasets.cdM'),
+  cdCellLat: t('ex.datasets.cdCellLat'),
+  cdCellLon: t('ex.datasets.cdCellLon'),
+  cdClsHarm: t('ex.datasets.cdClsHarm'),
+  cdClsRaw: t('ex.datasets.cdClsRaw'),
+  cdN: t('ex.datasets.cdN'),
+  cdFrp: t('ex.datasets.cdFrp'),
+  cdSeriesShort: t('ex.datasets.cdSeriesShort'),
+  cdSensors: t('ex.datasets.cdSensors'),
+  cdPtLon: t('ex.datasets.cdPtLon'),
+  cdPtLat: t('ex.datasets.cdPtLat'),
+  cdDate: t('ex.datasets.cdDate'),
+  cdTime: t('ex.datasets.cdTime'),
+  cdDayNight: t('ex.datasets.cdDayNight'),
+  cdConfidence: t('ex.datasets.cdConfidence'),
+  cdSatellite: t('ex.datasets.cdSatellite'),
+  cdType: t('ex.datasets.cdType'),
+  cdSource: t('ex.datasets.cdSource'),
+  docPointsViews: t('ex.datasets.docPointsViews'),
+  docRegionNames: t('ex.datasets.docRegionNames'),
+  cdGfedCode: t('ex.datasets.cdGfedCode'),
+  cdRegionName: t('ex.datasets.cdRegionName'),
+} as const;
+
+export const ROW_CAP = 200_000;
+
+/** Labels of the `signal` column; the table colours cells by comparing against these. */
+/** Values stored in the data (signal, origin): fixed English, so that queries and exports do not depend on the UI language. */
+const VAL = {
   above: 'Above usual',
   below: 'Below usual',
   within: 'Within usual',
   partial: 'Partial month',
-  sensorModis: 'MODIS (Terra + Aqua)',
-  sensorSnpp: 'VIIRS S-NPP',
-  sensorN20: 'VIIRS NOAA-20',
-  sensorN21: 'VIIRS NOAA-21',
-  dsRegions: 'Harmonized by region',
-  dsHarmGrid: 'Harmonized 1 degree grid',
-  dsGrid: 'Raw per-sensor 0.25 degree grid',
-  dsPoints: 'Single detections',
-  docRegions: 'Harmonized monthly detections by country or GFED region, with the usual value (median of the same calendar month in the other years), ratio, percentile and signal. Months without a row had 0 detections and are counted as 0.',
-  docHarmGrid: 'Harmonized detections on a 1 degree grid, per month. Long-term (Aqua-equivalent) or detail (VIIRS 375 m) series.',
-  docGrid: 'Raw detections of one sensor on a 0.25 degree grid, per month (cls 0 vegetation or unknown, 1 volcano, static source or offshore).',
-  docPoints: 'Single fire detections of one sensor, one row per detection. Needs a sensor and a time range of at most one year; the table shows at most {cap} rows, the Builder aggregates all of them.',
-  errNoRegions: 'No harmonized regional data in this build.',
-  errNoFiles: 'No data files for this selection.',
-  errPeriod: 'Choose a valid period.',
-  errOrder: 'The start of the period is after its end.',
-  errSpanMonths: 'The period can be at most {n} months for this dataset.',
-  errSpanDays: 'The period can be at most one year for single detections.',
-  errBbox: 'Fill all four bounding box values (west, south, east, north) or none; latitude -90 to 90, longitude -180 to 180, south not above north.',
-  errYear: 'No single-detection files for {sensor} in {years}.',
-  errMonthOnly: 'Waiting for the time slider month.',
+  originAqua: 'Aqua MODIS (measured)',
+  originConv: 'VIIRS converted to Aqua-equivalent',
+  originNative: 'VIIRS 375 m (S-NPP level)',
 } as const;
-
-export const ROW_CAP = 200_000;
+export const SIGNAL = { above: VAL.above, below: VAL.below, within: VAL.within, partial: VAL.partial } as const;
 
 export type Kind = 'text' | 'int' | 'num' | 'date';
 export interface ColDef {
@@ -125,7 +176,7 @@ const RT_OPTS: Opt[] = [
 ];
 
 const originSql = (col: string) =>
-  `CASE ${col} WHEN 0 THEN ${ql(TEXT.originAqua)} WHEN 1 THEN ${ql(TEXT.originConv)} WHEN 2 THEN ${ql(TEXT.originNative)} END`;
+  `CASE ${col} WHEN 0 THEN ${ql(VAL.originAqua)} WHEN 1 THEN ${ql(VAL.originConv)} WHEN 2 THEN ${ql(VAL.originNative)} END`;
 
 /** Quoted file list; `{data}/` is expanded to the data folder by the engine. */
 const list = (paths: string[]) => `[${paths.map((p) => ql(/^https?:\/\//.test(p) ? p : `{data}/${p}`)).join(', ')}]`;
@@ -135,21 +186,21 @@ const col = (name: string, kind: Kind, doc: string): ColDef => ({ name, kind, do
 // ---------- regions ----------
 
 const REGION_COLS: ColDef[] = [
-  col('series', 'text', "'long' (Aqua-equivalent, 2003+) or 'detail' (VIIRS 375 m, 2013+)"),
-  col('region_type', 'text', "'country' or 'gfed'"),
-  col('region', 'text', 'Country name, or GFED region name (code)'),
-  col('region_id', 'text', 'Country name or GFED code'),
-  col('period', 'text', 'YYYY-MM'),
-  col('year', 'int', 'Calendar year'),
-  col('month', 'int', 'Calendar month 1-12'),
-  col('detections', 'num', 'Harmonized monthly detections (0 when the region has no row that month)'),
-  col('lo90', 'num', 'Lower end of the 90% interval'),
-  col('hi90', 'num', 'Upper end of the 90% interval'),
-  col('origin', 'text', 'How the value was obtained'),
-  col('usual', 'num', 'Median of the same calendar month in the other years'),
-  col('ratio_to_usual', 'num', 'detections / usual (empty when usual is 0)'),
-  col('percentile', 'num', 'Share of the other years below this one, 0-100 (ties count half)'),
-  col('signal', 'text', 'Above/Below usual when the 90% interval excludes the usual value, else Within usual; Partial month for the month still being filled (not compared)'),
+  col('series', 'text', TEXT.cdSeries),
+  col('region_type', 'text', TEXT.cdRegionType),
+  col('region', 'text', TEXT.cdRegion),
+  col('region_id', 'text', TEXT.cdRegionId),
+  col('period', 'text', TEXT.cdPeriod),
+  col('year', 'int', TEXT.cdYear),
+  col('month', 'int', TEXT.cdMonth),
+  col('detections', 'num', TEXT.cdDetections),
+  col('lo90', 'num', TEXT.cdLo90),
+  col('hi90', 'num', TEXT.cdHi90),
+  col('origin', 'text', TEXT.cdOrigin),
+  col('usual', 'num', TEXT.cdUsual),
+  col('ratio_to_usual', 'num', TEXT.cdRatio),
+  col('percentile', 'num', TEXT.cdPercentile),
+  col('signal', 'text', fill(TEXT.cdSignal, { above: VAL.above, below: VAL.below, within: VAL.within, partial: VAL.partial })),
 ];
 
 /** Harmonized regional values, filled with 0 where a region has no row, with usual, ratio, percentile and signal. */
@@ -191,8 +242,8 @@ ${parts.join('\n    UNION ALL\n')}
          CAST(t.usual AS DOUBLE) AS usual,
          CASE WHEN t.usual > 0 AND a.m < ${pm} THEN a.v / t.usual END AS ratio_to_usual,
          CASE WHEN t.k > 0 AND a.m < ${pm} THEN 100.0 * (t.below + 0.5 * t.ties) / t.k END AS percentile,
-         CASE WHEN a.m >= ${pm} THEN ${ql(TEXT.partial)} WHEN t.usual IS NULL THEN NULL WHEN a.lo > t.usual THEN ${ql(TEXT.above)}
-              WHEN a.hi < t.usual THEN ${ql(TEXT.below)} ELSE ${ql(TEXT.within)} END AS signal
+         CASE WHEN a.m >= ${pm} THEN ${ql(VAL.partial)} WHEN t.usual IS NULL THEN NULL WHEN a.lo > t.usual THEN ${ql(VAL.above)}
+              WHEN a.hi < t.usual THEN ${ql(VAL.below)} ELSE ${ql(VAL.within)} END AS signal
   FROM full_grid a
   JOIN stat t ON t.series = a.series AND t.rt = a.rt AND t.id = a.id AND t.m = a.m
   LEFT JOIN region_names n ON a.rt = 'gfed' AND n.code = a.id`;
@@ -203,16 +254,16 @@ ${parts.join('\n    UNION ALL\n')}
 
 const GRID_COLS = (first: ColDef, harm: boolean): ColDef[] => [
   first,
-  col('m', 'int', 'Months since 2000-01 (filter on this one: it lets DuckDB skip data)'),
-  col('year', 'int', 'Calendar year'),
-  col('month', 'int', 'Calendar month 1-12'),
-  col('period', 'text', 'YYYY-MM'),
-  col('lat', 'num', 'Cell centre latitude'),
-  col('lon', 'num', 'Cell centre longitude'),
-  col('cls', 'int', harm ? 'Cell class' : '0 vegetation or unknown, 1 volcano, static source or offshore'),
-  col('n', 'num', 'Detections in the cell'),
-  col('frp', 'num', 'Fire radiative power, MW'),
-  ...(harm ? [col('origin', 'text', 'How the value was obtained')] : []),
+  col('m', 'int', TEXT.cdM),
+  col('year', 'int', TEXT.cdYear),
+  col('month', 'int', TEXT.cdMonth),
+  col('period', 'text', TEXT.cdPeriod),
+  col('lat', 'num', TEXT.cdCellLat),
+  col('lon', 'num', TEXT.cdCellLon),
+  col('cls', 'int', harm ? TEXT.cdClsHarm : TEXT.cdClsRaw),
+  col('n', 'num', TEXT.cdN),
+  col('frp', 'num', TEXT.cdFrp),
+  ...(harm ? [col('origin', 'text', TEXT.cdOrigin)] : []),
 ];
 
 function gridSelect(label: { col: string; value: string }, files: string[], harm: boolean, where: string[]): string {
@@ -224,17 +275,17 @@ FROM read_parquet(${list(files)})${where.length ? `\nWHERE ${where.join(' AND ')
 // ---------- points ----------
 
 const POINT_COLS: ColDef[] = [
-  col('sensor', 'text', 'MODIS, VIIRS_SNPP, VIIRS_NOAA20 or VIIRS_NOAA21'),
-  col('lon', 'num', 'Longitude'),
-  col('lat', 'num', 'Latitude'),
-  col('date', 'date', 'Acquisition date (UTC)'),
-  col('time_utc', 'text', 'Acquisition time HHMM (UTC)'),
-  col('frp', 'num', 'Fire radiative power, MW'),
-  col('daynight', 'text', "'day' or 'night'"),
-  col('confidence', 'text', 'low, nominal or high'),
-  col('satellite', 'text', 'Terra, Aqua or VIIRS'),
-  col('type', 'int', 'Detection type (0 vegetation fire, others: static, volcano, offshore)'),
-  col('source', 'text', 'SP_ARCHIVE, SP_API or NRT_API'),
+  col('sensor', 'text', TEXT.cdSensors),
+  col('lon', 'num', TEXT.cdPtLon),
+  col('lat', 'num', TEXT.cdPtLat),
+  col('date', 'date', TEXT.cdDate),
+  col('time_utc', 'text', TEXT.cdTime),
+  col('frp', 'num', TEXT.cdFrp),
+  col('daynight', 'text', TEXT.cdDayNight),
+  col('confidence', 'text', TEXT.cdConfidence),
+  col('satellite', 'text', TEXT.cdSatellite),
+  col('type', 'int', TEXT.cdType),
+  col('source', 'text', TEXT.cdSource),
 ];
 
 function pointsSelect(sensor: string, files: string[], where: string[]): string {
@@ -337,7 +388,7 @@ export function buildCatalog(man: Manifest, gfedNames: Record<string, string>): 
       id: 'harm_grid',
       label: TEXT.dsHarmGrid,
       doc: TEXT.docHarmGrid,
-      cols: GRID_COLS(col('series', 'text', "'long' or 'detail'"), true),
+      cols: GRID_COLS(col('series', 'text', TEXT.cdSeriesShort), true),
       defaultCols: ['series', 'period', 'lat', 'lon', 'cls', 'n', 'frp', 'origin'],
       spec: { series: SERIES_OPTS, period: 'month', periodRequired: true, maxSpan: 24, bbox: true },
       relation(s) {
@@ -350,7 +401,7 @@ export function buildCatalog(man: Manifest, gfedNames: Record<string, string>): 
       id: 'grid',
       label: TEXT.dsGrid,
       doc: TEXT.docGrid,
-      cols: GRID_COLS(col('sensor', 'text', 'MODIS, VIIRS_SNPP, VIIRS_NOAA20 or VIIRS_NOAA21'), false),
+      cols: GRID_COLS(col('sensor', 'text', TEXT.cdSensors), false),
       defaultCols: ['sensor', 'period', 'lat', 'lon', 'cls', 'n', 'frp'],
       spec: { sensor: sensorOpts(RAW_SENSORS), period: 'month', periodRequired: true, maxSpan: 12, bbox: true },
       relation(s) {
@@ -362,7 +413,7 @@ export function buildCatalog(man: Manifest, gfedNames: Record<string, string>): 
     {
       id: 'points',
       label: TEXT.dsPoints,
-      doc: fill(TEXT.docPoints, { cap: ROW_CAP.toLocaleString('en') }),
+      doc: fill(TEXT.docPoints, { cap: ROW_CAP.toLocaleString(locale) }),
       cols: POINT_COLS,
       spec: { sensor: pointSensors, period: 'date', periodRequired: true, maxSpan: 366, bbox: true },
       order: 'date, time_utc',
@@ -406,14 +457,14 @@ function viewSql(man: Manifest, hasRegions: boolean): Map<string, string> {
 function viewDocs(man: Manifest, hasRegions: boolean): ViewDoc[] {
   const out: ViewDoc[] = [];
   if (hasRegions) out.push({ name: 'regions', doc: TEXT.docRegions, cols: REGION_COLS });
-  if (man.grid.HARM_LONG || man.grid.HARM_DETAIL) out.push({ name: 'harm_grid', doc: TEXT.docHarmGrid, cols: GRID_COLS(col('series', 'text', "'long' or 'detail'"), true) });
-  out.push({ name: 'grid', doc: TEXT.docGrid, cols: GRID_COLS(col('sensor', 'text', 'MODIS, VIIRS_SNPP, VIIRS_NOAA20 or VIIRS_NOAA21'), false) });
+  if (man.grid.HARM_LONG || man.grid.HARM_DETAIL) out.push({ name: 'harm_grid', doc: TEXT.docHarmGrid, cols: GRID_COLS(col('series', 'text', TEXT.cdSeriesShort), true) });
+  out.push({ name: 'grid', doc: TEXT.docGrid, cols: GRID_COLS(col('sensor', 'text', TEXT.cdSensors), false) });
   const years = Object.entries(man.points).map(([s, f]) => `${s.toLowerCase()}: ${Math.min(...f.map((x) => x.year))}-${Math.max(...f.map((x) => x.year))}`);
   out.push({
     name: 'points_<sensor>_<year>',
-    doc: `Single detections, one view per sensor and year (${years.join('; ')}), e.g. points_viirs_snpp_2024. Always filter on date, lat and lon.`,
+    doc: fill(TEXT.docPointsViews, { years: years.join('; ') }),
     cols: POINT_COLS,
   });
-  out.push({ name: 'region_names', doc: 'GFED code to region name.', cols: [col('code', 'text', 'GFED code'), col('name', 'text', 'Region name')] });
+  out.push({ name: 'region_names', doc: TEXT.docRegionNames, cols: [col('code', 'text', TEXT.cdGfedCode), col('name', 'text', TEXT.cdRegionName)] });
   return out;
 }

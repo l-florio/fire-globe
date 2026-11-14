@@ -1,12 +1,13 @@
 import type { Completion, CompletionContext, CompletionResult, CompletionSource } from '@codemirror/autocomplete';
 import type { Catalog, ColDef } from './datasets';
+import { t } from '../i18n';
 
 const TEXT = {
-  view: 'view',
-  table: 'table',
-  column: 'column',
-  keyword: 'keyword',
-  fn: 'function',
+  view: t('ex.sqlcomplete.view'),
+  table: t('ex.sqlcomplete.table'),
+  column: t('ex.sqlcomplete.column'),
+  keyword: t('ex.sqlcomplete.keyword'),
+  fn: t('ex.sqlcomplete.fn'),
 } as const;
 
 const KEYWORDS = [

@@ -2,11 +2,13 @@ import { getDb } from '../duckdb';
 import { buildCatalog, ROW_CAP, type Catalog, type Manifest } from './datasets';
 import { guardSql } from './sqlguard';
 import { ql } from './util';
+import { t } from '../i18n';
 
 const TEXT = {
-  noManifest: 'The data catalog (static.json) could not be loaded.',
-  notSelect: 'Refused: only read-only SELECT queries are allowed.',
-  oneStatement: 'Refused: only one statement is allowed.',
+  noManifest: t('ex.engine.noManifest'),
+  notSelect: t('ex.engine.notSelect'),
+  oneStatement: t('ex.engine.oneStatement'),
+  syntaxFallback: t('ex.engine.syntaxFallback'),
 } as const;
 
 /**
@@ -41,7 +43,7 @@ function parserError(sql: string, j: { error_message?: string; position?: string
     line = upto.length;
     col = upto[upto.length - 1].length + 1;
   }
-  return new QueryError(msg || raw || 'syntax error', 'syntax', line, col);
+  return new QueryError(msg || raw || TEXT.syntaxFallback, 'syntax', line, col);
 }
 
 export type Row = Record<string, unknown>;

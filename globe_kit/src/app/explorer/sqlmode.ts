@@ -1,18 +1,19 @@
 import type { Catalog } from './datasets';
 import type { CmEditor } from './sqleditor';
 import { h } from './util';
+import { t } from '../i18n';
 
 const TEXT = {
-  editor: 'SQL query',
-  hint: 'Queries are read-only (one SELECT statement) and run locally in your browser with DuckDB; nothing is sent to a server. Suggestions appear while you type: Up/Down to move, Tab or Enter to accept, Esc to close, Ctrl+Space to open them. Ctrl+Enter runs the query.',
-  help: 'Tables and columns',
-  insert: 'Insert {n} into the query',
-  macro: 'In file paths, {data}/ stands for the data folder. Views are created when a query mentions them. Filter on m, lat, lon (grids) or date, lat, lon (points) so that only the needed parts are downloaded.',
-  examples: 'Examples',
-  exTop: 'Top countries in August',
-  exGrid: 'Grid cells, Mediterranean, 2023',
-  exPoints: 'Detections per day',
-  placeholder: 'SELECT ... FROM regions WHERE ...',
+  editor: t('ex.sqlmode.editor'),
+  hint: t('ex.sqlmode.hint'),
+  help: t('ex.sqlmode.help'),
+  insert: t('ex.sqlmode.insert'),
+  macro: t('ex.sqlmode.macro'),
+  examples: t('ex.sqlmode.examples'),
+  exTop: t('ex.sqlmode.exTop'),
+  exGrid: t('ex.sqlmode.exGrid'),
+  exPoints: t('ex.sqlmode.exPoints'),
+  placeholder: t('ex.sqlmode.placeholder'),
 } as const;
 
 const EXAMPLES: [string, string][] = [

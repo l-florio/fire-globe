@@ -1,48 +1,55 @@
 import { ROW_CAP, type ColDef, type DatasetDef, type Kind } from './datasets';
 import type { ScopeForm } from './scope';
 import { RE_DATE, field, h, qi, ql, select, toNum } from './util';
+import { locale, t } from '../i18n';
 
 const TEXT = {
-  filters: 'Filters',
-  groups: 'Group by',
-  measures: 'Measures',
-  addFilter: '+ Filter',
-  addGroup: '+ Group',
-  addMeasure: '+ Measure',
-  remove: 'Remove',
-  field: 'Field',
-  operator: 'Operator',
-  value: 'Value',
-  transform: 'Group as',
-  step: 'Bin size',
-  aggregate: 'Aggregation',
-  measureField: 'Measure field',
-  rowsOption: '(rows)',
-  asIs: 'as is',
-  binned: 'binned by',
-  day: 'day',
-  month: 'month',
-  year: 'year',
-  orderBy: 'Order by',
-  auto: '(automatic)',
-  desc: 'descending',
-  asc: 'ascending',
-  direction: 'Direction',
-  limit: 'Row limit',
-  editSql: 'Edit as SQL',
-  generated: 'Generated SQL (read-only)',
-  hintBetween: 'from, to',
-  hintIn: 'a, b, c',
-  hintValue: 'value',
-  errValue: 'Filter on {f}: the value "{v}" is not valid for this field.',
-  errBetween: 'Filter on {f}: "between" needs two values separated by a comma.',
-  errIn: 'Filter on {f}: enter at least one value.',
-  errStep: 'Group on {f}: the bin size must be a positive number.',
-  errMeasure: 'Choose a field for the {a} measure.',
-  errLimit: 'The row limit must be between 1 and {n}.',
-  opContains: 'contains',
-  opIn: 'is one of',
-  opBetween: 'between',
+  filters: t('ex.builder.filters'),
+  groups: t('ex.builder.groups'),
+  measures: t('ex.builder.measures'),
+  addFilter: t('ex.builder.addFilter'),
+  addGroup: t('ex.builder.addGroup'),
+  addMeasure: t('ex.builder.addMeasure'),
+  remove: t('ex.builder.remove'),
+  field: t('ex.builder.field'),
+  operator: t('ex.builder.operator'),
+  value: t('ex.builder.value'),
+  transform: t('ex.builder.transform'),
+  step: t('ex.builder.step'),
+  aggregate: t('ex.builder.aggregate'),
+  measureField: t('ex.builder.measureField'),
+  rowsOption: t('ex.builder.rowsOption'),
+  asIs: t('ex.builder.asIs'),
+  binned: t('ex.builder.binned'),
+  day: t('ex.builder.day'),
+  month: t('ex.builder.month'),
+  year: t('ex.builder.year'),
+  orderBy: t('ex.builder.orderBy'),
+  auto: t('ex.builder.auto'),
+  desc: t('ex.builder.desc'),
+  asc: t('ex.builder.asc'),
+  direction: t('ex.builder.direction'),
+  limit: t('ex.builder.limit'),
+  editSql: t('ex.builder.editSql'),
+  generated: t('ex.builder.generated'),
+  hintBetween: t('ex.builder.hintBetween'),
+  hintIn: t('ex.builder.hintIn'),
+  hintValue: t('ex.builder.hintValue'),
+  errValue: t('ex.builder.errValue'),
+  errBetween: t('ex.builder.errBetween'),
+  errIn: t('ex.builder.errIn'),
+  errStep: t('ex.builder.errStep'),
+  errMeasure: t('ex.builder.errMeasure'),
+  errLimit: t('ex.builder.errLimit'),
+  opContains: t('ex.builder.opContains'),
+  opIn: t('ex.builder.opIn'),
+  opBetween: t('ex.builder.opBetween'),
+  aggSum: t('ex.builder.aggSum'),
+  aggMean: t('ex.builder.aggMean'),
+  aggMedian: t('ex.builder.aggMedian'),
+  aggMin: t('ex.builder.aggMin'),
+  aggMax: t('ex.builder.aggMax'),
+  aggCount: t('ex.builder.aggCount'),
 } as const;
 
 type Op = '=' | '<>' | '>' | '>=' | '<' | '<=' | 'between' | 'in' | 'contains';
@@ -79,6 +86,7 @@ const OPS: Record<Kind, [Op, string][]> = {
   date: [['=', '='], ['<>', '<>'], ['>', '>'], ['>=', '>='], ['<', '<'], ['<=', '<='], ['between', TEXT.opBetween]],
 };
 const AGGS: Agg[] = ['sum', 'mean', 'median', 'min', 'max', 'count'];
+const AGG_LABEL: Record<Agg, string> = { sum: TEXT.aggSum, mean: TEXT.aggMean, median: TEXT.aggMedian, min: TEXT.aggMin, max: TEXT.aggMax, count: TEXT.aggCount };
 
 const emptySpec = (): Spec => ({ filters: [], dims: [], measures: [], order: '', desc: true, limit: '' });
 const fmt = (t: string, v: Record<string, string | number>) => t.replace(/\{(\w+)\}/g, (_, k: string) => String(v[k]));
@@ -124,7 +132,7 @@ function dimSql(d: Dim): { expr?: string; alias: string; error?: string } {
 
 function measureSql(m: Measure): { expr?: string; alias: string; error?: string } {
   if (m.agg === 'count') return m.field ? { expr: `count(${qi(m.field)})`, alias: `count_${m.field}` } : { expr: 'count(*)', alias: 'count' };
-  if (!m.field) return { alias: m.agg, error: fmt(TEXT.errMeasure, { a: m.agg }) };
+  if (!m.field) return { alias: m.agg, error: fmt(TEXT.errMeasure, { a: AGG_LABEL[m.agg] }) };
   const fn = m.agg === 'mean' ? 'avg' : m.agg;
   return { expr: `CAST(${fn}(${qi(m.field)}) AS DOUBLE)`, alias: `${m.agg}_${m.field}` };
 }
@@ -167,7 +175,7 @@ export function buildSql(ds: DatasetDef, relation: string, spec: Spec): Built {
   }
   const outputs = raw ? ds.cols.map((c) => c.name) : [...dims, ...meas].map((x) => x.alias);
   const limitN = spec.limit.trim() === '' ? (raw ? 1000 : 10000) : toNum(spec.limit);
-  if (limitN === undefined || limitN < 1 || limitN > ROW_CAP || !Number.isInteger(limitN)) error ??= fmt(TEXT.errLimit, { n: ROW_CAP.toLocaleString('en') });
+  if (limitN === undefined || limitN < 1 || limitN > ROW_CAP || !Number.isInteger(limitN)) error ??= fmt(TEXT.errLimit, { n: ROW_CAP.toLocaleString(locale) });
 
   const select = raw ? '*' : [...dims, ...meas].map((x) => `${x.expr ?? 'NULL'} AS ${qi(x.alias)}`).join(',\n       ');
   const order = outputs.includes(spec.order) ? spec.order : raw ? '' : meas.length ? meas[0].alias : dims[0].alias;
@@ -245,7 +253,7 @@ export function createBuilder(o: { form: ScopeForm; onEditSql: (sql: string) => 
       opSel.replaceChildren(...ops.map(([v, l]) => h('option', { value: v }, l)));
       if (!ops.some(([v]) => v === f.op)) f.op = ops[0][0];
       opSel.value = f.op;
-      val.placeholder = f.op === 'between' ? TEXT.hintBetween : f.op === 'in' ? TEXT.hintIn : kind === 'date' ? 'YYYY-MM-DD' : TEXT.hintValue;
+      val.placeholder = f.op === 'between' ? TEXT.hintBetween : f.op === 'in' ? TEXT.hintIn : kind === 'date' ? t('ex.scope.dateFmt') : TEXT.hintValue;
     };
     fieldSel.addEventListener('change', () => {
       f.field = fieldSel.value;
@@ -299,7 +307,7 @@ export function createBuilder(o: { form: ScopeForm; onEditSql: (sql: string) => 
   }
 
   function measureRow(m: Measure): HTMLElement {
-    const aggSel = select(AGGS.map((a) => [a, a] as [string, string]), m.agg, TEXT.aggregate);
+    const aggSel = select(AGGS.map((a) => [a, AGG_LABEL[a]] as [string, string]), m.agg, TEXT.aggregate);
     const fieldSel = select([], undefined, TEXT.measureField);
     const sync = () => {
       const opts: [string, string][] = [...(m.agg === 'count' ? [['', TEXT.rowsOption] as [string, string]] : []), ...colOpts(m.agg === 'count' ? cols() : nums())];

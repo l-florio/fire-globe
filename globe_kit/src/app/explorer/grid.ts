@@ -3,18 +3,24 @@ import type { CellComponent, ColumnDefinition } from 'tabulator-tables';
 import 'tabulator-tables/dist/css/tabulator.min.css';
 import type { QueryResult, ResultCol, Row } from './engine';
 import { h, readJson, writeJson } from './util';
+import { locale, t } from '../i18n';
+import { SIGNAL } from './datasets';
 
 const TEXT = {
-  empty: 'No rows',
-  min: 'min',
-  max: 'max',
-  minOf: 'Minimum of {c}',
-  maxOf: 'Maximum of {c}',
-  globe: 'Globe',
-  globeTitle: 'Open this region on the globe',
-  globeAria: 'Open {r} on the globe',
-  contains: 'contains',
+  empty: t('ex.grid.empty'),
+  min: t('ex.grid.min'),
+  max: t('ex.grid.max'),
+  minOf: t('ex.grid.minOf'),
+  maxOf: t('ex.grid.maxOf'),
+  globe: t('ex.grid.globe'),
+  globeTitle: t('ex.grid.globeTitle'),
+  globeAria: t('ex.grid.globeAria'),
+  contains: t('ex.grid.contains'),
+  noResults: t('ex.grid.noResults'),
 } as const;
+
+/** Header-filter list texts (Tabulator's defaults are English). */
+const LIST_PARAMS = { placeholderEmpty: TEXT.noResults, placeholderLoading: TEXT.noResults };
 
 const MAX_LIST = 300; // text columns with at most this many distinct values get a value list
 const MAX_INT_LIST = 40; // so do integer columns (year, month, class...)
@@ -53,11 +59,11 @@ export interface Grid {
 
 function fmtNum(v: number, name: string): string {
   if (!Number.isFinite(v)) return '';
-  if (name === 'lat' || name === 'lon') return String(Number(v.toFixed(6)));
+  if (name === 'lat' || name === 'lon') return v.toLocaleString(locale, { maximumFractionDigits: 6, useGrouping: false });
   const plain = PLAIN.has(name);
-  if (Number.isInteger(v)) return plain || Math.abs(v) < 10000 ? String(v) : v.toLocaleString('en');
+  if (Number.isInteger(v)) return plain || Math.abs(v) < 10000 ? String(v) : v.toLocaleString(locale);
   const a = Math.abs(v);
-  return v.toLocaleString('en', { maximumFractionDigits: a >= 1000 ? 0 : a >= 100 ? 1 : a >= 1 ? 2 : 4, useGrouping: a >= 10000 && !plain });
+  return v.toLocaleString(locale, { maximumFractionDigits: a >= 1000 ? 0 : a >= 100 ? 1 : a >= 1 ? 2 : 4, useGrouping: a >= 10000 && !plain });
 }
 
 /** Distinct non-null values of a column, or undefined when there are more than `limit`. */
@@ -69,7 +75,7 @@ function distinct(rows: Row[], name: string, limit: number): (string | number)[]
     seen.add(v as string | number);
     if (seen.size > limit) return undefined;
   }
-  return [...seen].sort((a, b) => (typeof a === 'number' && typeof b === 'number' ? a - b : String(a).localeCompare(String(b), 'en', { numeric: true })));
+  return [...seen].sort((a, b) => (typeof a === 'number' && typeof b === 'number' ? a - b : String(a).localeCompare(String(b), locale, { numeric: true })));
 }
 
 interface Range {
@@ -108,7 +114,7 @@ function filterDef(c: ResultCol, rows: Row[]): Partial<ColumnDefinition> {
   if (c.kind === 'num') {
     const few = distinct(rows, c.name, MAX_INT_LIST);
     if (few && few.every((v) => Number.isInteger(v)))
-      return { headerFilter: 'list', headerFilterParams: { values: few, multiselect: true, clearable: true }, headerFilterFunc: inListFilter };
+      return { headerFilter: 'list', headerFilterParams: { values: few, multiselect: true, clearable: true, ...LIST_PARAMS }, headerFilterFunc: inListFilter };
     return {
       headerFilter: minMaxEditor(c.name) as unknown as ColumnDefinition['headerFilter'],
       headerFilterFunc: minMaxFilter as ColumnDefinition['headerFilterFunc'],
@@ -116,14 +122,14 @@ function filterDef(c: ResultCol, rows: Row[]): Partial<ColumnDefinition> {
     };
   }
   const values = distinct(rows, c.name, MAX_LIST);
-  if (values) return { headerFilter: 'list', headerFilterParams: { values, multiselect: true, clearable: true }, headerFilterFunc: inListFilter };
+  if (values) return { headerFilter: 'list', headerFilterParams: { values, multiselect: true, clearable: true, ...LIST_PARAMS }, headerFilterFunc: inListFilter };
   return { headerFilter: 'input', headerFilterPlaceholder: TEXT.contains, headerFilterFunc: 'like' };
 }
 
 function signalCell(cell: CellComponent): HTMLElement | string {
   const v = cell.getValue() as string | null;
   if (!v) return '';
-  const kind = v.startsWith('Above') ? 'above' : v.startsWith('Below') ? 'below' : 'within';
+  const kind = v === SIGNAL.above ? 'above' : v === SIGNAL.below ? 'below' : 'within';
   return h('span', { class: `ex-sig ex-sig-${kind}` }, v);
 }
 

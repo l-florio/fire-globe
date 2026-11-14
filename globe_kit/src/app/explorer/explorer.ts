@@ -5,24 +5,25 @@ import { createResults, type ResultMeta } from './results';
 import { createScopeForm } from './scope';
 import { createSqlMode } from './sqlmode';
 import { h } from './util';
+import { t } from '../i18n';
 import './explorer.css'; // last, so that it overrides the Tabulator stylesheet imported by the grid
 
 const TEXT = {
-  title: 'Data explorer',
-  modes: 'Explorer mode',
-  table: 'Table',
-  builder: 'Builder',
-  sql: 'SQL',
-  load: 'Load table',
-  run: 'Run',
-  hideControls: 'Hide controls',
-  showControls: 'Show controls',
-  loadingEngine: 'Loading the data engine...',
-  failed: 'Could not start the explorer: {m}',
-  retry: 'Retry',
-  cancelled: 'Query cancelled.',
-  tableHint: 'Pick a dataset and an area or period, then load it. Use the filters in the column headers; Shift-click headers to sort by several columns.',
-  unknown: 'Unknown error',
+  title: t('ex.explorer.title'),
+  modes: t('ex.explorer.modes'),
+  table: t('ex.explorer.table'),
+  builder: t('ex.explorer.builder'),
+  sql: t('ex.explorer.sql'),
+  load: t('ex.explorer.load'),
+  run: t('ex.explorer.run'),
+  hideControls: t('ex.explorer.hideControls'),
+  showControls: t('ex.explorer.showControls'),
+  loadingEngine: t('ex.explorer.loadingEngine'),
+  failed: t('ex.explorer.failed'),
+  retry: t('ex.explorer.retry'),
+  cancelled: t('ex.explorer.cancelled'),
+  tableHint: t('ex.explorer.tableHint'),
+  unknown: t('ex.explorer.unknown'),
 } as const;
 
 type Mode = 'table' | 'builder' | 'sql';

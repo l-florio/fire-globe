@@ -1,33 +1,35 @@
 import { Chart, registerables, type ChartConfiguration, type ChartDataset } from 'chart.js';
 import type { QueryResult, ResultCol, Row } from './engine';
 import { field, h, saveBlob, select, stamp, toCsv } from './util';
+import { locale, t } from '../i18n';
 
 Chart.register(...registerables);
 
 const TEXT = {
-  type: 'Chart type',
-  line: 'Line',
-  bar: 'Bar',
-  scatter: 'Scatter',
-  x: 'X axis',
-  y: 'Y axis',
-  series: 'Series / colour',
-  none: '(none)',
-  png: 'PNG',
-  pngTitle: 'Download the chart as an image',
-  csv: 'Chart data CSV',
-  csvTitle: 'Download the plotted values as CSV',
-  noNumeric: 'Run a query with at least one numeric column to draw a chart.',
-  capX: 'Only the first {n} x values are drawn: filter or aggregate for the rest.',
-  capSeries: 'Only the {n} largest series are drawn.',
-  capPoints: 'Only the first {n} points are drawn.',
-  dup: 'Rows with the same x and series are summed.',
-  noPoints: 'No plottable values: scatter needs a numeric or date x column.',
-  empty: '(empty)',
+  type: t('ex.chart.type'),
+  line: t('ex.chart.line'),
+  bar: t('ex.chart.bar'),
+  scatter: t('ex.chart.scatter'),
+  x: t('ex.chart.x'),
+  y: t('ex.chart.y'),
+  series: t('ex.chart.series'),
+  none: t('ex.chart.none'),
+  png: t('ex.chart.png'),
+  pngTitle: t('ex.chart.pngTitle'),
+  csv: t('ex.chart.csv'),
+  csvTitle: t('ex.chart.csvTitle'),
+  noNumeric: t('ex.chart.noNumeric'),
+  capX: t('ex.chart.capX'),
+  capSeries: t('ex.chart.capSeries'),
+  capPoints: t('ex.chart.capPoints'),
+  dup: t('ex.chart.dup'),
+  noPoints: t('ex.chart.noPoints'),
+  empty: t('ex.chart.empty'),
   csvX: 'x',
   csvSeries: 'series',
   csvY: 'y',
   file: 'fire_chart_{d}',
+  ariaChart: t('ex.chart.ariaChart'),
 } as const;
 
 const MAX_X = 600;
@@ -47,7 +49,7 @@ interface Plot {
   table: [string | number, string, number | null][];
 }
 
-const fill = (t: string, n: number) => t.replace('{n}', n.toLocaleString('en'));
+const fill = (t: string, n: number) => t.replace('{n}', n.toLocaleString(locale));
 
 /** Fills the canvas with the panel colour so exported PNGs are not transparent. */
 const background = {
@@ -97,7 +99,7 @@ function categorical(rows: Row[], type: 'line' | 'bar', xc: ResultCol, y: string
   }
   const keep = limitSeries(totals, notes);
   let labels = [...xs.keys()].sort((a, b) =>
-    xc.kind === 'num' ? Number(xs.get(a)) - Number(xs.get(b)) : a.localeCompare(b, 'en', { numeric: true }),
+    xc.kind === 'num' ? Number(xs.get(a)) - Number(xs.get(b)) : a.localeCompare(b, locale, { numeric: true }),
   );
   if (labels.length > MAX_X) {
     labels = labels.slice(0, MAX_X);
@@ -206,7 +208,7 @@ export function createChartPanel(): ChartPanel {
     const type = typeSel.value as PlotType;
     plot = type === 'scatter' ? scatter(result.rows, xc, ySel.value, sSel.value) : categorical(result.rows, type, xc, ySel.value, sSel.value);
     note.textContent = plot.notes.join(' ');
-    canvas.setAttribute('aria-label', `${typeSel.selectedOptions[0].textContent}: ${ySel.value} by ${xSel.value}`);
+    canvas.setAttribute('aria-label', TEXT.ariaChart.replace('{type}', typeSel.selectedOptions[0].textContent ?? '').replace('{y}', ySel.value).replace('{x}', xSel.value));
     const axis = (title: string) => ({
       title: { display: true, text: title, color: INK },
       ticks: { color: INK, maxTicksLimit: 12 },
@@ -217,6 +219,7 @@ export function createChartPanel(): ChartPanel {
       type,
       data: { labels: plot.labels, datasets: plot.datasets },
       options: {
+        locale,
         responsive: true,
         maintainAspectRatio: false,
         animation: false,
