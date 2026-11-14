@@ -764,10 +764,68 @@ body.view-table #top-actions {
   text-align: left;
   border-bottom: 1px solid var(--gk-border);
 }
-.detpanel th {
+.detpanel thead {
   position: sticky;
   top: 0;
+  z-index: 1;
+}
+.detpanel th {
   background: #101826;
+  color: var(--gk-muted);
+}
+.det-sort {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.det-sort:hover {
+  color: var(--gk-text);
+}
+.det-sort:focus-visible,
+.det-f input:focus-visible,
+.det-tools button:focus-visible {
+  outline: 2px solid var(--gk-accent);
+  outline-offset: 1px;
+}
+.det-arrow {
+  color: var(--gk-accent);
+}
+.det-f {
+  padding: 2px;
+}
+.det-f input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 1px 3px;
+  font: 12px var(--gk-font);
+  color: var(--gk-text);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--gk-border);
+  border-radius: 4px;
+}
+.det-minmax {
+  display: flex;
+  gap: 2px;
+}
+.det-minmax input {
+  width: 50%;
+}
+.det-tools {
+  margin: 0 0 4px;
+}
+.det-tools:has(button[hidden]) {
+  display: none;
+}
+.det-tools button {
+  padding: 1px 8px;
+  font: 600 12px var(--gk-font);
+  cursor: pointer;
+}
+.det-none {
+  text-align: center;
   color: var(--gk-muted);
 }
 .detpanel tbody tr {

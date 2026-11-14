@@ -286,6 +286,11 @@
 .ex-menu summary::-webkit-details-marker {
   display: none;
 }
+.ex-menubody.ex-up {
+  top: auto;
+  bottom: 100%;
+  margin: 0 0 4px;
+}
 .ex-menubody {
   position: absolute;
   z-index: 5;
@@ -671,3 +676,4 @@
     width: calc(50% - 6px);
   }
 }
+

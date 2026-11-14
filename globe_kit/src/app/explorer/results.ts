@@ -143,6 +143,21 @@ export function createResults(o: { onGlobe: (row: Row) => void; onCancel: () => 
   tabBtn.onclick = () => setView('table');
   chartBtn.onclick = () => setView('chart');
   cancelBtn.onclick = o.onCancel;
+  /** Fit the column chooser in the viewport: limit its height to the room available and open upward when there is more above. */
+  const menuBody = menu.querySelector<HTMLElement>('.ex-menubody')!;
+  const fitMenu = () => {
+    if (!menu.open) return;
+    const r = menu.getBoundingClientRect();
+    const below = window.innerHeight - r.bottom - 12;
+    const above = r.top - 12;
+    const up = below < 180 && above > below;
+    menuBody.classList.toggle('ex-up', up);
+    menuBody.style.boxSizing = 'border-box'; // the limit includes padding and border
+    menuBody.style.maxHeight = `${Math.max(120, Math.floor(up ? above : below))}px`;
+  };
+  menu.addEventListener('toggle', fitMenu);
+  window.addEventListener('resize', fitMenu);
+  window.addEventListener('scroll', fitMenu, true);
   document.addEventListener('click', (e) => {
     if (menu.open && !menu.contains(e.target as Node)) menu.open = false;
   });
