@@ -1,5 +1,5 @@
 import type { Catalog, DatasetDef, Opt, Scope } from './datasets';
-import { field, h, select } from './util';
+import { RE_MONTH, field, h, select } from './util';
 
 const TEXT = {
   dataset: 'Dataset',
@@ -15,8 +15,6 @@ const TEXT = {
   south: 'South',
   east: 'East',
   north: 'North',
-  fixed: 'Month on the time slider: {m}',
-  noMonth: 'Move the time slider to choose a month.',
   optional: '(optional)',
 } as const;
 
@@ -31,12 +29,11 @@ export interface ScopeForm {
   el: HTMLElement;
   dataset(): DatasetDef;
   scope(): Scope;
-  /** The month on the time slider (YYYY-MM). */
-  setMonth(month: string): void;
+  /** Preset the period of datasets with an optional period to one month (YYYY-MM). */
+  presetMonth(month: string): void;
 }
 
 export function createScopeForm(cat: Catalog, onChange: () => void): ScopeForm {
-  let month = '';
   const scope: Scope = { series: 'long', rt: 'country', sensor: '', from: '', to: '', bbox: ['', '', '', ''] };
   let ds = cat.datasets[0];
 
@@ -49,7 +46,6 @@ export function createScopeForm(cat: Catalog, onChange: () => void): ScopeForm {
   const box = (label: string) => h('input', { type: 'number', step: 'any', 'aria-label': label, placeholder: label });
   const bboxIn = [box(TEXT.west), box(TEXT.south), box(TEXT.east), box(TEXT.north)];
   const doc = h('p', { class: 'ex-note' });
-  const fixedNote = h('p', { class: 'ex-note ex-fixed' });
 
   const seriesF = field(TEXT.series, seriesSel);
   const rtF = field(TEXT.regionType, rtSel);
@@ -58,7 +54,7 @@ export function createScopeForm(cat: Catalog, onChange: () => void): ScopeForm {
   const toF = field(TEXT.to, toIn);
   const bboxF = h('fieldset', { class: 'ex-bbox' }, h('legend', {}, TEXT.bbox), ...bboxIn);
   const row = h('div', { class: 'ex-row' }, seriesF, rtF, sensorF, fromF, toF);
-  const el = h('div', { class: 'ex-scope' }, field(TEXT.dataset, dsSel, 'ex-grow'), row, bboxF, fixedNote, doc);
+  const el = h('div', { class: 'ex-scope' }, field(TEXT.dataset, dsSel, 'ex-grow'), row, bboxF, doc);
 
   const setOptions = (sel: HTMLSelectElement, opts: Opt[] | undefined, current: string) => {
     sel.replaceChildren(...(opts ?? []).map(([v, l]) => h('option', { value: v }, l)));
@@ -69,16 +65,12 @@ export function createScopeForm(cat: Catalog, onChange: () => void): ScopeForm {
 
   function applyPeriod() {
     const p = ds.spec.period;
-    const base = month || DEFAULT_MONTH;
-    if (p === 'fixed') {
-      scope.from = month;
-      scope.to = month;
-    } else if (p === 'month') {
-      scope.from = scope.from.slice(0, 7) || (ds.spec.periodRequired ? base : '');
-      scope.to = scope.to.slice(0, 7) || (ds.spec.periodRequired ? base : '');
+    if (p === 'month') {
+      scope.from = scope.from.slice(0, 7) || (ds.spec.periodRequired ? DEFAULT_MONTH : '');
+      scope.to = scope.to.slice(0, 7) || (ds.spec.periodRequired ? DEFAULT_MONTH : '');
     } else if (p === 'date') {
-      scope.from = scope.from.length === 10 ? scope.from : `${scope.from.slice(0, 7) || base}-01`.slice(0, 10);
-      scope.to = scope.to.length === 10 ? scope.to : lastDay(scope.to.slice(0, 7) || base);
+      scope.from = scope.from.length === 10 ? scope.from : `${scope.from.slice(0, 7) || DEFAULT_MONTH}-01`.slice(0, 10);
+      scope.to = scope.to.length === 10 ? scope.to : lastDay(scope.to.slice(0, 7) || DEFAULT_MONTH);
     }
     const type = p === 'date' ? 'date' : 'month';
     for (const i of [fromIn, toIn]) {
@@ -87,7 +79,6 @@ export function createScopeForm(cat: Catalog, onChange: () => void): ScopeForm {
     }
     fromIn.value = scope.from;
     toIn.value = scope.to;
-    fixedNote.textContent = month ? TEXT.fixed.replace('{m}', month) : TEXT.noMonth;
   }
 
   function applyDataset() {
@@ -99,8 +90,7 @@ export function createScopeForm(cat: Catalog, onChange: () => void): ScopeForm {
     seriesF.hidden = !s.series;
     rtF.hidden = !s.rt;
     sensorF.hidden = !s.sensor;
-    fromF.hidden = toF.hidden = !s.period || s.period === 'fixed';
-    fixedNote.hidden = s.period !== 'fixed';
+    fromF.hidden = toF.hidden = !s.period;
     bboxF.hidden = !s.bbox;
     doc.textContent = ds.doc;
     applyPeriod();
@@ -127,12 +117,12 @@ export function createScopeForm(cat: Catalog, onChange: () => void): ScopeForm {
     el,
     dataset: () => ds,
     scope: () => ({ ...scope, bbox: [...scope.bbox] as Scope['bbox'] }),
-    setMonth(m) {
-      month = m;
-      if (ds.spec.period === 'fixed') {
-        applyPeriod();
-        onChange();
-      }
+    presetMonth(m) {
+      if (ds.spec.period !== 'month' || ds.spec.periodRequired || !RE_MONTH.test(m)) return;
+      scope.from = m;
+      scope.to = m;
+      applyPeriod();
+      onChange();
     },
   };
 }

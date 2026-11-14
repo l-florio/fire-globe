@@ -42,7 +42,11 @@ export function setLang(next: Lang) {
   const url = new URL(location.href);
   if (saved) url.searchParams.delete('lang');
   else url.searchParams.set('lang', next);
-  location.href = url.toString();
+  // Assigning location.href to a URL that differs from the current one only by the hash (or not at all, when the
+  // page has a hash) is a fragment navigation: the page does not reload. So fix the URL in place, keeping the hash
+  // (the shareable view state), and reload explicitly.
+  history.replaceState(null, '', url.toString());
+  location.reload();
 }
 
 // ------------------------------------------------------------------ dictionaries
@@ -192,7 +196,22 @@ const en = {
   'cal.colour': 'Colour',
   'cal.colour.value': 'Value',
   'cal.colour.anomaly': 'vs median',
-  'cal.excl': 'Exclude volcanoes and industrial sources',
+  'cal.types.label': 'Sources',
+  'cal.types.veg': 'Vegetation fires (default)',
+  'cal.types.all': 'All detections',
+  'cal.types.static': 'Volcanoes and industrial sources only',
+  'cal.types.harm': 'Not applicable: the harmonized series are built on vegetation fires only',
+  'cal.period.from': 'From',
+  'cal.period.to': 'To',
+  'cal.period.fromYear': 'From: year',
+  'cal.period.fromMonth': 'From: month',
+  'cal.period.toYear': 'To: year',
+  'cal.period.toMonth': 'To: month',
+  'cal.period.all': 'Whole record',
+  'cal.period.all.title': 'Show every month available for this sensor',
+  'cal.period.note': 'The period applies to the calendar, the statistics and the exports. The median used for the anomaly always uses the whole record.',
+  'cal.areaCopy.period': ', {from} to {to}',
+  'cal.legend.baseline': ' The median uses the whole record, not only the selected period.',
   'cal.csvCal': 'Calendar CSV',
   'cal.pngCal': 'Calendar PNG',
   'cal.pngCal.title': 'Image of the calendar with its legend',
@@ -487,7 +506,22 @@ const it: Partial<Record<Key, string>> = {
   'cal.colour': 'Colore',
   'cal.colour.value': 'Valore',
   'cal.colour.anomaly': 'vs mediana',
-  'cal.excl': 'Escludi vulcani e fonti industriali',
+  'cal.types.label': 'Fonti',
+  'cal.types.veg': 'Incendi di vegetazione (predefinito)',
+  'cal.types.all': 'Tutti i rilevamenti',
+  'cal.types.static': 'Solo vulcani e fonti industriali',
+  'cal.types.harm': 'Non applicabile: le serie armonizzate sono costruite solo sugli incendi di vegetazione',
+  'cal.period.from': 'Da',
+  'cal.period.to': 'A',
+  'cal.period.fromYear': 'Da: anno',
+  'cal.period.fromMonth': 'Da: mese',
+  'cal.period.toYear': 'A: anno',
+  'cal.period.toMonth': 'A: mese',
+  'cal.period.all': 'Intero periodo',
+  'cal.period.all.title': 'Mostra tutti i mesi disponibili per questo sensore',
+  'cal.period.note': "Il periodo vale per il calendario, le statistiche e le esportazioni. La mediana usata per l'anomalia usa sempre l'intero periodo disponibile.",
+  'cal.areaCopy.period': ', da {from} a {to}',
+  'cal.legend.baseline': " La mediana usa l'intero periodo disponibile, non solo quello selezionato.",
   'cal.csvCal': 'CSV calendario',
   'cal.pngCal': 'PNG calendario',
   'cal.pngCal.title': 'Immagine del calendario con la sua legenda',

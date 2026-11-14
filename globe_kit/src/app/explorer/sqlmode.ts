@@ -3,8 +3,7 @@ import { h } from './util';
 
 const TEXT = {
   editor: 'SQL query',
-  run: 'Run',
-  hint: 'Ctrl+Enter runs the query. DuckDB reads the files in your browser; nothing is sent to a server.',
+  hint: 'Queries are read-only (one SELECT statement) and run locally in your browser with DuckDB; nothing is sent to a server. Ctrl+Enter runs the query.',
   help: 'Tables and columns',
   insert: 'Insert {n} into the query',
   macro: 'In file paths, {data}/ stands for the data folder. Views are created when a query mentions them. Filter on m, lat, lon (grids) or date, lat, lon (points) so that only the needed parts are downloaded.',
@@ -46,6 +45,7 @@ ORDER BY date`,
 
 export interface SqlMode {
   el: HTMLElement;
+  sql(): string;
   setSql(sql: string): void;
   focus(): void;
 }
@@ -86,11 +86,11 @@ export function createSqlMode(o: { catalog: Catalog; onRun: (sql: string) => voi
       run();
     }
   });
-  const runBtn = h('button', { type: 'button', class: 'ex-primary', onclick: run }, TEXT.run);
-  const el = h('div', { class: 'ex-sqlmode' }, help, examples, editor, h('div', { class: 'ex-row' }, runBtn, h('span', { class: 'ex-note' }, TEXT.hint)));
+  const el = h('div', { class: 'ex-sqlmode' }, help, examples, editor, h('p', { class: 'ex-note' }, TEXT.hint));
 
   return {
     el,
+    sql: () => editor.value,
     setSql(sql) {
       editor.value = sql;
     },

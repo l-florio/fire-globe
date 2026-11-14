@@ -33,6 +33,14 @@ function latRange(a: Area): [number, number] {
   return a.kind === 'bbox' ? [a.south, a.north] : [a.lat - a.km / 111, a.lat + a.km / 111];
 }
 
+/** Vegetation fires (default), all detections, or volcanoes / static sources only, from the FIRMS `type` list. */
+function typeFilter(types: string): 'veg' | 'all' | 'static' {
+  const ts = types.split(',').map(Number);
+  const veg = ts.some((x) => x === 0 || x === -1);
+  const stat = ts.some((x) => x >= 1 && x <= 3);
+  return veg && stat ? 'all' : stat ? 'static' : 'veg';
+}
+
 const CSV_HEAD = 'latitude,longitude,acq_date,acq_time_utc,satellite,confidence,frp_mw,daynight,type,source';
 
 /**
@@ -109,7 +117,8 @@ export async function staticSource(baseUrl: string): Promise<DataSource | undefi
       const files = (man.grid[sensor] ?? []).filter((f) => f.north >= s && f.south <= n).map((f) => f.path);
       if (!files.length) return { source: 'grid', months: [] };
       const harm = sensor.startsWith('HARM_');
-      const cls = types === '0,-1' && !harm ? 'AND cls = 0' : '';
+      const f = typeFilter(types);
+      const cls = harm || f === 'all' ? '' : f === 'veg' ? 'AND cls = 0' : 'AND cls = 1';
       const t = await conn.query(`
         SELECT printf('%04d-%02d', 2000 + m // 12, m % 12 + 1) AS ym, CAST(sum(n) AS DOUBLE) AS n, CAST(sum(frp) AS DOUBLE) AS f${harm ? ', CAST(max(o) AS DOUBLE) AS o' : ''}
         FROM read_parquet(${list(files)}) WHERE ${areaSql(area)} ${cls}
@@ -147,7 +156,8 @@ export async function staticSource(baseUrl: string): Promise<DataSource | undefi
     async exportCsv(sensor, area, from, to, types): Promise<Blob> {
       const files = pointFiles(sensor, Number(from.slice(0, 4)), Number(to.slice(0, 4))).map((f) => f.path);
       if (!files.length) return new Blob([`# outside the region with single detections (${regionText})\n${CSV_HEAD}\n`], { type: 'text/csv' });
-      const typeCond = types === '0,-1' ? 'AND type IN (0, -1)' : '';
+      const f = typeFilter(types);
+      const typeCond = f === 'veg' ? 'AND type IN (0, -1)' : f === 'static' ? 'AND type IN (1, 2, 3)' : '';
       await conn.query(`
         COPY (
           SELECT lat AS latitude, lon AS longitude, d AS acq_date, lpad(CAST(hhmm AS VARCHAR), 4, '0') AS acq_time_utc,

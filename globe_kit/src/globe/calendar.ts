@@ -8,6 +8,8 @@ import { lut, RAMPS } from './colormaps';
  * Months without coverage are drawn hatched, never as zero.
  * Optional 90% intervals per month: shown in tooltips, and in "anomaly" mode a month whose
  * interval still contains the median is drawn faded (the difference is within the uncertainty).
+ * Optional display range (setRange): only the months inside it are drawn and totalled, while the anomaly
+ * baseline and the median row keep using every covered month (a short range would make the median meaningless).
  */
 export interface CalendarOptions {
   onSelect?: (key: string) => void;
@@ -96,6 +98,8 @@ export function createCalendarHeatmap(parent: HTMLElement, o: CalendarOptions = 
   let intervals = new Map<string, [number, number]>();
   let mode: 'value' | 'anomaly' = 'value';
   let selected = '';
+  let range: [string, string] | undefined;
+  const inRange = (k: string) => !range || (k >= range[0] && k <= range[1]);
 
   /** Stats of one month against the same calendar month in the other covered years. */
   function stats(key: string): MonthStats | undefined {
@@ -125,7 +129,7 @@ export function createCalendarHeatmap(parent: HTMLElement, o: CalendarOptions = 
   }
 
   function color(key: string, max: number): string {
-    if (!covered.has(key)) return '';
+    if (!covered.has(key) || !inRange(key)) return '';
     const v = values.get(key) ?? 0;
     let i: number;
     let table = VIRIDIS;
@@ -145,7 +149,8 @@ export function createCalendarHeatmap(parent: HTMLElement, o: CalendarOptions = 
   }
 
   function render() {
-    const keys = [...covered].sort();
+    const allKeys = [...covered].sort();
+    const keys = allKeys.filter(inRange);
     if (!keys.length) {
       el.innerHTML = values.size || covered.size ? `<p class="gk-cal-empty">${L.empty}</p>` : '';
       return;
@@ -162,7 +167,7 @@ export function createCalendarHeatmap(parent: HTMLElement, o: CalendarOptions = 
       html += `<div class="gk-cal-y">${y}</div>`;
       for (let m = 1; m <= 12; m++) {
         const key = `${y}-${String(m).padStart(2, '0')}`;
-        const has = covered.has(key);
+        const has = covered.has(key) && inRange(key);
         const s = has ? stats(key) : undefined;
         const tip = has
           ? L.tip({
@@ -176,8 +181,8 @@ export function createCalendarHeatmap(parent: HTMLElement, o: CalendarOptions = 
               years: s!.baselineYears,
               percentile: s!.percentile,
             })
-          : L.noData(MON[m - 1], y);
-        const part = partial.has(key);
+          : inRange(key) ? L.noData(MON[m - 1], y) : '';
+        const part = has && partial.has(key);
         const t2 = part ? L.partial(tip) : tip;
         html += `<button type="button" class="gk-cal-c${has ? '' : ' gk-cal-na'}${part ? ' gk-cal-part' : ''}${key === selected ? ' gk-cal-sel' : ''}" data-k="${key}" ${has ? '' : 'disabled'} style="background:${color(key, max)}" title="${t2}" aria-label="${t2}"></button>`;
       }
@@ -188,7 +193,7 @@ export function createCalendarHeatmap(parent: HTMLElement, o: CalendarOptions = 
     html += `<div class="gk-cal-y">${L.medianRow}</div>`;
     for (let m = 1; m <= 12; m++) {
       const mm = String(m).padStart(2, '0');
-      const med = median(keys.filter((k) => k.slice(5, 7) === mm).map((k) => values.get(k) ?? 0)) ?? 0;
+      const med = median(allKeys.filter((k) => k.slice(5, 7) === mm).map((k) => values.get(k) ?? 0)) ?? 0;
       html += `<div class="gk-cal-med" title="${L.medianTip(MON[m - 1], fmt(med))}">${fmt(med)}</div>`;
     }
     html += '<div></div></div>';
@@ -214,6 +219,13 @@ export function createCalendarHeatmap(parent: HTMLElement, o: CalendarOptions = 
       intervals = iv;
       render();
     },
+    /** Months shown (YYYY-MM, inclusive); undefined = all. Baselines still use the whole record. */
+    setRange(from?: string, to?: string) {
+      range = from && to ? [from.slice(0, 7), to.slice(0, 7)] : undefined;
+      render();
+    },
+    /** True when the month is inside the display range. */
+    inRange,
     setMode(m: 'value' | 'anomaly') {
       mode = m;
       render();

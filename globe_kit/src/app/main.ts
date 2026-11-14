@@ -12,10 +12,10 @@ import {
   type BasemapId,
 } from '../globe';
 import { createCalendarPanel } from './calendarPanel';
-import type { createExplorer } from './explorer/explorer';
 import { createDetectionsPanel } from './detectionsPanel';
 import { createExporter } from './exporter';
 import { copyLink, readShare, writeShare } from './share';
+import { openTable, storeGlobeHash } from './nav';
 import { detectSource, lazySource } from './dataSource';
 import { createDetail, DETECTION_FRP_TOP, type Pass, type Sat, type Step } from './detail';
 import { applyI18n, fmtFixed, locale, monthsShort, t, tOr } from './i18n';
@@ -244,13 +244,15 @@ async function main() {
         viirs: mode === 'VIIRS' || mode === 'BOTH' ? viirsSel.value : undefined,
         metric: mode === 'HARM' ? undefined : metricSel.value,
         step: step === 'day' ? 'day' : undefined,
-        view: document.body.classList.contains('view-table') ? 'table' : undefined,
         cam: [Cesium.Math.toDegrees(c.longitude).toFixed(3), Cesium.Math.toDegrees(c.latitude).toFixed(3), Math.round(c.height)].join(','),
         cal: cal?.open ? '1' : undefined,
         area: cal?.area,
         cs: cal?.open || cal?.area ? cal.sensor : undefined,
         cv: cal?.variable === 'frp' ? 'frp' : undefined,
         cm: cal?.colour === 'anomaly' ? 'anomaly' : undefined,
+        cf: cal?.from,
+        ct: cal?.to,
+        src: cal && cal.src !== 'veg' ? cal.src : undefined,
       });
     }, 300);
   }
@@ -306,7 +308,6 @@ async function main() {
 
   // eslint-disable-next-line prefer-const
   let calPanel: ReturnType<typeof createCalendarPanel> | undefined;
-  let table: ReturnType<typeof createExplorer> | undefined;
   // eslint-disable-next-line prefer-const
   let detail: ReturnType<typeof createDetail> | undefined;
   const daySel = $<HTMLSelectElement>('day');
@@ -362,7 +363,6 @@ async function main() {
       syncUrl();
       refreshLabels(key);
       calPanel?.select(key);
-      table?.select(key);
       detail?.setPeriod(step, key);
       if (step === 'day') return;
       fillDays(key);
@@ -528,54 +528,17 @@ async function main() {
   document.body.appendChild(actions);
   calPanel.select(slider.key);
 
-  // ---- Globe | Table view
+  // ---- Globe | Table: the table is a separate page (table.html); the globe state is kept for the way back
   const tabs = document.createElement('div');
   tabs.id = 'view-tabs';
   tabs.className = 'seg seg2';
   tabs.setAttribute('role', 'tablist');
-  tabs.innerHTML = `<button type="button" role="tab" data-v="globe">${t('view.globe')}</button><button type="button" role="tab" data-v="table" title="${t('view.table.title')}">${t('view.table')}</button>`;
-  const setView = (v: 'globe' | 'table') => {
-    for (const b of tabs.querySelectorAll('button')) b.setAttribute('aria-selected', String(b.dataset.v === v));
-    document.body.classList.toggle('view-table', v === 'table');
-    table?.show(v === 'table');
-    syncUrl();
-  };
-  // The data explorer (Tabulator, Chart.js) is loaded on first use, so it does not slow down the globe.
-  let explorer: Promise<ReturnType<typeof createExplorer>> | undefined;
-  let tableKey = slider.key;
-  const getExplorer = () =>
-    (explorer ??= import('./explorer/explorer').then((m) => {
-      const x = m.createExplorer({
-        baseUrl: `${import.meta.env.BASE_URL}data/`,
-        onPick: (type, id, name) => {
-          setView('globe');
-          if (type === 'gfed') calPanel?.pickRegion(id);
-          else calPanel?.searchPlace(name, 'country');
-        },
-      });
-      x.select(tableKey);
-      return x;
-    }));
-  let tableVisible = false;
-  table = {
-    get visible() {
-      return tableVisible;
-    },
-    show(on: boolean) {
-      tableVisible = on;
-      if (on || explorer) void getExplorer().then((x) => x.show(on));
-    },
-    select(key: string) {
-      tableKey = key;
-      void explorer?.then((x) => x.select(key));
-    },
-  };
-  tabs.onclick = (e) => {
-    const v = (e.target as HTMLElement).closest('button')?.dataset.v as 'globe' | 'table' | undefined;
-    if (v) setView(v);
-  };
+  tabs.innerHTML = `<button type="button" role="tab" aria-selected="true">${t('view.globe')}</button><button type="button" role="tab" aria-selected="false" title="${t('view.table.title')}">${t('view.table')}</button>`;
+  tabs.lastElementChild!.addEventListener('click', () => {
+    storeGlobeHash(location.hash);
+    openTable(slider.key);
+  });
   document.body.appendChild(tabs);
-  setView('globe');
   detail.setPeriod(step, slider.key);
   refreshControls();
 
@@ -603,10 +566,11 @@ async function main() {
   const cam = (st.cam ?? '').split(',').map(Number);
   if (cam.length === 3 && cam.every(Number.isFinite) && !st.area)
     viewer.camera.setView({ destination: Cesium.Cartesian3.fromDegrees(cam[0], cam[1], cam[2]) });
-  if (st.view === 'table') setView('table');
   if (st.cal === '1' || st.area) {
     detPanel.toggle(false);
-    await calPanel.applyState({ area: st.area, sensor: st.cs, variable: st.cv, colour: st.cm });
+    await calPanel.applyState({ area: st.area, sensor: st.cs, variable: st.cv, colour: st.cm, from: st.cf, to: st.ct, src: st.src });
+    // Opened from the table on a country: find it by name.
+    if (st.q && !st.area) calPanel.searchPlace(st.q, 'country');
   }
   urlReady = true;
   syncUrl();

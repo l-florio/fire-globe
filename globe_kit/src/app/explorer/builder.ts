@@ -29,7 +29,6 @@ const TEXT = {
   asc: 'ascending',
   direction: 'Direction',
   limit: 'Row limit',
-  run: 'Run',
   editSql: 'Edit as SQL',
   generated: 'Generated SQL (read-only)',
   hintBetween: 'from, to',
@@ -142,7 +141,6 @@ export interface Built {
 /** SQL for a builder state over the dataset's scoped relation. */
 export function buildSql(ds: DatasetDef, relation: string, spec: Spec): Built {
   const kindOf = (name: string) => ds.cols.find((c) => c.name === name);
-  const raw = !spec.dims.length && !spec.measures.length;
   const where: string[] = [];
   let error: string | undefined;
   for (const f of spec.filters) {
@@ -159,8 +157,10 @@ export function buildSql(ds: DatasetDef, relation: string, spec: Spec): Built {
     used.add(n);
     return n;
   };
-  const dims = spec.dims.map((d) => ({ ...dimSql(d) }));
-  const meas = spec.measures.map((m) => measureSql(m));
+  // Only known columns of the dataset ever reach the SQL (as quoted identifiers).
+  const dims = spec.dims.filter((d) => kindOf(d.field)).map((d) => ({ ...dimSql(d) }));
+  const meas = spec.measures.filter((m) => !m.field || kindOf(m.field)).map((m) => measureSql(m));
+  const raw = !dims.length && !meas.length;
   for (const x of [...dims, ...meas]) {
     if (x.error) error ??= x.error;
     x.alias = unique(x.alias);
@@ -192,7 +192,7 @@ export interface Builder {
   refresh(): void;
 }
 
-export function createBuilder(o: { form: ScopeForm; onRun: () => void; onEditSql: (sql: string) => void }): Builder {
+export function createBuilder(o: { form: ScopeForm; onEditSql: (sql: string) => void }): Builder {
   let spec = emptySpec();
   let dsId = '';
 
@@ -203,7 +203,6 @@ export function createBuilder(o: { form: ScopeForm; onRun: () => void; onEditSql
   const dirSel = select([['desc', TEXT.desc], ['asc', TEXT.asc]], 'desc', TEXT.direction);
   const limitIn = h('input', { type: 'number', min: '1', max: ROW_CAP, placeholder: '10000' });
   const sqlBox = h('textarea', { class: 'ex-sqlview', readonly: true, rows: 6, spellcheck: 'false', 'aria-label': TEXT.generated });
-  const runBtn = h('button', { type: 'button', class: 'ex-primary' }, TEXT.run);
   const editBtn = h('button', { type: 'button' }, TEXT.editSql);
 
   const group = (title: string, addLabel: string, add: () => void, box: HTMLElement) =>
@@ -214,7 +213,7 @@ export function createBuilder(o: { form: ScopeForm; onRun: () => void; onEditSql
     group(TEXT.filters, TEXT.addFilter, () => addFilter(), filterBox),
     group(TEXT.groups, TEXT.addGroup, () => addDim(), dimBox),
     group(TEXT.measures, TEXT.addMeasure, () => addMeasure(), measBox),
-    h('div', { class: 'ex-row' }, field(TEXT.orderBy, orderSel), field(TEXT.direction, dirSel), field(TEXT.limit, limitIn), runBtn, editBtn),
+    h('div', { class: 'ex-row' }, field(TEXT.orderBy, orderSel), field(TEXT.direction, dirSel), field(TEXT.limit, limitIn), editBtn),
     h('label', { class: 'ex-field ex-grow' }, h('span', { class: 'ex-flabel' }, TEXT.generated), sqlBox),
   );
 
@@ -368,7 +367,6 @@ export function createBuilder(o: { form: ScopeForm; onRun: () => void; onEditSql
   });
   dirSel.addEventListener('change', refresh);
   limitIn.addEventListener('input', refresh);
-  runBtn.onclick = o.onRun;
   editBtn.onclick = () => o.onEditSql(build().sql);
 
   return { el, build, refresh };

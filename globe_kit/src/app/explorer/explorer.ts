@@ -14,6 +14,7 @@ const TEXT = {
   builder: 'Builder',
   sql: 'SQL',
   load: 'Load table',
+  run: 'Run',
   hideControls: 'Hide controls',
   showControls: 'Show controls',
   loadingEngine: 'Loading the data engine...',
@@ -30,6 +31,8 @@ const MODES: Mode[] = ['table', 'builder', 'sql'];
 export interface ExplorerOptions {
   /** `${import.meta.env.BASE_URL}data/` */
   baseUrl: string;
+  /** Month (YYYY-MM) to preset in the regions dataset; it then loads at once. */
+  month?: string;
   /** A region row was chosen: show it on the globe. */
   onPick: (type: 'country' | 'gfed', id: string, name: string) => void;
 }
@@ -38,18 +41,14 @@ const message = (e: unknown) => (e instanceof Error ? e.message : typeof e === '
 
 /**
  * Data explorer: harmonized regions, grids and single detections read with DuckDB-WASM, as an Excel-like table,
- * a no-code query builder or SQL, with charts. The engine and the data load on first show.
+ * a no-code query builder or SQL, with charts. Returns the element to mount; the engine and the data load at once.
  */
-export function createExplorer(o: ExplorerOptions) {
-  const root = h('section', { class: 'panel tablepanel explorer', 'aria-label': TEXT.title });
-  root.hidden = true;
-  document.body.appendChild(root);
+export function createExplorer(o: ExplorerOptions): HTMLElement {
+  const root = h('section', { class: 'explorer', 'aria-label': TEXT.title });
 
-  let month = '';
   let mode: Mode = 'table';
   let starting: Promise<void> | undefined;
   let session: Session | undefined;
-  let stale = false; // the month changed while hidden
 
   const tabs = new Map<Mode, HTMLButtonElement>();
   const tablist = h('div', { class: 'ex-tabs', role: 'tablist', 'aria-label': TEXT.modes });
@@ -82,10 +81,7 @@ export function createExplorer(o: ExplorerOptions) {
   interface Session {
     nodes: HTMLElement[];
     apply(m: Mode): void;
-    scopeChanged(): void;
-    setMonth(m: string): void;
     resize(): void;
-    autoRun(): void;
   }
 
   function start() {
@@ -95,9 +91,7 @@ export function createExplorer(o: ExplorerOptions) {
         const engine = await createEngine(o.baseUrl);
         session = build(engine);
         body.replaceChildren(...session.nodes);
-        session.setMonth(month);
         setMode(mode);
-        session.autoRun();
       } catch (e) {
         starting = undefined;
         const retry = h('button', { type: 'button', onclick: start }, TEXT.retry);
@@ -126,13 +120,17 @@ export function createExplorer(o: ExplorerOptions) {
       },
     });
 
-    async function exec(sql: string, meta: Pick<ResultMeta, 'title' | 'layoutKey' | 'defaultCols' | 'docs'>, countSql?: string) {
+    async function exec(
+      sql: string,
+      meta: Pick<ResultMeta, 'title' | 'layoutKey' | 'defaultCols' | 'docs'>,
+      how: { countSql?: string; user?: boolean } = {},
+    ) {
       const my = ++req;
       results.running(true);
       try {
-        const r = await engine.run(sql);
+        const r = await (how.user ? engine.runUser(sql) : engine.run(sql));
         if (my !== req) return;
-        const total = r.truncated && countSql ? await engine.count(countSql).catch(() => undefined) : undefined;
+        const total = r.truncated && how.countSql ? await engine.count(how.countSql).catch(() => undefined) : undefined;
         if (my !== req) return;
         results.show(r, { ...meta, sql, total, cap: ROW_CAP, onGlobe });
       } catch (e) {
@@ -152,7 +150,7 @@ export function createExplorer(o: ExplorerOptions) {
       const err = ds.check(scope);
       if (err) return results.error(err);
       const rel = ds.relation(scope);
-      void exec(rel + (ds.order ? `\nORDER BY ${ds.order}` : ''), { title: ds.id, layoutKey: ds.id, defaultCols: ds.defaultCols, docs: docsOf() }, rel);
+      void exec(rel + (ds.order ? `\nORDER BY ${ds.order}` : ''), { title: ds.id, layoutKey: ds.id, defaultCols: ds.defaultCols, docs: docsOf() }, { countSql: rel });
     }
 
     function runBuilder() {
@@ -165,17 +163,19 @@ export function createExplorer(o: ExplorerOptions) {
 
     const builder = createBuilder({
       form,
-      onRun: runBuilder,
       onEditSql: (sql) => {
         sqlMode.setSql(sql);
         setMode('sql');
         sqlMode.focus();
       },
     });
-    const sqlMode = createSqlMode({ catalog: cat, onRun: (sql) => void exec(sql, { title: 'sql' }) });
+    const sqlMode = createSqlMode({ catalog: cat, onRun: (sql) => void exec(sql, { title: 'sql' }, { user: true }) });
 
-    const loadBtn = h('button', { type: 'button', class: 'ex-primary', onclick: runTable }, TEXT.load);
-    const tablePane = h('div', { class: 'ex-row' }, loadBtn, h('span', { class: 'ex-note' }, TEXT.tableHint));
+    const runners: Record<Mode, () => void> = { table: runTable, builder: runBuilder, sql: () => void exec(sqlMode.sql(), { title: 'sql' }, { user: true }) };
+    // The run button sits above the scrolling controls, so it stays visible however tall they are.
+    const runBtn = h('button', { type: 'button', class: 'ex-primary', onclick: () => runners[mode]() });
+    const actions = h('div', { class: 'ex-actions' }, runBtn);
+    const tablePane = h('p', { class: 'ex-note' }, TEXT.tableHint);
     const controls = h('div', { class: 'ex-controls' }, form.el, tablePane, builder.el, sqlMode.el);
     const panes: Record<Mode, HTMLElement[]> = { table: [form.el, tablePane], builder: [form.el, builder.el], sql: [sqlMode.el] };
 
@@ -190,50 +190,28 @@ export function createExplorer(o: ExplorerOptions) {
     function scopeChanged() {
       builder.refresh();
       if (mode !== 'table' || !autoDataset()) return;
-      if (root.hidden) {
-        stale = true;
-        return;
-      }
       clearTimeout(timer);
       timer = window.setTimeout(runTable, 120);
     }
 
+    if (o.month) {
+      form.presetMonth(o.month);
+      runTable();
+    }
+
     return {
-      nodes: [controls, results.el],
+      nodes: [actions, controls, results.el],
       apply(m) {
+        runBtn.textContent = m === 'table' ? TEXT.load : TEXT.run;
         const shown = new Set(panes[m]);
         for (const e of Object.values(panes).flat()) e.hidden = !shown.has(e);
         if (m === 'builder') builder.refresh();
         results.resize();
       },
-      scopeChanged,
-      setMonth: (m) => form.setMonth(m),
       resize: () => results.resize(),
-      autoRun() {
-        stale = false;
-        clearTimeout(timer);
-        if (mode === 'table' && autoDataset() && !root.hidden) runTable();
-      },
     };
   }
 
-  return {
-    get visible() {
-      return !root.hidden;
-    },
-    show(on: boolean) {
-      root.hidden = !on;
-      if (!on) return;
-      if (!session) return start();
-      session.resize();
-      if (stale) session.autoRun();
-    },
-    /** Follow the time slider (YYYY-MM or YYYY-MM-DD): "Regions this month" shows that month. */
-    select(key: string) {
-      const m = key.slice(0, 7);
-      if (m === month) return;
-      month = m;
-      session?.setMonth(m);
-    },
-  };
+  start();
+  return root;
 }

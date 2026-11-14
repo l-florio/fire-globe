@@ -16,12 +16,10 @@ const TEXT = {
   sensorSnpp: 'VIIRS S-NPP',
   sensorN20: 'VIIRS NOAA-20',
   sensorN21: 'VIIRS NOAA-21',
-  dsRegionsMonth: 'Regions this month (follows the time slider)',
   dsRegions: 'Harmonized by region',
   dsHarmGrid: 'Harmonized 1 degree grid',
   dsGrid: 'Raw per-sensor 0.25 degree grid',
   dsPoints: 'Single detections',
-  docRegionsMonth: 'Harmonized monthly detections by country or GFED region for the month on the time slider, against the same month in the other years.',
   docRegions: 'Harmonized monthly detections by country or GFED region, with the usual value (median of the same calendar month in the other years), ratio, percentile and signal. Months without a row had 0 detections and are counted as 0.',
   docHarmGrid: 'Harmonized detections on a 1 degree grid, per month. Long-term (Aqua-equivalent) or detail (VIIRS 375 m) series.',
   docGrid: 'Raw detections of one sensor on a 0.25 degree grid, per month (cls 0 vegetation or unknown, 1 volcano, static source or offshore).',
@@ -67,8 +65,8 @@ export interface ScopeSpec {
   series?: Opt[];
   rt?: Opt[];
   sensor?: Opt[];
-  /** month: YYYY-MM, date: YYYY-MM-DD, fixed: the time slider month (no input) */
-  period?: 'month' | 'date' | 'fixed';
+  /** month: YYYY-MM, date: YYYY-MM-DD */
+  period?: 'month' | 'date';
   periodRequired?: boolean;
   /** longest allowed period, in months (or days for dates) */
   maxSpan?: number;
@@ -323,18 +321,6 @@ export function buildCatalog(man: Manifest, gfedNames: Record<string, string>): 
 
   const harmKey = (s: Scope) => HARM_KEY[s.series] ?? '';
   const datasets: DatasetDef[] = [
-    {
-      id: 'regions_month',
-      label: TEXT.dsRegionsMonth,
-      doc: TEXT.docRegionsMonth,
-      cols: REGION_COLS,
-      defaultCols: ['region', 'detections', 'lo90', 'hi90', 'usual', 'ratio_to_usual', 'percentile', 'signal', 'origin'],
-      spec: { series: SERIES_OPTS, rt: RT_OPTS, period: 'fixed' },
-      order: 'detections DESC',
-      regionRows: true,
-      relation: regionRelation,
-      check: (s) => (s.from ? regionCheck(s) : TEXT.errMonthOnly),
-    },
     {
       id: 'regions',
       label: TEXT.dsRegions,

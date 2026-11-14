@@ -41,3 +41,6 @@ KPI_benchmark_research.md
 KPI_confronto.md
 roadmap_artifact/
 /*.log
+
+# --- forecast feasibility lab (local experiment)
+forecast_lab/

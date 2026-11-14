@@ -119,7 +119,17 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
       <label>${t('cal.variable')}<select data-c="var"><option value="n">${t('cal.var.n')}</option><option value="frp">${t('cal.var.frp')}</option></select></label>
       <label>${t('cal.colour')}<select data-c="mode"><option value="value">${t('cal.colour.value')}</option><option value="anomaly">${t('cal.colour.anomaly')}</option></select></label>
     </div>
-    <label class="check"><input type="checkbox" data-c="excl" checked /> ${t('cal.excl')}</label>
+    <label class="cal-types">${t('cal.types.label')}<select data-c="types">
+      <option value="veg">${t('cal.types.veg')}</option><option value="all">${t('cal.types.all')}</option><option value="static">${t('cal.types.static')}</option>
+    </select></label>
+    <section class="cal-period">
+      <span class="cal-period-row">${t('cal.period.from')}
+        <select data-c="fy" aria-label="${t('cal.period.fromYear')}"></select><select data-c="fm" aria-label="${t('cal.period.fromMonth')}"></select></span>
+      <span class="cal-period-row">${t('cal.period.to')}
+        <select data-c="ty" aria-label="${t('cal.period.toYear')}"></select><select data-c="tm" aria-label="${t('cal.period.toMonth')}"></select></span>
+      <button type="button" data-a="period-all" title="${t('cal.period.all.title')}">${t('cal.period.all')}</button>
+      <p class="note cal-period-note">${t('cal.period.note')}</p>
+    </section>
     <div class="cal-body">
       <p class="cal-area-copy note"></p>
       <div class="cal-heat"></div>
@@ -144,7 +154,11 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
   const sensorSel = $<HTMLSelectElement>('[data-c=sensor]');
   const varSel = $<HTMLSelectElement>('[data-c=var]');
   const modeSel = $<HTMLSelectElement>('[data-c=mode]');
-  const excl = $<HTMLInputElement>('[data-c=excl]');
+  const typesSel = $<HTMLSelectElement>('[data-c=types]');
+  const fySel = $<HTMLSelectElement>('[data-c=fy]');
+  const fmSel = $<HTMLSelectElement>('[data-c=fm]');
+  const tySel = $<HTMLSelectElement>('[data-c=ty]');
+  const tmSel = $<HTMLSelectElement>('[data-c=tm]');
   const fromIn = $<HTMLInputElement>('[data-c=from]');
   const toIn = $<HTMLInputElement>('[data-c=to]');
   const areaP = $<HTMLParagraphElement>('.cal-area');
@@ -176,7 +190,66 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
   let req = 0;
   let sourceNote = '';
 
-  const types = () => (excl.checked ? '0,-1' : '0,1,2,3,-1');
+  /** FIRMS `type` list sent to the data source: vegetation fires (default), everything, or static sources only. */
+  const TYPES: Record<string, string> = { veg: '0,-1', all: '0,1,2,3,-1', static: '1,2,3' };
+  const types = () => TYPES[typesSel.value] ?? TYPES.veg;
+
+  // ---- period of the calendar: '' = from the first / up to the last month of the sensor
+  let fromKey = '';
+  let toKey = '';
+  const sensorMonths = () => [...o.sensors[sensorSel.value].months].sort();
+  const firstKey = () => sensorMonths()[0] ?? '';
+  const lastKey = () => sensorMonths().slice(-1)[0] ?? '';
+  const effFrom = () => (fromKey && fromKey >= firstKey() && fromKey <= lastKey() ? fromKey : firstKey());
+  const effTo = () => (toKey && toKey >= firstKey() && toKey <= lastKey() ? toKey : lastKey());
+  const customRange = () => effFrom() !== firstKey() || effTo() !== lastKey();
+  const inRange = (k: string) => k >= effFrom() && k <= effTo();
+  const monthName = (k: string) => `${MON[Number(k.slice(5, 7)) - 1]} ${k.slice(0, 4)}`;
+
+  function fillPeriodSelects() {
+    const keys = sensorMonths();
+    if (!keys.length) return;
+    const y0 = Number(keys[0].slice(0, 4));
+    const y1 = Number(keys[keys.length - 1].slice(0, 4));
+    const years = Array.from({ length: y1 - y0 + 1 }, (_, i) => `<option>${y0 + i}</option>`).join('');
+    const months = MON.map((m, i) => `<option value="${String(i + 1).padStart(2, '0')}">${m}</option>`).join('');
+    for (const s of [fySel, tySel]) s.innerHTML = years;
+    for (const s of [fmSel, tmSel]) s.innerHTML = months;
+    showPeriod();
+  }
+  function showPeriod() {
+    const [f, t2] = [effFrom(), effTo()];
+    fySel.value = f.slice(0, 4);
+    fmSel.value = f.slice(5, 7);
+    tySel.value = t2.slice(0, 4);
+    tmSel.value = t2.slice(5, 7);
+  }
+  /** Read the selects; the bound that did not move is adjusted when they cross. */
+  function readPeriod(changed: 'from' | 'to') {
+    let f = `${fySel.value}-${fmSel.value}`;
+    let t2 = `${tySel.value}-${tmSel.value}`;
+    if (f > t2) {
+      if (changed === 'from') t2 = f;
+      else f = t2;
+    }
+    fromKey = f <= firstKey() ? '' : f;
+    toKey = t2 >= lastKey() ? '' : t2;
+    showPeriod();
+    applyPeriod();
+  }
+  function applyPeriod() {
+    const custom = customRange();
+    heat.setRange(custom ? effFrom() : undefined, custom ? effTo() : undefined);
+    if (custom) {
+      // The hotspots export defaults to the same period.
+      fromIn.value = `${effFrom()}-01`;
+      const [y, m] = effTo().split('-').map(Number);
+      toIn.value = `${effTo()}-${String(new Date(Date.UTC(y, m, 0)).getUTCDate()).padStart(2, '0')}`;
+    }
+    if (rows.length) draw();
+    panel.onChange?.();
+  }
+  const visibleRows = () => rows.filter((r) => inRange(r[0]));
 
   async function load() {
     if (!area) return;
@@ -203,7 +276,7 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
           area: areaLabel(area, AREA_LABELS),
           sensor: o.sensors[sensorSel.value].label,
           var: varSel.value === 'frp' ? t('cal.var.frp') : t('cal.var.n.lower'),
-        })
+        }) + (customRange() ? t('cal.areaCopy.period', { from: monthName(effFrom()), to: monthName(effTo()) }) : '')
       : '';
     const k = varSel.value === 'frp' ? 2 : 1;
     const s = o.sensors[sensorSel.value];
@@ -213,7 +286,8 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
     heat.select(selected);
     legendEl.textContent =
       sourceNote +
-      t(modeSel.value === 'anomaly' ? 'cal.legend.anomaly' : 'cal.legend.value');
+      t(modeSel.value === 'anomaly' ? 'cal.legend.anomaly' : 'cal.legend.value') +
+      (customRange() && modeSel.value === 'anomaly' ? t('cal.legend.baseline') : '');
     summary();
   }
 
@@ -275,14 +349,14 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
     // Seasonality and top years.
     const byMonth = Array.from({ length: 12 }, (_, m) => {
       const mm = String(m + 1).padStart(2, '0');
-      const v = rows.filter((r) => r[0].slice(5, 7) === mm).map((r) => (varSel.value === 'frp' ? r[2] : r[1]));
+      const v = visibleRows().filter((r) => r[0].slice(5, 7) === mm).map((r) => (varSel.value === 'frp' ? r[2] : r[1]));
       return v.reduce((a, b) => a + b, 0);
     });
     const peak = byMonth.indexOf(Math.max(...byMonth));
     const years = new Map<string, number>();
-    for (const r of rows) years.set(r[0].slice(0, 4), (years.get(r[0].slice(0, 4)) ?? 0) + (varSel.value === 'frp' ? r[2] : r[1]));
+    for (const r of visibleRows()) years.set(r[0].slice(0, 4), (years.get(r[0].slice(0, 4)) ?? 0) + (varSel.value === 'frp' ? r[2] : r[1]));
     const top = [...years.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
-    if (rows.length) {
+    if (visibleRows().length) {
       parts.push(t('cal.sum.peak', { month: MON[peak], years: top.map(([y, v]) => `${y} (${f(v)})`).join(', ') }));
     }
     statsEl.innerHTML = parts.map((p) => `<p>${p}</p>`).join('');
@@ -335,7 +409,7 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
     const k = varSel.value === 'frp' ? 2 : 1;
     const head = `sensor,year,month,${varSel.value === 'frp' ? 'frp_mw' : 'detections'},median_same_month_other_years,ratio_to_median,percentile_vs_other_years${isHarm() ? ',lo90,hi90,origin' : ''}`;
     const ORIG = ['aqua_obs', 'viirs_conv', 'viirs_native'];
-    const lines = [...o.sensors[sensorSel.value].months].sort().map((key) => {
+    const lines = sensorMonths().filter(inRange).map((key) => {
       const s = heat.stats(key);
       const v = rows.find((r) => r[0] === key)?.[k] ?? 0;
       const row = rows.find((r) => r[0] === key);
@@ -346,7 +420,8 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
       ? `harmonized ${sensorSel.value === 'HARM_LONG' ? 'long-term series (Aqua-equivalent detections, 1 degree cells overlapping the area)' : 'detail series (VIIRS 375 m at S-NPP level, 1 degree cells overlapping the area)'}`
       : 'raw values of one sensor, not harmonized';
     const last = o.sensors[sensorSel.value].partial_last_month ? `; last month ${o.sensors[sensorSel.value].months.slice(-1)[0]} is partial` : '';
-    const meta = `# area: ${areaLabel(area)}; types: ${types()}; ${what}${last}; ratio_to_median = value / median (empty when the median is 0); source: NASA FIRMS`;
+    const period = customRange() ? `period: ${effFrom()} to ${effTo()} (median and percentile use the whole record); ` : '';
+    const meta = `# area: ${areaLabel(area)}; ${period}types: ${types()}; ${what}${last}; ratio_to_median = value / median (empty when the median is 0); source: NASA FIRMS`;
     const blob = new Blob([[meta, head, ...lines].join('\n') + '\n'], { type: 'text/csv' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -391,6 +466,11 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
       void Promise.resolve(panel.onExportPng?.(body)).finally(() => body.classList.remove('exporting'));
     }
     else if (act === 'csvpts') void downloadPoints();
+    else if (act === 'period-all') {
+      fromKey = toKey = '';
+      showPeriod();
+      applyPeriod();
+    }
   });
   $('.cal-x').onclick = () => panel.toggle(false);
 
@@ -580,12 +660,14 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
     $<HTMLParagraphElement>('.cal-raw').hidden = h; // the warning is about raw counts only
     if (h) varSel.value = 'n';
     varSel.disabled = h;
-    excl.disabled = h; // the static-source mask is already applied in the harmonized series
+    typesSel.disabled = h; // the static-source mask is already applied in the harmonized series
+    typesSel.title = h ? t('cal.types.harm') : '';
     const pts = $<HTMLButtonElement>('[data-a=csvpts]');
     pts.disabled = h;
     pts.title = h ? t('cal.csvPts.harm') : '';
   }
   refreshHarmControls();
+  fillPeriodSelects();
   /** Restore an area from a shareable link (see areaSpec). */
   async function applyAreaSpec(spec: string) {
     const [kind, ...rest] = spec.split(':');
@@ -615,10 +697,17 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
 
   sensorSel.onchange = () => {
     refreshHarmControls();
+    fillPeriodSelects();
+    applyPeriod();
     void load();
     panel.onChange?.();
   };
-  excl.onchange = () => void load();
+  typesSel.onchange = () => {
+    void load();
+    panel.onChange?.();
+  };
+  fySel.onchange = fmSel.onchange = () => readPeriod('from');
+  tySel.onchange = tmSel.onchange = () => readPeriod('to');
   varSel.onchange = () => {
     draw();
     panel.onChange?.();
@@ -633,15 +722,32 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
     onChange: undefined as (() => void) | undefined,
     /** Calendar state for a shareable link. */
     get state() {
-      return { area: areaSpec, sensor: sensorSel.value, variable: varSel.value, colour: modeSel.value, open: !el.hidden };
+      return {
+        area: areaSpec,
+        sensor: sensorSel.value,
+        variable: varSel.value,
+        colour: modeSel.value,
+        open: !el.hidden,
+        from: effFrom() !== firstKey() ? effFrom() : undefined,
+        to: effTo() !== lastKey() ? effTo() : undefined,
+        src: typesSel.value,
+      };
     },
     /** Restore the calendar from a shareable link. */
-    async applyState(s: { area?: string; sensor?: string; variable?: string; colour?: string }) {
+    async applyState(s: { area?: string; sensor?: string; variable?: string; colour?: string; from?: string; to?: string; src?: string }) {
       panel.toggle(true);
       if (s.sensor && sensors.includes(s.sensor)) {
         sensorSel.value = s.sensor;
         refreshHarmControls();
+        fillPeriodSelects();
       }
+      const ym = (v?: string) => (v && /^\d{4}-(0[1-9]|1[0-2])$/.test(v) ? v : '');
+      fromKey = ym(s.from);
+      toKey = ym(s.to);
+      if (fromKey && toKey && fromKey > toKey) [fromKey, toKey] = [toKey, fromKey];
+      showPeriod();
+      applyPeriod();
+      if (s.src && s.src in TYPES) typesSel.value = s.src;
       if (s.variable && [...varSel.options].some((x) => x.value === s.variable) && !varSel.disabled) varSel.value = s.variable;
       if (s.colour && [...modeSel.options].some((x) => x.value === s.colour)) modeSel.value = s.colour;
       if (s.area) await applyAreaSpec(s.area);

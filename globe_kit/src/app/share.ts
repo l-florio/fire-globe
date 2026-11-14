@@ -3,7 +3,8 @@
  *   #t=2023-07&mode=HARM&harm=HARM_LONG&cal=1&area=region:c:EU&cs=HARM_LONG
  * The hash is updated in place while the user works (no new history entries), so the address bar is always a
  * link to the current view. Keys: t (time key), mode, harm, viirs, metric, step, view, cam (lon,lat,height m),
- * cal (calendar open), area (see calendarPanel areaSpec), cs / cv / cm (calendar sensor, variable, colour).
+ * cal (calendar open), area (see calendarPanel areaSpec), cs / cv / cm (calendar sensor, variable, colour),
+ * cf / ct (calendar period, YYYY-MM), src (calendar sources: veg | all | static; veg is the default).
  */
 export type ShareState = Record<string, string | undefined>;
 

@@ -808,3 +808,49 @@ body.view-table #top-actions {
     top: 62px;
   }
 }
+
+/* Links in panels: accent colour on the dark panel (contrast above 4.5:1), underlined, visible focus. */
+.panel a {
+  color: var(--gk-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.panel a:hover {
+  color: color-mix(in srgb, var(--gk-accent) 60%, #fff);
+}
+.panel a:focus-visible {
+  outline: 2px solid var(--gk-accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Area fire calendar: sources and period */
+.calpanel label.cal-types {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  color: var(--gk-muted);
+}
+.calpanel label.cal-types select {
+  width: 100%;
+}
+.cal-period {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  color: var(--gk-muted);
+}
+.cal-period-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: nowrap;
+}
+.cal-period-row select {
+  min-width: 0;
+}
+.cal-period .cal-period-note {
+  flex: 1 1 100%;
+  margin: 0;
+}

@@ -10,6 +10,7 @@ GET /api/detections?sensor=VIIRS_SNPP&month=2024-08 | &date=2024-08-20 [&bbox=w,
   bbox defaults to the whole world
   headers: X-Total (matches in the rectangle), X-Returned (records sent; the strongest FRP first when capped)
 GET /api/calendar?sensor=MODIS&bbox=w,s,e,n | &circle=lat,lon,km [&types=0,-1][&pass=all|day|night]
+     (types: FIRMS type list; 0,-1 vegetation fires, 0,1,2,3,-1 all, 1,2,3 volcanoes and static sources only)
   200 JSON {sensor, source: "detections" | "grid", months: [[YYYY-MM, count, frp_sum], ...]}
   Small areas (under 25 square degrees) are counted from single detections; larger ones from the
   0.25 degree grid aggregate (cells whose centre falls in the area).
