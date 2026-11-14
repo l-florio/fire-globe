@@ -168,7 +168,9 @@ export function createResults(o: { onGlobe: (row: Row) => void; onCancel: () => 
       cancelBtn.hidden = !on;
       if (on) {
         status.textContent = TEXT.loading;
-        clearMessage();
+        // Hide the previous result while the new query runs, so an error never flashes the old table first.
+        msgBox.hidden = true;
+        body.hidden = true;
       }
     },
     show(r, m) {
@@ -189,7 +191,7 @@ export function createResults(o: { onGlobe: (row: Row) => void; onCancel: () => 
         kind === 'syntax'
           ? (at.line !== undefined && at.col !== undefined ? TEXT.syntaxAt.replace('{l}', String(at.line)).replace('{c}', String(at.col)) : at.line !== undefined ? TEXT.syntaxLine.replace('{l}', String(at.line)) : TEXT.syntax).replace('{m}', message)
           : kind === 'runtime'
-            ? TEXT.runtime.replace('{m}', message)
+            ? TEXT.runtime.replace('{m}', at.line !== undefined ? `${message} (line ${at.line})` : message)
             : message;
       say('error', text);
     },

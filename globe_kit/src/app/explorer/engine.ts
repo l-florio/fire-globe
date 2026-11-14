@@ -193,7 +193,13 @@ export async function createEngine(baseUrl: string): Promise<Engine> {
         const t = await conn.query(expand(capped(sql, cap)));
         return { ...toResult(t, cap), ms: performance.now() - t0 };
       } catch (e) {
-        throw e instanceof QueryError ? e : new QueryError(e instanceof Error ? e.message : String(e), 'runtime');
+        if (e instanceof QueryError) throw e;
+        // The query runs wrapped as "SELECT * FROM (\n<query>\n) LIMIT n": DuckDB's "LINE n:" refers to the
+        // wrapped text, one line below the user's; report the user's line and drop the echoed excerpt.
+        const raw = e instanceof Error ? e.message : String(e);
+        const m = /\s*LINE (\d+):/.exec(raw);
+        const line = m ? Math.max(1, Number(m[1]) - (/^(with|select|from)\b/i.test(sql.trim()) ? 1 : 0)) : undefined;
+        throw new QueryError(m ? raw.slice(0, m.index).trim() : raw, 'runtime', line);
       }
     });
 
