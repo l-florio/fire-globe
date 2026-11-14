@@ -46,8 +46,18 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 300
+    outputs:
+      private: ${{ steps.vis.outputs.private }}
     steps:
       - uses: actions/checkout@v4
+
+      # While the repository is private the site is built and checked but not published (Pages needs a public repo
+      # on GitHub Free). Make the repository public to publish.
+      - name: Repository visibility
+        id: vis
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: echo "private=$(gh api repos/${{ github.repository }} --jq .private)" >> "$GITHUB_OUTPUT"
 
       - uses: actions/setup-python@v5
         with:
@@ -90,6 +100,22 @@ jobs:
           if [ -n "$POINTS_BASE" ]; then EXT="--external-points site_data/external_points --points-base $POINTS_BASE"; fi
           python globe_kit/scripts/assemble_site.py --part site_data --part build/recent --out globe_kit/public $EXT
 
+      - name: Check the site data
+        run: |
+          RECENT=""
+          if [ -d build/recent/frames ]; then RECENT="--expect-recent"; fi
+          python globe_kit/scripts/check_site.py $RECENT | tee site_check.txt
+
+      - name: Upload the check report
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-check
+          retention-days: 7
+          path: |
+            site_check.txt
+            globe_kit/public/frames/manifest.json
+            globe_kit/public/data/static.json
+
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
@@ -103,11 +129,13 @@ jobs:
           npm run build
 
       - uses: actions/upload-pages-artifact@v3
+        if: steps.vis.outputs.private == 'false'
         with:
           path: globe_kit/dist
 
   deploy:
     needs: build
+    if: needs.build.outputs.private == 'false'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
