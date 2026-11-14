@@ -1,0 +1,5 @@
+data/
+.venv/
+__pycache__/
+.firms_key
+download.log

@@ -1,0 +1,24 @@
+{
+  "name": "globe-kit",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Reusable CesiumJS globe (keyless basemaps, time-raster layers, split compare) with a FIRMS demo",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "static": "vite build && vite preview",
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@duckdb/duckdb-wasm": "1.32.0",
+    "cesium": "1.147.0"
+  },
+  "devDependencies": {
+    "typescript": "6.0.3",
+    "vite": "8.3.8",
+    "vite-plugin-static-copy": "4.1.1"
+  }
+}

@@ -1,0 +1,682 @@
+{
+ "generated_utc": "2026-11-14T11:54:10+00:00",
+ "region": [
+  -180.0,
+  -90.0,
+  180.0,
+  90.0
+ ],
+ "grid_res_deg": 0.25,
+ "grid": {},
+ "points": {
+  "MODIS": [
+   {
+    "year": 2000,
+    "path": "points/sensor=MODIS/year=2000.parquet",
+    "rows": 261363,
+    "bytes": 2620909,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2001,
+    "path": "points/sensor=MODIS/year=2001.parquet",
+    "rows": 1769987,
+    "bytes": 17986313,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2002,
+    "path": "points/sensor=MODIS/year=2002.parquet",
+    "rows": 3699859,
+    "bytes": 37768735,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2003,
+    "path": "points/sensor=MODIS/year=2003.parquet",
+    "rows": 5149401,
+    "bytes": 52161187,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2004,
+    "path": "points/sensor=MODIS/year=2004.parquet",
+    "rows": 5092534,
+    "bytes": 51676672,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2005,
+    "path": "points/sensor=MODIS/year=2005.parquet",
+    "rows": 5125152,
+    "bytes": 51992425,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2006,
+    "path": "points/sensor=MODIS/year=2006.parquet",
+    "rows": 4688046,
+    "bytes": 47624414,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2007,
+    "path": "points/sensor=MODIS/year=2007.parquet",
+    "rows": 5134642,
+    "bytes": 52047099,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2008,
+    "path": "points/sensor=MODIS/year=2008.parquet",
+    "rows": 4818997,
+    "bytes": 48722862,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2009,
+    "path": "points/sensor=MODIS/year=2009.parquet",
+    "rows": 4456446,
+    "bytes": 45147943,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2010,
+    "path": "points/sensor=MODIS/year=2010.parquet",
+    "rows": 4715142,
+    "bytes": 47710718,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2011,
+    "path": "points/sensor=MODIS/year=2011.parquet",
+    "rows": 4699314,
+    "bytes": 47781229,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2012,
+    "path": "points/sensor=MODIS/year=2012.parquet",
+    "rows": 4959509,
+    "bytes": 50549518,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2013,
+    "path": "points/sensor=MODIS/year=2013.parquet",
+    "rows": 4226648,
+    "bytes": 42824707,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2014,
+    "path": "points/sensor=MODIS/year=2014.parquet",
+    "rows": 4434374,
+    "bytes": 45058142,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2015,
+    "path": "points/sensor=MODIS/year=2015.parquet",
+    "rows": 4741228,
+    "bytes": 48196039,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2016,
+    "path": "points/sensor=MODIS/year=2016.parquet",
+    "rows": 4415910,
+    "bytes": 44685467,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2017,
+    "path": "points/sensor=MODIS/year=2017.parquet",
+    "rows": 4453181,
+    "bytes": 45393790,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2018,
+    "path": "points/sensor=MODIS/year=2018.parquet",
+    "rows": 4184262,
+    "bytes": 42648898,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2019,
+    "path": "points/sensor=MODIS/year=2019.parquet",
+    "rows": 4578188,
+    "bytes": 46724635,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2020,
+    "path": "points/sensor=MODIS/year=2020.parquet",
+    "rows": 4440623,
+    "bytes": 45148561,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2021,
+    "path": "points/sensor=MODIS/year=2021.parquet",
+    "rows": 4384343,
+    "bytes": 44699743,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2022,
+    "path": "points/sensor=MODIS/year=2022.parquet",
+    "rows": 3789164,
+    "bytes": 38515035,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2023,
+    "path": "points/sensor=MODIS/year=2023.parquet",
+    "rows": 4664302,
+    "bytes": 47608904,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2024,
+    "path": "points/sensor=MODIS/year=2024.parquet",
+    "rows": 4848247,
+    "bytes": 49101826,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2025,
+    "path": "points/sensor=MODIS/year=2025.parquet",
+    "rows": 3693555,
+    "bytes": 37483135,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2026,
+    "path": "points/sensor=MODIS/year=2026.parquet",
+    "rows": 3093664,
+    "bytes": 32381663,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   }
+  ],
+  "VIIRS_NOAA20": [
+   {
+    "year": 2018,
+    "path": "points/sensor=VIIRS_NOAA20/year=2018.parquet",
+    "rows": 14524817,
+    "bytes": 147410353,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2019,
+    "path": "points/sensor=VIIRS_NOAA20/year=2019.parquet",
+    "rows": 20742304,
+    "bytes": 209206562,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2020,
+    "path": "points/sensor=VIIRS_NOAA20/year=2020.parquet",
+    "rows": 20385806,
+    "bytes": 205834839,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2021,
+    "path": "points/sensor=VIIRS_NOAA20/year=2021.parquet",
+    "rows": 20059802,
+    "bytes": 201705188,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2022,
+    "path": "points/sensor=VIIRS_NOAA20/year=2022.parquet",
+    "rows": 18043578,
+    "bytes": 182889699,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2023,
+    "path": "points/sensor=VIIRS_NOAA20/year=2023.parquet",
+    "rows": 21288380,
+    "bytes": 214572452,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2024,
+    "path": "points/sensor=VIIRS_NOAA20/year=2024.parquet",
+    "rows": 22511092,
+    "bytes": 225949720,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2025,
+    "path": "points/sensor=VIIRS_NOAA20/year=2025.parquet",
+    "rows": 18376493,
+    "bytes": 185859458,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2026,
+    "path": "points/sensor=VIIRS_NOAA20/year=2026.parquet",
+    "rows": 17009313,
+    "bytes": 170060901,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   }
+  ],
+  "VIIRS_NOAA21": [
+   {
+    "year": 2023,
+    "path": "points/sensor=VIIRS_NOAA21/year=2023.parquet",
+    "rows": 18110940,
+    "bytes": 184813626,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2024,
+    "path": "points/sensor=VIIRS_NOAA21/year=2024.parquet",
+    "rows": 21724518,
+    "bytes": 220966605,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2025,
+    "path": "points/sensor=VIIRS_NOAA21/year=2025.parquet",
+    "rows": 17674069,
+    "bytes": 181248378,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2026,
+    "path": "points/sensor=VIIRS_NOAA21/year=2026.parquet",
+    "rows": 16321946,
+    "bytes": 165380490,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   }
+  ],
+  "VIIRS_SNPP": [
+   {
+    "year": 2012,
+    "path": "points/sensor=VIIRS_SNPP/year=2012.parquet",
+    "rows": 20864680,
+    "bytes": 210593373,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2013,
+    "path": "points/sensor=VIIRS_SNPP/year=2013.parquet",
+    "rows": 19296980,
+    "bytes": 195252253,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2014,
+    "path": "points/sensor=VIIRS_SNPP/year=2014.parquet",
+    "rows": 20190209,
+    "bytes": 204048769,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2015,
+    "path": "points/sensor=VIIRS_SNPP/year=2015.parquet",
+    "rows": 21329469,
+    "bytes": 215333731,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2016,
+    "path": "points/sensor=VIIRS_SNPP/year=2016.parquet",
+    "rows": 20247889,
+    "bytes": 204143446,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2017,
+    "path": "points/sensor=VIIRS_SNPP/year=2017.parquet",
+    "rows": 19984137,
+    "bytes": 202279495,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2018,
+    "path": "points/sensor=VIIRS_SNPP/year=2018.parquet",
+    "rows": 19067085,
+    "bytes": 193066782,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2019,
+    "path": "points/sensor=VIIRS_SNPP/year=2019.parquet",
+    "rows": 20990294,
+    "bytes": 211487018,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2020,
+    "path": "points/sensor=VIIRS_SNPP/year=2020.parquet",
+    "rows": 20619331,
+    "bytes": 207728605,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2021,
+    "path": "points/sensor=VIIRS_SNPP/year=2021.parquet",
+    "rows": 20247675,
+    "bytes": 203302357,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2022,
+    "path": "points/sensor=VIIRS_SNPP/year=2022.parquet",
+    "rows": 17164365,
+    "bytes": 173937954,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2023,
+    "path": "points/sensor=VIIRS_SNPP/year=2023.parquet",
+    "rows": 21750317,
+    "bytes": 218857804,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2024,
+    "path": "points/sensor=VIIRS_SNPP/year=2024.parquet",
+    "rows": 20976982,
+    "bytes": 210612129,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2025,
+    "path": "points/sensor=VIIRS_SNPP/year=2025.parquet",
+    "rows": 18415101,
+    "bytes": 185888696,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   },
+   {
+    "year": 2026,
+    "path": "points/sensor=VIIRS_SNPP/year=2026.parquet",
+    "rows": 15461912,
+    "bytes": 154377148,
+    "region": [
+     -180.0,
+     -90.0,
+     180.0,
+     90.0
+    ]
+   }
+  ]
+ },
+ "harmonized": false
+}

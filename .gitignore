@@ -1,0 +1,37 @@
+# --- private: internal notes, competitor evidence, local tooling (never publish)
+evidenze_concorrenti/
+Censimento_Challenges_2026.md
+challenges_2026.csv
+Roadmap_Challenge.md
+.claude/
+
+# --- not published until reviewed (harmonization research notes)
+Analisi_Metodi_Armonizzazione.md
+Letteratura_Armonizzazione_MODIS_VIIRS.md
+diagnostica/
+
+# --- secrets
+**/.firms_key
+**/.firms_key.txt
+.env
+
+# --- generated data (site_data/ IS committed: it is the historical part of the site)
+build/
+data_pipeline/data/
+data_pipeline/.venv/
+data_pipeline/*.log
+globe_kit/node_modules/
+globe_kit/dist/
+globe_kit/public/frames/
+globe_kit/public/data/
+__pycache__/
+*.pyc
+
+# worldwide detections: uploaded to Hugging Face, only their static.json is committed
+site_data/external_points/points/
+
+# --- internal planning (not for the public repo)
+KPI_benchmark_research.md
+KPI_confronto.md
+roadmap_artifact/
+/*.log

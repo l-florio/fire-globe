@@ -1,0 +1,1133 @@
+{
+ "generated_utc": "2026-11-14T11:53:28+00:00",
+ "region": [
+  -25.0,
+  27.0,
+  45.0,
+  72.0
+ ],
+ "grid_res_deg": 0.25,
+ "grid": {
+  "MODIS": [
+   {
+    "band": 0,
+    "south": -90,
+    "north": -80,
+    "path": "grid/sensor=MODIS/band=0.hist.parquet",
+    "bytes": 778
+   },
+   {
+    "band": 3,
+    "south": -60,
+    "north": -50,
+    "path": "grid/sensor=MODIS/band=3.hist.parquet",
+    "bytes": 5549
+   },
+   {
+    "band": 4,
+    "south": -50,
+    "north": -40,
+    "path": "grid/sensor=MODIS/band=4.hist.parquet",
+    "bytes": 74979
+   },
+   {
+    "band": 5,
+    "south": -40,
+    "north": -30,
+    "path": "grid/sensor=MODIS/band=5.hist.parquet",
+    "bytes": 1126633
+   },
+   {
+    "band": 6,
+    "south": -30,
+    "north": -20,
+    "path": "grid/sensor=MODIS/band=6.hist.parquet",
+    "bytes": 3136768
+   },
+   {
+    "band": 7,
+    "south": -20,
+    "north": -10,
+    "path": "grid/sensor=MODIS/band=7.hist.parquet",
+    "bytes": 5660881
+   },
+   {
+    "band": 8,
+    "south": -10,
+    "north": 0,
+    "path": "grid/sensor=MODIS/band=8.hist.parquet",
+    "bytes": 4868427
+   },
+   {
+    "band": 9,
+    "south": 0,
+    "north": 10,
+    "path": "grid/sensor=MODIS/band=9.hist.parquet",
+    "bytes": 4461522
+   },
+   {
+    "band": 10,
+    "south": 10,
+    "north": 20,
+    "path": "grid/sensor=MODIS/band=10.hist.parquet",
+    "bytes": 3639009
+   },
+   {
+    "band": 11,
+    "south": 20,
+    "north": 30,
+    "path": "grid/sensor=MODIS/band=11.hist.parquet",
+    "bytes": 2709880
+   },
+   {
+    "band": 12,
+    "south": 30,
+    "north": 40,
+    "path": "grid/sensor=MODIS/band=12.hist.parquet",
+    "bytes": 3298894
+   },
+   {
+    "band": 13,
+    "south": 40,
+    "north": 50,
+    "path": "grid/sensor=MODIS/band=13.hist.parquet",
+    "bytes": 3076781
+   },
+   {
+    "band": 14,
+    "south": 50,
+    "north": 60,
+    "path": "grid/sensor=MODIS/band=14.hist.parquet",
+    "bytes": 2840131
+   },
+   {
+    "band": 15,
+    "south": 60,
+    "north": 70,
+    "path": "grid/sensor=MODIS/band=15.hist.parquet",
+    "bytes": 529302
+   },
+   {
+    "band": 16,
+    "south": 70,
+    "north": 80,
+    "path": "grid/sensor=MODIS/band=16.hist.parquet",
+    "bytes": 8543
+   },
+   {
+    "band": 17,
+    "south": 80,
+    "north": 90,
+    "path": "grid/sensor=MODIS/band=17.hist.parquet",
+    "bytes": 1254
+   }
+  ],
+  "VIIRS_NOAA20": [
+   {
+    "band": 0,
+    "south": -90,
+    "north": -80,
+    "path": "grid/sensor=VIIRS_NOAA20/band=0.hist.parquet",
+    "bytes": 1631
+   },
+   {
+    "band": 1,
+    "south": -80,
+    "north": -70,
+    "path": "grid/sensor=VIIRS_NOAA20/band=1.hist.parquet",
+    "bytes": 2832
+   },
+   {
+    "band": 2,
+    "south": -70,
+    "north": -60,
+    "path": "grid/sensor=VIIRS_NOAA20/band=2.hist.parquet",
+    "bytes": 1515
+   },
+   {
+    "band": 3,
+    "south": -60,
+    "north": -50,
+    "path": "grid/sensor=VIIRS_NOAA20/band=3.hist.parquet",
+    "bytes": 6268
+   },
+   {
+    "band": 4,
+    "south": -50,
+    "north": -40,
+    "path": "grid/sensor=VIIRS_NOAA20/band=4.hist.parquet",
+    "bytes": 61976
+   },
+   {
+    "band": 5,
+    "south": -40,
+    "north": -30,
+    "path": "grid/sensor=VIIRS_NOAA20/band=5.hist.parquet",
+    "bytes": 661041
+   },
+   {
+    "band": 6,
+    "south": -30,
+    "north": -20,
+    "path": "grid/sensor=VIIRS_NOAA20/band=6.hist.parquet",
+    "bytes": 1679043
+   },
+   {
+    "band": 7,
+    "south": -20,
+    "north": -10,
+    "path": "grid/sensor=VIIRS_NOAA20/band=7.hist.parquet",
+    "bytes": 2854376
+   },
+   {
+    "band": 8,
+    "south": -10,
+    "north": 0,
+    "path": "grid/sensor=VIIRS_NOAA20/band=8.hist.parquet",
+    "bytes": 2702588
+   },
+   {
+    "band": 9,
+    "south": 0,
+    "north": 10,
+    "path": "grid/sensor=VIIRS_NOAA20/band=9.hist.parquet",
+    "bytes": 2367047
+   },
+   {
+    "band": 10,
+    "south": 10,
+    "north": 20,
+    "path": "grid/sensor=VIIRS_NOAA20/band=10.hist.parquet",
+    "bytes": 2266775
+   },
+   {
+    "band": 11,
+    "south": 20,
+    "north": 30,
+    "path": "grid/sensor=VIIRS_NOAA20/band=11.hist.parquet",
+    "bytes": 2029338
+   },
+   {
+    "band": 12,
+    "south": 30,
+    "north": 40,
+    "path": "grid/sensor=VIIRS_NOAA20/band=12.hist.parquet",
+    "bytes": 2595159
+   },
+   {
+    "band": 13,
+    "south": 40,
+    "north": 50,
+    "path": "grid/sensor=VIIRS_NOAA20/band=13.hist.parquet",
+    "bytes": 1915338
+   },
+   {
+    "band": 14,
+    "south": 50,
+    "north": 60,
+    "path": "grid/sensor=VIIRS_NOAA20/band=14.hist.parquet",
+    "bytes": 1383369
+   },
+   {
+    "band": 15,
+    "south": 60,
+    "north": 70,
+    "path": "grid/sensor=VIIRS_NOAA20/band=15.hist.parquet",
+    "bytes": 354936
+   },
+   {
+    "band": 16,
+    "south": 70,
+    "north": 80,
+    "path": "grid/sensor=VIIRS_NOAA20/band=16.hist.parquet",
+    "bytes": 14706
+   },
+   {
+    "band": 17,
+    "south": 80,
+    "north": 90,
+    "path": "grid/sensor=VIIRS_NOAA20/band=17.hist.parquet",
+    "bytes": 949
+   }
+  ],
+  "VIIRS_NOAA21": [
+   {
+    "band": 0,
+    "south": -90,
+    "north": -80,
+    "path": "grid/sensor=VIIRS_NOAA21/band=0.hist.parquet",
+    "bytes": 1237
+   },
+   {
+    "band": 1,
+    "south": -80,
+    "north": -70,
+    "path": "grid/sensor=VIIRS_NOAA21/band=1.hist.parquet",
+    "bytes": 1659
+   },
+   {
+    "band": 2,
+    "south": -70,
+    "north": -60,
+    "path": "grid/sensor=VIIRS_NOAA21/band=2.hist.parquet",
+    "bytes": 1071
+   },
+   {
+    "band": 3,
+    "south": -60,
+    "north": -50,
+    "path": "grid/sensor=VIIRS_NOAA21/band=3.hist.parquet",
+    "bytes": 2957
+   },
+   {
+    "band": 4,
+    "south": -50,
+    "north": -40,
+    "path": "grid/sensor=VIIRS_NOAA21/band=4.hist.parquet",
+    "bytes": 24219
+   },
+   {
+    "band": 5,
+    "south": -40,
+    "north": -30,
+    "path": "grid/sensor=VIIRS_NOAA21/band=5.hist.parquet",
+    "bytes": 233616
+   },
+   {
+    "band": 6,
+    "south": -30,
+    "north": -20,
+    "path": "grid/sensor=VIIRS_NOAA21/band=6.hist.parquet",
+    "bytes": 630122
+   },
+   {
+    "band": 7,
+    "south": -20,
+    "north": -10,
+    "path": "grid/sensor=VIIRS_NOAA21/band=7.hist.parquet",
+    "bytes": 1083312
+   },
+   {
+    "band": 8,
+    "south": -10,
+    "north": 0,
+    "path": "grid/sensor=VIIRS_NOAA21/band=8.hist.parquet",
+    "bytes": 1027067
+   },
+   {
+    "band": 9,
+    "south": 0,
+    "north": 10,
+    "path": "grid/sensor=VIIRS_NOAA21/band=9.hist.parquet",
+    "bytes": 881560
+   },
+   {
+    "band": 10,
+    "south": 10,
+    "north": 20,
+    "path": "grid/sensor=VIIRS_NOAA21/band=10.hist.parquet",
+    "bytes": 855389
+   },
+   {
+    "band": 11,
+    "south": 20,
+    "north": 30,
+    "path": "grid/sensor=VIIRS_NOAA21/band=11.hist.parquet",
+    "bytes": 758690
+   },
+   {
+    "band": 12,
+    "south": 30,
+    "north": 40,
+    "path": "grid/sensor=VIIRS_NOAA21/band=12.hist.parquet",
+    "bytes": 977732
+   },
+   {
+    "band": 13,
+    "south": 40,
+    "north": 50,
+    "path": "grid/sensor=VIIRS_NOAA21/band=13.hist.parquet",
+    "bytes": 689957
+   },
+   {
+    "band": 14,
+    "south": 50,
+    "north": 60,
+    "path": "grid/sensor=VIIRS_NOAA21/band=14.hist.parquet",
+    "bytes": 490928
+   },
+   {
+    "band": 15,
+    "south": 60,
+    "north": 70,
+    "path": "grid/sensor=VIIRS_NOAA21/band=15.hist.parquet",
+    "bytes": 136235
+   },
+   {
+    "band": 16,
+    "south": 70,
+    "north": 80,
+    "path": "grid/sensor=VIIRS_NOAA21/band=16.hist.parquet",
+    "bytes": 7132
+   },
+   {
+    "band": 17,
+    "south": 80,
+    "north": 90,
+    "path": "grid/sensor=VIIRS_NOAA21/band=17.hist.parquet",
+    "bytes": 798
+   }
+  ],
+  "VIIRS_SNPP": [
+   {
+    "band": 0,
+    "south": -90,
+    "north": -80,
+    "path": "grid/sensor=VIIRS_SNPP/band=0.hist.parquet",
+    "bytes": 2070
+   },
+   {
+    "band": 1,
+    "south": -80,
+    "north": -70,
+    "path": "grid/sensor=VIIRS_SNPP/band=1.hist.parquet",
+    "bytes": 4538
+   },
+   {
+    "band": 2,
+    "south": -70,
+    "north": -60,
+    "path": "grid/sensor=VIIRS_SNPP/band=2.hist.parquet",
+    "bytes": 1730
+   },
+   {
+    "band": 3,
+    "south": -60,
+    "north": -50,
+    "path": "grid/sensor=VIIRS_SNPP/band=3.hist.parquet",
+    "bytes": 10821
+   },
+   {
+    "band": 4,
+    "south": -50,
+    "north": -40,
+    "path": "grid/sensor=VIIRS_SNPP/band=4.hist.parquet",
+    "bytes": 110783
+   },
+   {
+    "band": 5,
+    "south": -40,
+    "north": -30,
+    "path": "grid/sensor=VIIRS_SNPP/band=5.hist.parquet",
+    "bytes": 1116484
+   },
+   {
+    "band": 6,
+    "south": -30,
+    "north": -20,
+    "path": "grid/sensor=VIIRS_SNPP/band=6.hist.parquet",
+    "bytes": 2878230
+   },
+   {
+    "band": 7,
+    "south": -20,
+    "north": -10,
+    "path": "grid/sensor=VIIRS_SNPP/band=7.hist.parquet",
+    "bytes": 4861496
+   },
+   {
+    "band": 8,
+    "south": -10,
+    "north": 0,
+    "path": "grid/sensor=VIIRS_SNPP/band=8.hist.parquet",
+    "bytes": 4642556
+   },
+   {
+    "band": 9,
+    "south": 0,
+    "north": 10,
+    "path": "grid/sensor=VIIRS_SNPP/band=9.hist.parquet",
+    "bytes": 4275052
+   },
+   {
+    "band": 10,
+    "south": 10,
+    "north": 20,
+    "path": "grid/sensor=VIIRS_SNPP/band=10.hist.parquet",
+    "bytes": 3865581
+   },
+   {
+    "band": 11,
+    "south": 20,
+    "north": 30,
+    "path": "grid/sensor=VIIRS_SNPP/band=11.hist.parquet",
+    "bytes": 3427956
+   },
+   {
+    "band": 12,
+    "south": 30,
+    "north": 40,
+    "path": "grid/sensor=VIIRS_SNPP/band=12.hist.parquet",
+    "bytes": 4367144
+   },
+   {
+    "band": 13,
+    "south": 40,
+    "north": 50,
+    "path": "grid/sensor=VIIRS_SNPP/band=13.hist.parquet",
+    "bytes": 3340746
+   },
+   {
+    "band": 14,
+    "south": 50,
+    "north": 60,
+    "path": "grid/sensor=VIIRS_SNPP/band=14.hist.parquet",
+    "bytes": 2486461
+   },
+   {
+    "band": 15,
+    "south": 60,
+    "north": 70,
+    "path": "grid/sensor=VIIRS_SNPP/band=15.hist.parquet",
+    "bytes": 605137
+   },
+   {
+    "band": 16,
+    "south": 70,
+    "north": 80,
+    "path": "grid/sensor=VIIRS_SNPP/band=16.hist.parquet",
+    "bytes": 19192
+   },
+   {
+    "band": 17,
+    "south": 80,
+    "north": 90,
+    "path": "grid/sensor=VIIRS_SNPP/band=17.hist.parquet",
+    "bytes": 1151
+   }
+  ]
+ },
+ "points": {
+  "MODIS": [
+   {
+    "year": 2000,
+    "path": "points/sensor=MODIS/year=2000.parquet",
+    "rows": 3270,
+    "bytes": 36595,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2001,
+    "path": "points/sensor=MODIS/year=2001.parquet",
+    "rows": 122062,
+    "bytes": 1162093,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2002,
+    "path": "points/sensor=MODIS/year=2002.parquet",
+    "rows": 184142,
+    "bytes": 1798839,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2003,
+    "path": "points/sensor=MODIS/year=2003.parquet",
+    "rows": 142238,
+    "bytes": 1418172,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2004,
+    "path": "points/sensor=MODIS/year=2004.parquet",
+    "rows": 160627,
+    "bytes": 1583434,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2005,
+    "path": "points/sensor=MODIS/year=2005.parquet",
+    "rows": 196000,
+    "bytes": 1921540,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2006,
+    "path": "points/sensor=MODIS/year=2006.parquet",
+    "rows": 225032,
+    "bytes": 2187563,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2007,
+    "path": "points/sensor=MODIS/year=2007.parquet",
+    "rows": 206147,
+    "bytes": 2041113,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2008,
+    "path": "points/sensor=MODIS/year=2008.parquet",
+    "rows": 214915,
+    "bytes": 2109242,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2009,
+    "path": "points/sensor=MODIS/year=2009.parquet",
+    "rows": 218444,
+    "bytes": 2116210,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2010,
+    "path": "points/sensor=MODIS/year=2010.parquet",
+    "rows": 171454,
+    "bytes": 1693725,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2011,
+    "path": "points/sensor=MODIS/year=2011.parquet",
+    "rows": 151869,
+    "bytes": 1513058,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2012,
+    "path": "points/sensor=MODIS/year=2012.parquet",
+    "rows": 142438,
+    "bytes": 1422343,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2013,
+    "path": "points/sensor=MODIS/year=2013.parquet",
+    "rows": 114174,
+    "bytes": 1150640,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2014,
+    "path": "points/sensor=MODIS/year=2014.parquet",
+    "rows": 189439,
+    "bytes": 1854859,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2015,
+    "path": "points/sensor=MODIS/year=2015.parquet",
+    "rows": 178569,
+    "bytes": 1761728,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2016,
+    "path": "points/sensor=MODIS/year=2016.parquet",
+    "rows": 129452,
+    "bytes": 1287776,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2017,
+    "path": "points/sensor=MODIS/year=2017.parquet",
+    "rows": 158521,
+    "bytes": 1577811,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2018,
+    "path": "points/sensor=MODIS/year=2018.parquet",
+    "rows": 109263,
+    "bytes": 1089446,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2019,
+    "path": "points/sensor=MODIS/year=2019.parquet",
+    "rows": 157175,
+    "bytes": 1551876,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2020,
+    "path": "points/sensor=MODIS/year=2020.parquet",
+    "rows": 134905,
+    "bytes": 1347260,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2021,
+    "path": "points/sensor=MODIS/year=2021.parquet",
+    "rows": 101920,
+    "bytes": 1044390,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2022,
+    "path": "points/sensor=MODIS/year=2022.parquet",
+    "rows": 91060,
+    "bytes": 927230,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2023,
+    "path": "points/sensor=MODIS/year=2023.parquet",
+    "rows": 88416,
+    "bytes": 901044,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2024,
+    "path": "points/sensor=MODIS/year=2024.parquet",
+    "rows": 111217,
+    "bytes": 1134440,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2025,
+    "path": "points/sensor=MODIS/year=2025.parquet",
+    "rows": 109938,
+    "bytes": 1124986,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   }
+  ],
+  "VIIRS_NOAA20": [
+   {
+    "year": 2018,
+    "path": "points/sensor=VIIRS_NOAA20/year=2018.parquet",
+    "rows": 536136,
+    "bytes": 5446261,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2019,
+    "path": "points/sensor=VIIRS_NOAA20/year=2019.parquet",
+    "rows": 759737,
+    "bytes": 7703456,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2020,
+    "path": "points/sensor=VIIRS_NOAA20/year=2020.parquet",
+    "rows": 665072,
+    "bytes": 6748132,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2021,
+    "path": "points/sensor=VIIRS_NOAA20/year=2021.parquet",
+    "rows": 589620,
+    "bytes": 6011465,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2022,
+    "path": "points/sensor=VIIRS_NOAA20/year=2022.parquet",
+    "rows": 566105,
+    "bytes": 5768755,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2023,
+    "path": "points/sensor=VIIRS_NOAA20/year=2023.parquet",
+    "rows": 522057,
+    "bytes": 5328947,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2024,
+    "path": "points/sensor=VIIRS_NOAA20/year=2024.parquet",
+    "rows": 633691,
+    "bytes": 6432608,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2025,
+    "path": "points/sensor=VIIRS_NOAA20/year=2025.parquet",
+    "rows": 599509,
+    "bytes": 6136358,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   }
+  ],
+  "VIIRS_NOAA21": [
+   {
+    "year": 2023,
+    "path": "points/sensor=VIIRS_NOAA21/year=2023.parquet",
+    "rows": 471571,
+    "bytes": 4857091,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2024,
+    "path": "points/sensor=VIIRS_NOAA21/year=2024.parquet",
+    "rows": 609102,
+    "bytes": 6238378,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2025,
+    "path": "points/sensor=VIIRS_NOAA21/year=2025.parquet",
+    "rows": 575628,
+    "bytes": 5946460,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   }
+  ],
+  "VIIRS_SNPP": [
+   {
+    "year": 2012,
+    "path": "points/sensor=VIIRS_SNPP/year=2012.parquet",
+    "rows": 701464,
+    "bytes": 7095190,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2013,
+    "path": "points/sensor=VIIRS_SNPP/year=2013.parquet",
+    "rows": 625138,
+    "bytes": 6350310,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2014,
+    "path": "points/sensor=VIIRS_SNPP/year=2014.parquet",
+    "rows": 869495,
+    "bytes": 8711264,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2015,
+    "path": "points/sensor=VIIRS_SNPP/year=2015.parquet",
+    "rows": 831302,
+    "bytes": 8362208,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2016,
+    "path": "points/sensor=VIIRS_SNPP/year=2016.parquet",
+    "rows": 669022,
+    "bytes": 6779203,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2017,
+    "path": "points/sensor=VIIRS_SNPP/year=2017.parquet",
+    "rows": 763198,
+    "bytes": 7728509,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2018,
+    "path": "points/sensor=VIIRS_SNPP/year=2018.parquet",
+    "rows": 612803,
+    "bytes": 6205047,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2019,
+    "path": "points/sensor=VIIRS_SNPP/year=2019.parquet",
+    "rows": 769641,
+    "bytes": 7796673,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2020,
+    "path": "points/sensor=VIIRS_SNPP/year=2020.parquet",
+    "rows": 675673,
+    "bytes": 6845963,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2021,
+    "path": "points/sensor=VIIRS_SNPP/year=2021.parquet",
+    "rows": 588985,
+    "bytes": 5987785,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2022,
+    "path": "points/sensor=VIIRS_SNPP/year=2022.parquet",
+    "rows": 527188,
+    "bytes": 5363199,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2023,
+    "path": "points/sensor=VIIRS_SNPP/year=2023.parquet",
+    "rows": 525501,
+    "bytes": 5356317,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2024,
+    "path": "points/sensor=VIIRS_SNPP/year=2024.parquet",
+    "rows": 587156,
+    "bytes": 5947165,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   },
+   {
+    "year": 2025,
+    "path": "points/sensor=VIIRS_SNPP/year=2025.parquet",
+    "rows": 596202,
+    "bytes": 6093471,
+    "region": [
+     -25.0,
+     27.0,
+     45.0,
+     72.0
+    ]
+   }
+  ]
+ },
+ "harmonized": false
+}

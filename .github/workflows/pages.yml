@@ -1,0 +1,110 @@
+# Nightly: download the current-year FIRMS data with the MAP_KEY secret, rebuild the recent part,
+# merge it with the historical part committed in site_data/, build the app and publish it on GitHub Pages.
+#
+# Setup (once): Settings > Pages > Source: GitHub Actions; Settings > Secrets and variables > Actions >
+# New repository secret FIRMS_MAP_KEY. Without the secret the site is published with the historical data only.
+
+name: Update data and deploy
+
+on:
+  schedule:
+    - cron: "30 3 * * *" # every day at 03:30 UTC
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "globe_kit/**"
+      - "site_data/**"
+      - "data_pipeline/firms_pipeline.py"
+      - ".github/workflows/pages.yml"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  # Recent part: from this date to today. Move it forward after rebuilding site_data/ with newer years.
+  RECENT_FROM: "2026-01-01"
+  RECENT_SENSORS: "MODIS,VIIRS_SNPP,VIIRS_NOAA20,VIIRS_NOAA21"
+  # Single detections of the recent part published on Pages, worldwide (the active sensors only,
+  # to stay well under the 1 GB Pages limit). The other years come from POINTS_BASE when set.
+  RECENT_POINT_SENSORS: "MODIS,VIIRS_NOAA20"
+  # Repository variable (Settings > Variables): URL of the folder with the historical worldwide
+  # detections, e.g. https://huggingface.co/datasets/<user>/<name>/resolve/main/
+  POINTS_BASE: ${{ vars.POINTS_BASE }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Python dependencies
+        run: pip install -r data_pipeline/requirements.txt -r globe_kit/scripts/requirements.txt
+
+      # Raw API files already downloaded: only new days (and the last week of NRT) are fetched again.
+      - uses: actions/cache@v4
+        with:
+          path: data_pipeline/data/raw/api
+          key: firms-api-${{ github.run_id }}
+          restore-keys: firms-api-
+
+      - name: Current-year data from FIRMS
+        env:
+          FIRMS_MAP_KEY: ${{ secrets.FIRMS_MAP_KEY }}
+        run: |
+          if [ -z "$FIRMS_MAP_KEY" ]; then
+            echo "No FIRMS_MAP_KEY secret: publishing the historical data only."
+            exit 0
+          fi
+          Y0="${RECENT_FROM:0:4}"
+          cd data_pipeline
+          python firms_pipeline.py --sensors "$RECENT_SENSORS" download-recent --start "$RECENT_FROM"
+          python firms_pipeline.py --sensors "$RECENT_SENSORS" build
+          python firms_pipeline.py aggregate
+          cd ../globe_kit
+          python scripts/make_fire_frames.py --from-year "$Y0" --scale-from ../site_data/frames/manifest.json --out ../build/recent/frames
+          python scripts/make_static_data.py --from-year "$Y0" --tag recent --out ../build/recent/data \
+            --region=-180,-90,180,90 --points-sensors "$RECENT_POINT_SENSORS"
+
+      - name: Merge historical and recent data
+        run: |
+          EXT=""
+          if [ -n "$POINTS_BASE" ]; then EXT="--external-points site_data/external_points --points-base $POINTS_BASE"; fi
+          python globe_kit/scripts/assemble_site.py --part site_data --part build/recent --out globe_kit/public $EXT
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: globe_kit/package-lock.json
+
+      - name: Build the app
+        working-directory: globe_kit
+        run: |
+          npm ci
+          npm run build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: globe_kit/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

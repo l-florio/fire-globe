@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fire Globe</title>
+  </head>
+  <body>
+    <div id="globe"></div>
+    <aside id="panel" class="panel">
+      <h1>Active fires from space, 2000-2026</h1>
+      <p class="sub">NASA FIRMS, monthly, 0.25&deg; grid. <span class="badge">Raw per-sensor data, not harmonized</span></p>
+      <label>Variable
+        <select id="metric"></select>
+      </label>
+      <div class="field">
+        <span class="field-label">Show</span>
+        <div class="seg" id="mode" role="radiogroup" aria-label="Sensors shown">
+          <button type="button" role="radio" data-mode="MODIS">MODIS</button>
+          <button type="button" role="radio" data-mode="VIIRS">VIIRS</button>
+          <button type="button" role="radio" data-mode="BOTH">Both</button>
+        </div>
+      </div>
+      <div class="field">
+        <span class="field-label">Time step</span>
+        <div class="seg seg2" id="step" role="radiogroup" aria-label="Time step">
+          <button type="button" role="radio" data-step="month">Month</button>
+          <button type="button" role="radio" data-step="day">Day</button>
+        </div>
+      </div>
+      <label id="viirs-wrap">VIIRS satellite
+        <select id="viirs"></select>
+      </label>
+      <div class="sides" id="sides">
+        <span>Left: <b id="side-l"></b></span>
+        <span>Right: <b id="side-r"></b></span>
+        <button type="button" id="swap" title="Swap left and right">&#8644; Swap sides</button>
+      </div>
+      <div id="filters" class="filters" hidden>
+        <div class="field">
+          <span class="field-label">Overpass</span>
+          <div class="seg" id="pass" role="radiogroup" aria-label="Overpass">
+            <button type="button" role="radio" data-pass="all">All</button>
+            <button type="button" role="radio" data-pass="day">Daytime</button>
+            <button type="button" role="radio" data-pass="night">Night</button>
+          </div>
+        </div>
+        <label id="sat-wrap">MODIS satellite
+          <select id="sat">
+            <option value="all">Terra + Aqua</option>
+            <option value="terra">Terra only (about 10:30 and 22:30 local)</option>
+            <option value="aqua">Aqua only (about 13:30 and 01:30 local)</option>
+          </select>
+        </label>
+      </div>
+      <label id="gain-wrap">Color range (upper limit)
+        <input type="range" id="gain" min="0" max="1" step="0.01" value="0.75" />
+      </label>
+      <label>Basemap
+        <select id="basemap"></select>
+      </label>
+      <label class="check"><input type="checkbox" id="borders" checked /> Coastlines, borders and place names</label>
+      <p class="note" id="note"></p>
+      <p class="note detail" id="detail-note">Zoom in below 2,500 km to see individual detections.</p>
+    </aside>
+    <footer id="bottom" class="panel bottom">
+      <div id="time"></div>
+      <label id="day-wrap" class="day" hidden>Day
+        <select id="day"></select>
+      </label>
+      <div id="legend"></div>
+    </footer>
+    <div id="side-labels"><span id="lab-left"></span><span id="lab-right"></span></div>
+    <script type="module" src="/src/app/main.ts"></script>
+  </body>
+</html>

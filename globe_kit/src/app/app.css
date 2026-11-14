@@ -1,0 +1,369 @@
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #05080f;
+  color: var(--gk-text);
+  font-family: var(--gk-font);
+}
+#globe {
+  position: absolute;
+  inset: 0;
+}
+.panel {
+  position: absolute;
+  z-index: 10;
+  background: var(--gk-panel);
+  border: 1px solid var(--gk-border);
+  border-radius: 10px;
+  backdrop-filter: blur(8px);
+  padding: 14px 16px;
+  box-sizing: border-box;
+}
+#panel {
+  top: 16px;
+  left: 16px;
+  width: 300px;
+  max-width: calc(100vw - 32px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 13px;
+}
+#panel h1 {
+  font-size: 17px;
+  margin: 0;
+  line-height: 1.25;
+}
+#panel .sub {
+  margin: 0;
+  color: var(--gk-muted);
+  line-height: 1.5;
+}
+.badge {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 1px 7px;
+  border-radius: 9px;
+  background: rgba(255, 138, 61, 0.15);
+  color: var(--gk-accent);
+  font-size: 11px;
+}
+#panel label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--gk-muted);
+}
+#panel label.check {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  color: var(--gk-text);
+}
+#panel select {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--gk-text);
+  border: 1px solid var(--gk-border);
+  border-radius: 6px;
+  padding: 5px 6px;
+  font: inherit;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+#panel select option {
+  color: #111;
+}
+#panel input[type='range'] {
+  accent-color: var(--gk-accent);
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.field-label {
+  color: var(--gk-muted);
+}
+.seg {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border: 1px solid var(--gk-border);
+  border-radius: 7px;
+  overflow: hidden;
+}
+.seg button {
+  border: 0;
+  border-right: 1px solid var(--gk-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--gk-text);
+  font: inherit;
+  font-weight: 600;
+  padding: 7px 0;
+  cursor: pointer;
+}
+.seg button:last-child {
+  border-right: 0;
+}
+.seg button[aria-checked='true'] {
+  background: var(--gk-accent);
+  color: #111;
+}
+.sides {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  color: var(--gk-muted);
+}
+.sides b {
+  color: var(--gk-text);
+  font-weight: 600;
+}
+.sides button {
+  margin-left: auto;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--gk-text);
+  border: 1px solid var(--gk-border);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font: inherit;
+  cursor: pointer;
+}
+#zoom {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+}
+.note {
+  margin: 0;
+  color: var(--gk-muted);
+  font-size: 12px;
+  min-height: 1em;
+}
+.bottom {
+  left: 16px;
+  right: 16px;
+  bottom: 28px;
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+#time {
+  flex: 1;
+  min-width: 0;
+}
+#side-labels {
+  position: absolute;
+  bottom: 118px;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+  z-index: 6;
+}
+#side-labels span {
+  position: absolute;
+  bottom: 0;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--gk-panel);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.cesium-viewer-bottom {
+  bottom: 0;
+}
+@media (max-width: 760px) {
+  #panel {
+    width: auto;
+    right: 16px;
+    max-height: 45vh;
+    overflow: auto;
+  }
+  .bottom {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  #side-labels {
+    display: none;
+  }
+}
+
+.note.detail {
+  color: var(--gk-text);
+}
+.day {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--gk-muted);
+  font-size: 13px;
+}
+.day[hidden] {
+  display: none;
+}
+.day select {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--gk-text);
+  border: 1px solid var(--gk-border);
+  border-radius: 6px;
+  padding: 4px 6px;
+  font: inherit;
+}
+.day select option {
+  color: #111;
+}
+
+.seg.seg2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+.seg button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  border: 1px dashed var(--gk-border);
+  border-radius: 8px;
+}
+.filters[hidden] {
+  display: none;
+}
+
+#scale {
+  position: absolute;
+  right: 16px;
+  bottom: 112px;
+  z-index: 6;
+  text-align: right;
+}
+#scale .gk-scale-bar {
+  margin-left: auto;
+}
+
+#panel {
+  max-height: calc(100vh - 150px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+#cal-toggle {
+  position: absolute;
+  top: 16px;
+  right: 66px;
+  z-index: 10;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid var(--gk-border);
+  background: var(--gk-accent);
+  color: #111;
+  font: 600 13px var(--gk-font);
+  cursor: pointer;
+}
+.calpanel {
+  top: 64px;
+  right: 16px;
+  width: 470px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 190px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 13px;
+  z-index: 11;
+}
+.calpanel[hidden] {
+  display: none;
+}
+.cal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.cal-head h2 {
+  margin: 0;
+  font-size: 16px;
+}
+.cal-x {
+  background: none;
+  border: 0;
+  color: var(--gk-text);
+  font-size: 22px;
+  cursor: pointer;
+}
+.cal-sec {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.cal-btns {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 6px;
+}
+.calpanel button:not(.cal-x):not(.gk-cal-c),
+.calpanel input,
+.calpanel select {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--gk-text);
+  border: 1px solid var(--gk-border);
+  border-radius: 6px;
+  padding: 5px 6px;
+  font: inherit;
+  min-width: 0;
+}
+.calpanel button:not(.cal-x):not(.gk-cal-c) {
+  cursor: pointer;
+  font-weight: 600;
+}
+.calpanel select option {
+  color: #111;
+}
+.cal-pt {
+  display: grid;
+  grid-template-columns: 1fr 1fr 64px auto;
+  gap: 6px;
+}
+.cal-row3 {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 6px;
+}
+.cal-row3 label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  color: var(--gk-muted);
+}
+.calpanel label.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cal-stats p {
+  margin: 0 0 4px;
+  line-height: 1.45;
+}
+.cal-export {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.cal-range {
+  color: var(--gk-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
