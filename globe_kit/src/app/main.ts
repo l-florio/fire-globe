@@ -15,7 +15,7 @@ import { createCalendarPanel } from './calendarPanel';
 import { createDetectionsPanel } from './detectionsPanel';
 import { createExporter } from './exporter';
 import { copyLink, readShare, writeShare } from './share';
-import { openTable, storeGlobeHash } from './nav';
+import { openClimatology, openTable, storeGlobeHash } from './nav';
 import { detectSource, lazySource } from './dataSource';
 import { createDetail, DETECTION_FRP_TOP, type Pass, type Sat, type Step } from './detail';
 import { applyI18n, fmtFixed, locale, monthsShort, t, tOr } from './i18n';
@@ -547,15 +547,19 @@ async function main() {
   document.body.appendChild(actions);
   calPanel.select(slider.key);
 
-  // ---- Globe | Table: the table is a separate page (table.html); the globe state is kept for the way back
+  // ---- Globe | Table | Climatology: separate pages (table.html, climatology.html); the globe state is kept for the way back
   const tabs = document.createElement('div');
   tabs.id = 'view-tabs';
-  tabs.className = 'seg seg2';
+  tabs.className = 'seg seg3';
   tabs.setAttribute('role', 'tablist');
-  tabs.innerHTML = `<button type="button" role="tab" aria-selected="true">${t('view.globe')}</button><button type="button" role="tab" aria-selected="false" title="${t('view.table.title')}">${t('view.table')}</button>`;
-  tabs.lastElementChild!.addEventListener('click', () => {
+  tabs.innerHTML = `<button type="button" role="tab" aria-selected="true">${t('view.globe')}</button><button type="button" role="tab" aria-selected="false" title="${t('view.table.title')}">${t('view.table')}</button><button type="button" role="tab" aria-selected="false" title="${t('view.climatology.title')}">${t('view.climatology')}</button>`;
+  tabs.children[1].addEventListener('click', () => {
     storeGlobeHash(location.hash);
     openTable(slider.key);
+  });
+  tabs.children[2].addEventListener('click', () => {
+    storeGlobeHash(location.hash);
+    openClimatology(/^\d{4}-\d{2}(-\d{2})?$/.test(slider.key) ? `t=${slider.key}` : '');
   });
   document.body.appendChild(tabs);
   detail.setPeriod(step, slider.key);

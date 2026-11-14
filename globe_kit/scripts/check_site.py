@@ -51,6 +51,15 @@ def main() -> int:
     if static.get("intervals") and not (pub / "data" / static["intervals"]).exists():
         errors.append("interval table missing")
 
+    clim = static.get("climatology")
+    if clim:
+        if not (pub / "data" / clim.get("band", "climatology/band.parquet")).exists():
+            errors.append("climatology: band file missing")
+        elif clim.get("current") and not (pub / "data" / clim["current"]).exists():
+            errors.append("climatology: current-year file missing")
+        else:
+            print(f"climatology: band + current ({clim.get('generated', '?')})")
+
     if a.expect_recent:
         today = dt.date.today()
         prev = (today.replace(day=1) - dt.timedelta(days=1)).strftime("%Y-%m")

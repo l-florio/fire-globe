@@ -8,6 +8,7 @@ Web app of the Fire Globe project (NASA Space Apps Challenge 2026, "Harmonizatio
 - **Single detections:** below 2,500 km of camera height, colored by FRP, with a list of the detections in view. Overpass filters (day/night, Terra/Aqua). Not available for the harmonized series.
 - **Area fire calendar:** area by place search (OpenStreetMap Nominatim), continent (Natural Earth), GFED region, drawn box, current view, or point plus radius. Month x year calendar; color by value (log) or anomaly (ratio to the median of the same month in the other years); 90% interval for harmonized series; the current month is partial and excluded from medians. CSV and PNG export.
 - **Data explorer (Table tab):** datasets (harmonized regions, harmonized 1 degree grid, raw 0.25 degree grid, single detections), Excel-like filters, no-code builder, SQL on DuckDB-WASM, charts.
+- **Climatology page (third tab, `climatology.html`, no Cesium):** typical range of the 7-day fire detections by day of the year for a continent, GFED region or country, with the current year over it (data in `public/data/climatology/`, read with DuckDB-WASM; current-year file rebuilt nightly by `scripts/make_climatology_current.py`, which needs `scripts/climatology_country_cells.parquet`, the cell-to-country map of the band). PNG and CSV export; link from the Area fire calendar.
 - **Export:** map PNG and time-animation video. English and Italian UI.
 
 Harmonized values are on 1 degree cells (small areas count whole cells) and are detections, not burned area.

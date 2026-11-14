@@ -31,6 +31,7 @@ Full method, validation and limits: [data_pipeline/HARMONIZATION.md](data_pipeli
 - **Globe:** MODIS, VIIRS, both (split compare) or Harmonized (long or detail series). Monthly and daily steps. Zoomed in, single detections are drawn and a list shows the detections in view.
 - **Area fire calendar:** pick an area by place search (OpenStreetMap Nominatim), continent (Natural Earth), GFED region, drawn box, current view, or point plus radius. It shows a month x year calendar, the anomaly against the median of the same month in the other years, and the 90% interval for harmonized series. Export as CSV or PNG.
 - **Data explorer (Table tab):** datasets, Excel-like column filters, a no-code builder, SQL on DuckDB-WASM, and charts.
+- **Climatology (third tab):** for a continent, GFED region or country, the typical range (5-95%) of the 7-day total of fire detections for each day of the year (VIIRS S-NPP 2012-2025, validated at about 90% leave-one-year-out coverage) with the current year (NOAA-20, near-real-time days provisional) on top, plus PNG and CSV export. Descriptive, not a forecast. Linked from the Area fire calendar.
 - **Export:** map as PNG, time animation as video. The interface is in English and Italian.
 
 ## Limits

@@ -1,6 +1,6 @@
 import { createExplorer } from './explorer/explorer';
 import { applyI18n } from './i18n';
-import { openGlobe, openRegionOnGlobe } from './nav';
+import { openClimatology, openGlobe, openRegionOnGlobe } from './nav';
 import { readShare } from './share';
 import './tablePage.css';
 
@@ -8,6 +8,7 @@ import './tablePage.css';
 // presets the regions dataset.
 applyI18n();
 document.getElementById('tab-globe')!.addEventListener('click', openGlobe);
+document.getElementById('tab-climatology')!.addEventListener('click', () => openClimatology());
 
 const key = readShare().t ?? '';
 document.getElementById('table-main')!.append(

@@ -1,0 +1,168 @@
+/* The climatology page (climatology.html): reuses the header of the table page (tablePage.css). */
+body.clim-page {
+  overflow: auto;
+  height: auto;
+  min-height: 100%;
+}
+html:has(body.clim-page) {
+  height: auto;
+}
+#clim-main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 1100px;
+  width: 100%;
+  margin: 0 auto;
+  min-width: 0;
+}
+#clim-main h1 {
+  margin: 0;
+  font-size: 20px;
+}
+.clim-badge {
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--gk-accent);
+  border-radius: 7px;
+  background: rgba(255, 138, 61, 0.12);
+  font-weight: 700;
+  font-size: 14px;
+}
+.clim-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  align-items: flex-end;
+}
+.clim-controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--gk-muted);
+  min-width: 0;
+}
+.clim-controls input,
+.clim-controls select {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--gk-text);
+  border: 1px solid var(--gk-border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font: 14px var(--gk-font);
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.clim-controls option,
+.clim-controls optgroup {
+  color: #111;
+}
+.clim-controls select {
+  min-width: 260px;
+}
+.clim-hint {
+  font-size: 12px;
+  color: var(--gk-muted);
+  align-self: center;
+}
+#clim-main :focus-visible {
+  outline: 2px solid var(--gk-accent);
+  outline-offset: 2px;
+}
+.clim-status {
+  margin: 0;
+  color: var(--gk-muted);
+  font-size: 13px;
+  min-height: 1em;
+}
+.clim-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+.clim-card {
+  background: var(--gk-panel);
+  border: 1px solid var(--gk-border);
+  border-radius: 7px;
+  padding: 8px 10px;
+  min-width: 0;
+}
+.clim-card dt {
+  font-size: 12px;
+  color: var(--gk-muted);
+}
+.clim-card dd {
+  margin: 2px 0 0;
+  font-size: 18px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.clim-card dd small {
+  display: block;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--gk-muted);
+}
+.clim-sumtitle,
+.clim-next,
+.clim-prov {
+  margin: 0;
+  font-size: 13px;
+}
+.clim-next {
+  font-weight: 600;
+}
+.clim-prov {
+  color: var(--gk-muted);
+}
+.clim-chartbox {
+  position: relative;
+  height: clamp(300px, 56vh, 540px);
+  background: #0a0f19;
+  border: 1px solid var(--gk-border);
+  border-radius: 7px;
+  padding: 6px;
+  box-sizing: border-box;
+}
+.clim-actions {
+  display: flex;
+  gap: 8px;
+}
+.clim-actions button {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--gk-text);
+  border: 1px solid var(--gk-border);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font: 600 13px var(--gk-font);
+  cursor: pointer;
+}
+.clim-method {
+  font-size: 12px;
+  color: var(--gk-muted);
+  line-height: 1.45;
+}
+.clim-method h2 {
+  margin: 0 0 4px;
+  font-size: 13px;
+  color: var(--gk-text);
+}
+.clim-method p {
+  margin: 0 0 6px;
+}
+@media (max-width: 760px) {
+  #clim-main h1 {
+    font-size: 17px;
+  }
+  .clim-controls label,
+  .clim-controls select,
+  .clim-controls input {
+    width: 100%;
+    min-width: 0;
+  }
+  .clim-chartbox {
+    height: 340px;
+  }
+}

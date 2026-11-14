@@ -1,6 +1,7 @@
 import type * as Cesium from 'cesium';
 import { areaLabel, cellsFromGeoJson, createAreaPicker, createCalendarHeatmap, type Area, type CellArea } from '../globe';
 import type { DataSource, MonthRow } from './dataSource';
+import { climatologyHref, storeGlobeHash } from './nav';
 import { fmtFixed, fmtInt, lang, locale, monthsShort, monthInitials, t, tOr, tn } from './i18n';
 
 interface IntervalBins {
@@ -25,6 +26,7 @@ interface Place {
   lon: string;
   boundingbox?: string[]; // south, north, west, east
   geojson?: { type: string; coordinates: unknown };
+  namedetails?: Record<string, string>;
 }
 /** Continents (Natural Earth) on 1 degree cells: public/continents.json; also typed names, English and Italian. */
 const CONTINENT_NAMES: Record<string, string> = {
@@ -135,6 +137,7 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
       <div class="cal-heat"></div>
       <div class="cal-legend note"></div>
       <div class="cal-stats"></div>
+      <p class="cal-clim" hidden><a class="cal-clim-a" href="#" title="${t('cal.climLink.title')}">${t('cal.climLink')}</a></p>
     </div>
     <section class="cal-sec cal-export">
       <button type="button" data-a="csvcal">${t('cal.csvCal')}</button>
@@ -163,6 +166,9 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
   const toIn = $<HTMLInputElement>('[data-c=to]');
   const areaP = $<HTMLParagraphElement>('.cal-area');
   const statsEl = $<HTMLDivElement>('.cal-stats');
+  const climP = $<HTMLParagraphElement>('.cal-clim');
+  const climA = $<HTMLAnchorElement>('.cal-clim-a');
+  climA.addEventListener('click', () => storeGlobeHash(location.hash)); // the link itself navigates
   const legendEl = $<HTMLDivElement>('.cal-legend');
   sensorSel.value = sensors.includes('HARM_LONG') ? 'HARM_LONG' : sensors.includes('VIIRS_SNPP') ? 'VIIRS_SNPP' : sensors[0];
   const isHarm = () => sensorSel.value.startsWith('HARM_');
@@ -379,6 +385,9 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
     regionSel.value = '';
     resultsEl.hidden = true;
     areaSpec = undefined;
+    areaCountry = undefined;
+    cellCountry = undefined;
+    showClimLink();
     panel.onChange?.();
   }
 
@@ -388,6 +397,15 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
    */
   let areaSpec: string | undefined;
   let cellSpec: string | undefined; // set by the place / region pickers just before a cell area is used
+  // English country name when the area is a country found by search (Nominatim addresstype country): climatology link
+  let cellCountry: string | undefined;
+  let areaCountry: string | undefined;
+  function showClimLink() {
+    const regionSpec = areaSpec?.startsWith('region:') ? areaSpec : undefined;
+    const spec = regionSpec ?? (areaCountry ? `country:${areaCountry}` : undefined);
+    climP.hidden = !spec;
+    if (spec) climA.href = climatologyHref(spec);
+  }
   const r4 = (v: number) => String(Math.round(v * 1e4) / 1e4);
   function specOf(a: Area): string | undefined {
     if (a.kind === 'bbox') return `box:${[a.west, a.south, a.east, a.north].map(r4).join(',')}`;
@@ -398,7 +416,10 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
     if (!a) return;
     area = a;
     areaSpec = specOf(a);
+    areaCountry = a.kind === 'cells' ? cellCountry : undefined;
     cellSpec = undefined;
+    cellCountry = undefined;
+    showClimLink();
     panel.onChange?.();
     areaP.textContent = areaLabel(a, AREA_LABELS);
     void load();
@@ -549,7 +570,7 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
       resultsEl.textContent = t('cal.outline.loading');
       try {
         const [d] = await nominatim(
-          `https://nominatim.openstreetmap.org/lookup?format=jsonv2&polygon_geojson=1&polygon_threshold=${tol}&osm_ids=${p.osm_type[0].toUpperCase()}${p.osm_id}`,
+          `https://nominatim.openstreetmap.org/lookup?format=jsonv2&polygon_geojson=1&polygon_threshold=${tol}&osm_ids=${p.osm_type[0].toUpperCase()}${p.osm_id}&namedetails=1`,
         );
         const g = d?.geojson;
         const a = g && /Polygon$/.test(g.type) ? cellsFromGeoJson(g, label) : undefined;
@@ -558,6 +579,7 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
           regionSel.value = '';
           resultsEl.hidden = true;
           cellSpec = `osm:${p.osm_type[0].toUpperCase()}${p.osm_id}`;
+          cellCountry = p.addresstype === 'country' ? (p.namedetails?.['name:en'] ?? p.namedetails?.name) : undefined;
           return useArea(a);
         }
       } catch (err) {
@@ -582,7 +604,7 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
     try {
       const ft = featureType ? `&featureType=${featureType}` : '';
       const found = await nominatim(
-        `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=8&accept-language=${lang}${ft}&q=${encodeURIComponent(q)}`,
+        `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=8&namedetails=1&accept-language=${lang}${ft}&q=${encodeURIComponent(q)}`,
       );
       // The same street is often several OpenStreetMap ways: keep one result per label.
       const seen = new Set<string>();
@@ -686,7 +708,7 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
       resultsEl.hidden = false;
       resultsEl.textContent = t('cal.outline.loading');
       try {
-        const [p] = await nominatim(`https://nominatim.openstreetmap.org/lookup?format=jsonv2&accept-language=${lang}&osm_ids=${val}`);
+        const [p] = await nominatim(`https://nominatim.openstreetmap.org/lookup?format=jsonv2&namedetails=1&accept-language=${lang}&osm_ids=${val}`);
         if (p) await usePlace(p);
         else resultsEl.textContent = t('cal.noPlace');
       } catch (err) {

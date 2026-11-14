@@ -93,6 +93,9 @@ jobs:
           python scripts/make_fire_frames.py --from-year "$Y0" --scale-from ../site_data/frames/manifest.json --out ../build/recent/frames --harmonized "$H"
           python scripts/make_static_data.py --from-year "$Y0" --tag recent --out ../build/recent/data --harmonized "$H" \
             --region=-180,-90,180,90 --points-sensors "$RECENT_POINT_SENSORS"
+          # Climatology page: current-year daily counts per region (NOAA-20), next to the committed band (site_data/data/climatology/).
+          # Not fatal: on failure the snapshot committed in site_data is published.
+          python scripts/make_climatology_current.py --year "$Y0" --out ../build/recent/data/climatology/current.parquet             || echo "::warning::climatology current-year file not built"
 
       - name: Merge historical and recent data
         run: |

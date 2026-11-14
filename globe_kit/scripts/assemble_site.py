@@ -6,7 +6,8 @@ Each input folder has the layout written by make_fire_frames.py (frames/) and ma
 
 Usage: python assemble_site.py --part ../site_data [--part ../build/recent] [--out ../globe_kit/public]
                         [--external-points DIR --points-base URL]
-Later parts win on identical file paths (a recent month replaces an older copy of the same month).
+Later parts win on identical file paths (a recent month replaces an older copy of the same month; the same holds for
+data/climatology/current.parquet, and the static.json key `climatology` is carried over).
 Single detections: for each sensor and year the file covering the largest region wins (worldwide beats a
 region); on equal coverage the later source wins. Order: external points, then the parts in order.
 --external-points: a folder written by make_static_data.py --skip-grid (its static.json and points/),
@@ -17,6 +18,7 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -60,6 +62,8 @@ def merge_static(manifests: list[dict]) -> dict:
         if m.get("regions"):
             have = {f["path"] for f in out.get("regions", [])}
             out["regions"] = out.get("regions", []) + [f for f in m["regions"] if f["path"] not in have]
+        if m.get("climatology"):
+            out["climatology"] = {**out.get("climatology", {}), **m["climatology"]}
     return out
 
 
@@ -92,6 +96,15 @@ def main() -> None:
         statics = [ext] + statics
     if statics:
         merged = merge_static(statics)
+        # Climatology page: the band is historical (site_data); the current-year file is rebuilt nightly in the recent part
+        # (<part>/data/climatology/current.parquet, no manifest key needed) and replaces the committed snapshot.
+        clim = merged.get("climatology")
+        for p in parts:
+            cur = p / "data" / "climatology" / "current.parquet"
+            if clim and cur.exists():
+                clim["current"] = "climatology/current.parquet"
+                if p is parts[-1] and len(parts) > 1:
+                    clim["generated"] = datetime.fromtimestamp(cur.stat().st_mtime, timezone.utc).isoformat(timespec="seconds")
         (out / "data" / "static.json").write_text(json.dumps(merged, indent=1), encoding="utf-8")
         # Drop copied point files that a wider external file replaced.
         used = {f["path"] for files in merged["points"].values() for f in files}
