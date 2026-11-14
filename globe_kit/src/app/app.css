@@ -711,6 +711,7 @@ body.view-table .gk-splitter {
 #top-actions #cal-toggle {
   position: static;
 }
+#share-btn,
 #export-toggle {
   height: 38px;
   padding: 0 14px;
@@ -786,5 +787,24 @@ body.view-table #top-actions {
   .detpanel th:nth-child(6),
   .detpanel td:nth-child(6) {
     display: none;
+  }
+}
+
+/* Globe | Table sits right of the control panel (not over the split line); compact top actions on medium screens. */
+@media (min-width: 761px) {
+  #view-tabs {
+    left: 332px;
+    transform: none;
+  }
+}
+@media (min-width: 761px) and (max-width: 1100px) {
+  #top-actions button {
+    padding: 0 10px;
+    font-size: 12px;
+  }
+}
+@media (min-width: 761px) and (max-width: 900px) {
+  #view-tabs {
+    top: 62px;
   }
 }

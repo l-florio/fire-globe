@@ -304,11 +304,28 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
     f.reset();
     regionSel.value = '';
     resultsEl.hidden = true;
+    areaSpec = undefined;
+    panel.onChange?.();
   }
 
+  /**
+   * The current area as a short text for shareable links:
+   * box:w,s,e,n | pt:lat,lon,km | region:c:EU / region:g:EURO | osm:R123 (OpenStreetMap object, outline re-fetched).
+   */
+  let areaSpec: string | undefined;
+  let cellSpec: string | undefined; // set by the place / region pickers just before a cell area is used
+  const r4 = (v: number) => String(Math.round(v * 1e4) / 1e4);
+  function specOf(a: Area): string | undefined {
+    if (a.kind === 'bbox') return `box:${[a.west, a.south, a.east, a.north].map(r4).join(',')}`;
+    if (a.kind === 'circle') return `pt:${r4(a.lat)},${r4(a.lon)},${a.km}`;
+    return cellSpec;
+  }
   function setArea(a: Area | undefined) {
     if (!a) return;
     area = a;
+    areaSpec = specOf(a);
+    cellSpec = undefined;
+    panel.onChange?.();
     areaP.textContent = areaLabel(a, AREA_LABELS);
     void load();
   }
@@ -460,6 +477,7 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
           resetPoint();
           regionSel.value = '';
           resultsEl.hidden = true;
+          cellSpec = `osm:${p.osm_type[0].toUpperCase()}${p.osm_id}`;
           return useArea(a);
         }
       } catch (err) {
@@ -546,6 +564,7 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
     const a: CellArea = { kind: 'cells', res: 1, ids: g.ids, bbox: g.bbox, label };
     resultsEl.hidden = true;
     resetPoint();
+    cellSpec = `region:${k}:${code}`;
     useArea(a);
   }
   $<HTMLFormElement>('.cal-pt').onsubmit = (e) => {
@@ -567,15 +586,67 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
     pts.title = h ? t('cal.csvPts.harm') : '';
   }
   refreshHarmControls();
+  /** Restore an area from a shareable link (see areaSpec). */
+  async function applyAreaSpec(spec: string) {
+    const [kind, ...rest] = spec.split(':');
+    const val = rest.join(':');
+    const nums = val.split(',').map(Number);
+    if (kind === 'box' && nums.length === 4 && nums.every(Number.isFinite)) {
+      useArea({ kind: 'bbox', west: nums[0], south: nums[1], east: nums[2], north: nums[3] });
+    } else if (kind === 'pt' && nums.length === 3 && nums.every(Number.isFinite)) {
+      ptInput('lat').value = String(nums[0]);
+      ptInput('lon').value = String(nums[1]);
+      ptInput('km').value = String(nums[2]);
+      useArea({ kind: 'circle', lat: nums[0], lon: nums[1], km: nums[2] });
+    } else if (kind === 'region') {
+      await pickRegion(val);
+    } else if (kind === 'osm' && /^[NWR]\d+$/.test(val)) {
+      resultsEl.hidden = false;
+      resultsEl.textContent = t('cal.outline.loading');
+      try {
+        const [p] = await nominatim(`https://nominatim.openstreetmap.org/lookup?format=jsonv2&accept-language=${lang}&osm_ids=${val}`);
+        if (p) await usePlace(p);
+        else resultsEl.textContent = t('cal.noPlace');
+      } catch (err) {
+        resultsEl.textContent = t('cal.outline.error', { msg: (err as Error).message });
+      }
+    }
+  }
+
   sensorSel.onchange = () => {
     refreshHarmControls();
     void load();
+    panel.onChange?.();
   };
   excl.onchange = () => void load();
-  varSel.onchange = draw;
-  modeSel.onchange = draw;
+  varSel.onchange = () => {
+    draw();
+    panel.onChange?.();
+  };
+  modeSel.onchange = () => {
+    draw();
+    panel.onChange?.();
+  };
 
   const panel = {
+    /** Called when the area or the calendar options change (the app updates the shareable link). */
+    onChange: undefined as (() => void) | undefined,
+    /** Calendar state for a shareable link. */
+    get state() {
+      return { area: areaSpec, sensor: sensorSel.value, variable: varSel.value, colour: modeSel.value, open: !el.hidden };
+    },
+    /** Restore the calendar from a shareable link. */
+    async applyState(s: { area?: string; sensor?: string; variable?: string; colour?: string }) {
+      panel.toggle(true);
+      if (s.sensor && sensors.includes(s.sensor)) {
+        sensorSel.value = s.sensor;
+        refreshHarmControls();
+      }
+      if (s.variable && [...varSel.options].some((x) => x.value === s.variable) && !varSel.disabled) varSel.value = s.variable;
+      if (s.colour && [...modeSel.options].some((x) => x.value === s.colour)) modeSel.value = s.colour;
+      if (s.area) await applyAreaSpec(s.area);
+      else void load();
+    },
     /** Set by the app: export an element (the calendar with its legend) as PNG. */
     onExportPng: undefined as ((el: HTMLElement) => Promise<void>) | undefined,
     /** Open the calendar on a place by name (e.g. a country chosen in the table). */
@@ -592,6 +663,7 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
     toggle(on?: boolean) {
       el.hidden = on === undefined ? !el.hidden : !on;
       if (el.hidden) picker.cancel();
+      panel.onChange?.();
       return !el.hidden;
     },
     /** Follow the time slider: highlight the month and preset the export range. */

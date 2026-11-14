@@ -15,6 +15,7 @@ import { createCalendarPanel } from './calendarPanel';
 import type { createExplorer } from './explorer/explorer';
 import { createDetectionsPanel } from './detectionsPanel';
 import { createExporter } from './exporter';
+import { copyLink, readShare, writeShare } from './share';
 import { detectSource, lazySource } from './dataSource';
 import { createDetail, DETECTION_FRP_TOP, type Pass, type Sat, type Step } from './detail';
 import { applyI18n, fmtFixed, locale, monthsShort, t, tOr } from './i18n';
@@ -227,8 +228,36 @@ async function main() {
       .join(' ');
   }
 
+  // ---- shareable link: the state is written to the URL hash (see share.ts) once the start-up state is applied
+  let urlReady = false;
+  let urlTimer: number | undefined;
+  function syncUrl() {
+    if (!urlReady) return;
+    window.clearTimeout(urlTimer);
+    urlTimer = window.setTimeout(() => {
+      const c = viewer.camera.positionCartographic;
+      const cal = calPanel?.state;
+      writeShare({
+        t: slider.key,
+        mode,
+        harm: mode === 'HARM' ? harmSel.value : undefined,
+        viirs: mode === 'VIIRS' || mode === 'BOTH' ? viirsSel.value : undefined,
+        metric: mode === 'HARM' ? undefined : metricSel.value,
+        step: step === 'day' ? 'day' : undefined,
+        view: document.body.classList.contains('view-table') ? 'table' : undefined,
+        cam: [Cesium.Math.toDegrees(c.longitude).toFixed(3), Cesium.Math.toDegrees(c.latitude).toFixed(3), Math.round(c.height)].join(','),
+        cal: cal?.open ? '1' : undefined,
+        area: cal?.area,
+        cs: cal?.open || cal?.area ? cal.sensor : undefined,
+        cv: cal?.variable === 'frp' ? 'frp' : undefined,
+        cm: cal?.colour === 'anomaly' ? 'anomaly' : undefined,
+      });
+    }, 300);
+  }
+
   /** Apply mode, VIIRS satellite and side order to layers, UI and time axis. */
   function applySelection() {
+    syncUrl();
     const [a, b] = shown();
     for (const btn of modeSeg.querySelectorAll<HTMLButtonElement>('button'))
       btn.setAttribute('aria-checked', String(btn.dataset.mode === mode));
@@ -330,6 +359,7 @@ async function main() {
       day: t('slider.day'),
     },
     onChange: async (key) => {
+      syncUrl();
       refreshLabels(key);
       calPanel?.select(key);
       table?.select(key);
@@ -367,6 +397,7 @@ async function main() {
     void slider.go(target);
     refreshControls();
     refreshLegend();
+    syncUrl();
   };
   passSeg.onclick = (e) => {
     const p = (e.target as HTMLElement).closest('button')?.dataset.pass as Pass | undefined;
@@ -477,7 +508,23 @@ async function main() {
   calPanel.onExportPng = (el) => exporter.exportElementPng(el, 'fire_calendar.png');
   const actions = document.createElement('div');
   actions.id = 'top-actions';
-  actions.append(exporter.button, calBtn);
+  const shareBtn = document.createElement('button');
+  shareBtn.id = 'share-btn';
+  shareBtn.type = 'button';
+  shareBtn.textContent = t('share.btn');
+  shareBtn.title = t('share.title');
+  shareBtn.onclick = async () => {
+    window.clearTimeout(urlTimer);
+    urlReady = true;
+    syncUrl();
+    await new Promise((r) => setTimeout(r, 350));
+    const ok = await copyLink();
+    shareBtn.textContent = ok ? t('share.copied') : t('share.manual');
+    setTimeout(() => (shareBtn.textContent = t('share.btn')), 2500);
+  };
+  actions.append(shareBtn, exporter.button, calBtn);
+  calPanel.onChange = syncUrl;
+  viewer.camera.moveEnd.addEventListener(syncUrl);
   document.body.appendChild(actions);
   calPanel.select(slider.key);
 
@@ -491,6 +538,7 @@ async function main() {
     for (const b of tabs.querySelectorAll('button')) b.setAttribute('aria-selected', String(b.dataset.v === v));
     document.body.classList.toggle('view-table', v === 'table');
     table?.show(v === 'table');
+    syncUrl();
   };
   // The data explorer (Tabulator, Chart.js) is loaded on first use, so it does not slow down the globe.
   let explorer: Promise<ReturnType<typeof createExplorer>> | undefined;
@@ -533,6 +581,35 @@ async function main() {
 
   applySelection();
   refreshLegend();
+
+  // ---- start-up state from a shareable link
+  const st = readShare();
+  const has = (sel: HTMLSelectElement, v?: string) => !!v && [...sel.options].some((o) => o.value === v);
+  if (st.mode && ['MODIS', 'VIIRS', 'BOTH', 'HARM'].includes(st.mode)) mode = st.mode as Mode;
+  if (has(harmSel, st.harm)) harmSel.value = st.harm!;
+  if (has(viirsSel, st.viirs)) viirsSel.value = st.viirs!;
+  if (has(metricSel, st.metric)) metricSel.value = st.metric!;
+  if (st.step === 'day' && mode !== 'HARM' && (step as Step) !== 'day') {
+    step = 'day';
+    slider.setKeys(allKeys());
+    refreshControls();
+  }
+  if (st.mode || st.harm || st.viirs || st.metric) applySelection();
+  if (st.t) {
+    const keys = allKeys();
+    const key = keys.includes(st.t) ? st.t : keys.find((k) => k.startsWith(st.t!.slice(0, 7)));
+    if (key) await slider.go(key);
+  }
+  const cam = (st.cam ?? '').split(',').map(Number);
+  if (cam.length === 3 && cam.every(Number.isFinite) && !st.area)
+    viewer.camera.setView({ destination: Cesium.Cartesian3.fromDegrees(cam[0], cam[1], cam[2]) });
+  if (st.view === 'table') setView('table');
+  if (st.cal === '1' || st.area) {
+    detPanel.toggle(false);
+    await calPanel.applyState({ area: st.area, sensor: st.cs, variable: st.cv, colour: st.cm });
+  }
+  urlReady = true;
+  syncUrl();
   // Debug handle for the browser console.
   Object.assign(window, { globe, left, right, slider });
 }
