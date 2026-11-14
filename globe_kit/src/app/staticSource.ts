@@ -4,7 +4,7 @@ import mvpWorker from '@duckdb/duckdb-wasm/dist/duckdb-browser-mvp.worker.js?url
 import ehWasm from '@duckdb/duckdb-wasm/dist/duckdb-eh.wasm?url';
 import ehWorker from '@duckdb/duckdb-wasm/dist/duckdb-browser-eh.worker.js?url';
 import type { Area } from '../globe';
-import type { CalendarResult, DataSource, Detections } from './dataSource';
+import type { CalendarResult, DataSource, Detections, MonthRow } from './dataSource';
 
 interface StaticManifest {
   region: [number, number, number, number];
@@ -109,15 +109,20 @@ export async function staticSource(baseUrl: string): Promise<DataSource | undefi
       const [s, n] = latRange(area);
       const files = (man.grid[sensor] ?? []).filter((f) => f.north >= s && f.south <= n).map((f) => f.path);
       if (!files.length) return { source: 'grid', months: [] };
-      const cls = types === '0,-1' ? 'AND cls = 0' : '';
+      const harm = sensor.startsWith('HARM_');
+      const cls = types === '0,-1' && !harm ? 'AND cls = 0' : '';
       const t = await conn.query(`
-        SELECT printf('%04d-%02d', 2000 + m // 12, m % 12 + 1) AS ym, CAST(sum(n) AS DOUBLE) AS n, CAST(sum(frp) AS DOUBLE) AS f
+        SELECT printf('%04d-%02d', 2000 + m // 12, m % 12 + 1) AS ym, CAST(sum(n) AS DOUBLE) AS n, CAST(sum(frp) AS DOUBLE) AS f${harm ? ', CAST(max(o) AS DOUBLE) AS o' : ''}
         FROM read_parquet(${list(files)}) WHERE ${areaSql(area)} ${cls}
         GROUP BY m ORDER BY m`);
       const ym = t.getChild('ym')!.toArray() as string[];
       const nn = t.getChild('n')!.toArray() as Float64Array;
       const ff = t.getChild('f')!.toArray() as Float64Array;
-      return { source: 'grid', months: ym.map((m, i) => [m, nn[i], Math.round(ff[i] * 10) / 10] as [string, number, number]) };
+      const oo = harm ? (t.getChild('o')!.toArray() as Float64Array) : undefined;
+      return {
+        source: harm ? 'harmonized' : 'grid',
+        months: ym.map((m, i) => [m, nn[i], Math.round(ff[i] * 10) / 10, ...(oo ? [oo[i]] : [])] as MonthRow),
+      };
     },
 
     async exportCsv(sensor, area, from, to, types): Promise<Blob> {

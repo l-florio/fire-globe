@@ -81,6 +81,7 @@ def parse_area(q: dict) -> dict:
 class Store:
     def __init__(self, data: Path):
         self.grid = data / "agg" / "grid_0.25deg_month.parquet"
+        self.harm = data / "harmonized" / "harm_map.parquet"
         self.pq = data / "parquet"
         self.db = duckdb.connect()
         self.local = threading.local()
@@ -141,6 +142,16 @@ class Store:
 
 
 def _calendar(self, sensor: str, area: dict, types: list[int], pass_: str):
+    if sensor in ("HARM_LONG", "HARM_DETAIL"):
+        series = "long" if sensor == "HARM_LONG" else "detail"
+        rows = self.con().execute(f"""
+            SELECT strftime(month, '%Y-%m'), sum(value), 0,
+                   max(CASE origin WHEN 'aqua_obs' THEN 0 WHEN 'viirs_conv' THEN 1 ELSE 2 END)
+            FROM read_parquet('{self.harm.as_posix()}')
+            WHERE series = ? AND {area_sql(area, 'cell_lat', 'cell_lon')}
+            GROUP BY 1 ORDER BY 1
+        """, [series]).fetchall()
+        return "harmonized", rows
     tcond = f"coalesce(type, -1) IN ({','.join(map(str, types))})"
     dn = {"day": "AND daynight = 'D'", "night": "AND daynight = 'N'"}.get(pass_, "")
     c = self.con()
@@ -235,7 +246,9 @@ def make_handler(store: Store):
                     return self.error(400, "sensor, and bbox=w,s,e,n or circle=lat,lon,km required")
                 if u.path == "/api/calendar":
                     source, rows = store.calendar(sensor, area, types, q.get("pass", "all"))
-                    body = {"sensor": sensor, "source": source, "months": [[m, int(n), round(float(f), 1)] for m, n, f in rows]}
+                    body = {"sensor": sensor, "source": source,
+                            "months": [[r[0], round(float(r[1]), 3), round(float(r[2]), 1)] + ([int(r[3])] if len(r) > 3 else [])
+                                       for r in rows]}
                     return self.send(200, json.dumps(body).encode(), "application/json")
                 d0, d1 = q.get("from", ""), q.get("to", "")
                 if not (DATE_RE.match(d0) and DATE_RE.match(d1)) or d0 > d1:

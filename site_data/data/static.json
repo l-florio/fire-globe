@@ -1,5 +1,5 @@
 {
- "generated_utc": "2026-11-14T11:53:28+00:00",
+ "generated_utc": "2026-11-14T12:11:07+00:00",
  "region": [
   -25.0,
   27.0,
@@ -21,98 +21,98 @@
     "south": -60,
     "north": -50,
     "path": "grid/sensor=MODIS/band=3.hist.parquet",
-    "bytes": 5549
+    "bytes": 5550
    },
    {
     "band": 4,
     "south": -50,
     "north": -40,
     "path": "grid/sensor=MODIS/band=4.hist.parquet",
-    "bytes": 74979
+    "bytes": 74949
    },
    {
     "band": 5,
     "south": -40,
     "north": -30,
     "path": "grid/sensor=MODIS/band=5.hist.parquet",
-    "bytes": 1126633
+    "bytes": 1126703
    },
    {
     "band": 6,
     "south": -30,
     "north": -20,
     "path": "grid/sensor=MODIS/band=6.hist.parquet",
-    "bytes": 3136768
+    "bytes": 3136736
    },
    {
     "band": 7,
     "south": -20,
     "north": -10,
     "path": "grid/sensor=MODIS/band=7.hist.parquet",
-    "bytes": 5660881
+    "bytes": 5660953
    },
    {
     "band": 8,
     "south": -10,
     "north": 0,
     "path": "grid/sensor=MODIS/band=8.hist.parquet",
-    "bytes": 4868427
+    "bytes": 4867282
    },
    {
     "band": 9,
     "south": 0,
     "north": 10,
     "path": "grid/sensor=MODIS/band=9.hist.parquet",
-    "bytes": 4461522
+    "bytes": 4461581
    },
    {
     "band": 10,
     "south": 10,
     "north": 20,
     "path": "grid/sensor=MODIS/band=10.hist.parquet",
-    "bytes": 3639009
+    "bytes": 3638944
    },
    {
     "band": 11,
     "south": 20,
     "north": 30,
     "path": "grid/sensor=MODIS/band=11.hist.parquet",
-    "bytes": 2709880
+    "bytes": 2709825
    },
    {
     "band": 12,
     "south": 30,
     "north": 40,
     "path": "grid/sensor=MODIS/band=12.hist.parquet",
-    "bytes": 3298894
+    "bytes": 3299475
    },
    {
     "band": 13,
     "south": 40,
     "north": 50,
     "path": "grid/sensor=MODIS/band=13.hist.parquet",
-    "bytes": 3076781
+    "bytes": 3076016
    },
    {
     "band": 14,
     "south": 50,
     "north": 60,
     "path": "grid/sensor=MODIS/band=14.hist.parquet",
-    "bytes": 2840131
+    "bytes": 2839050
    },
    {
     "band": 15,
     "south": 60,
     "north": 70,
     "path": "grid/sensor=MODIS/band=15.hist.parquet",
-    "bytes": 529302
+    "bytes": 529348
    },
    {
     "band": 16,
     "south": 70,
     "north": 80,
     "path": "grid/sensor=MODIS/band=16.hist.parquet",
-    "bytes": 8543
+    "bytes": 8540
    },
    {
     "band": 17,
@@ -135,7 +135,7 @@
     "south": -80,
     "north": -70,
     "path": "grid/sensor=VIIRS_NOAA20/band=1.hist.parquet",
-    "bytes": 2832
+    "bytes": 2839
    },
    {
     "band": 2,
@@ -149,91 +149,91 @@
     "south": -60,
     "north": -50,
     "path": "grid/sensor=VIIRS_NOAA20/band=3.hist.parquet",
-    "bytes": 6268
+    "bytes": 6284
    },
    {
     "band": 4,
     "south": -50,
     "north": -40,
     "path": "grid/sensor=VIIRS_NOAA20/band=4.hist.parquet",
-    "bytes": 61976
+    "bytes": 61922
    },
    {
     "band": 5,
     "south": -40,
     "north": -30,
     "path": "grid/sensor=VIIRS_NOAA20/band=5.hist.parquet",
-    "bytes": 661041
+    "bytes": 661171
    },
    {
     "band": 6,
     "south": -30,
     "north": -20,
     "path": "grid/sensor=VIIRS_NOAA20/band=6.hist.parquet",
-    "bytes": 1679043
+    "bytes": 1679194
    },
    {
     "band": 7,
     "south": -20,
     "north": -10,
     "path": "grid/sensor=VIIRS_NOAA20/band=7.hist.parquet",
-    "bytes": 2854376
+    "bytes": 2855224
    },
    {
     "band": 8,
     "south": -10,
     "north": 0,
     "path": "grid/sensor=VIIRS_NOAA20/band=8.hist.parquet",
-    "bytes": 2702588
+    "bytes": 2702546
    },
    {
     "band": 9,
     "south": 0,
     "north": 10,
     "path": "grid/sensor=VIIRS_NOAA20/band=9.hist.parquet",
-    "bytes": 2367047
+    "bytes": 2366991
    },
    {
     "band": 10,
     "south": 10,
     "north": 20,
     "path": "grid/sensor=VIIRS_NOAA20/band=10.hist.parquet",
-    "bytes": 2266775
+    "bytes": 2266930
    },
    {
     "band": 11,
     "south": 20,
     "north": 30,
     "path": "grid/sensor=VIIRS_NOAA20/band=11.hist.parquet",
-    "bytes": 2029338
+    "bytes": 2029574
    },
    {
     "band": 12,
     "south": 30,
     "north": 40,
     "path": "grid/sensor=VIIRS_NOAA20/band=12.hist.parquet",
-    "bytes": 2595159
+    "bytes": 2594567
    },
    {
     "band": 13,
     "south": 40,
     "north": 50,
     "path": "grid/sensor=VIIRS_NOAA20/band=13.hist.parquet",
-    "bytes": 1915338
+    "bytes": 1915274
    },
    {
     "band": 14,
     "south": 50,
     "north": 60,
     "path": "grid/sensor=VIIRS_NOAA20/band=14.hist.parquet",
-    "bytes": 1383369
+    "bytes": 1383281
    },
    {
     "band": 15,
     "south": 60,
     "north": 70,
     "path": "grid/sensor=VIIRS_NOAA20/band=15.hist.parquet",
-    "bytes": 354936
+    "bytes": 355825
    },
    {
     "band": 16,
@@ -277,98 +277,98 @@
     "south": -60,
     "north": -50,
     "path": "grid/sensor=VIIRS_NOAA21/band=3.hist.parquet",
-    "bytes": 2957
+    "bytes": 2955
    },
    {
     "band": 4,
     "south": -50,
     "north": -40,
     "path": "grid/sensor=VIIRS_NOAA21/band=4.hist.parquet",
-    "bytes": 24219
+    "bytes": 24211
    },
    {
     "band": 5,
     "south": -40,
     "north": -30,
     "path": "grid/sensor=VIIRS_NOAA21/band=5.hist.parquet",
-    "bytes": 233616
+    "bytes": 233626
    },
    {
     "band": 6,
     "south": -30,
     "north": -20,
     "path": "grid/sensor=VIIRS_NOAA21/band=6.hist.parquet",
-    "bytes": 630122
+    "bytes": 630088
    },
    {
     "band": 7,
     "south": -20,
     "north": -10,
     "path": "grid/sensor=VIIRS_NOAA21/band=7.hist.parquet",
-    "bytes": 1083312
+    "bytes": 1083135
    },
    {
     "band": 8,
     "south": -10,
     "north": 0,
     "path": "grid/sensor=VIIRS_NOAA21/band=8.hist.parquet",
-    "bytes": 1027067
+    "bytes": 1026021
    },
    {
     "band": 9,
     "south": 0,
     "north": 10,
     "path": "grid/sensor=VIIRS_NOAA21/band=9.hist.parquet",
-    "bytes": 881560
+    "bytes": 881476
    },
    {
     "band": 10,
     "south": 10,
     "north": 20,
     "path": "grid/sensor=VIIRS_NOAA21/band=10.hist.parquet",
-    "bytes": 855389
+    "bytes": 855585
    },
    {
     "band": 11,
     "south": 20,
     "north": 30,
     "path": "grid/sensor=VIIRS_NOAA21/band=11.hist.parquet",
-    "bytes": 758690
+    "bytes": 760708
    },
    {
     "band": 12,
     "south": 30,
     "north": 40,
     "path": "grid/sensor=VIIRS_NOAA21/band=12.hist.parquet",
-    "bytes": 977732
+    "bytes": 977915
    },
    {
     "band": 13,
     "south": 40,
     "north": 50,
     "path": "grid/sensor=VIIRS_NOAA21/band=13.hist.parquet",
-    "bytes": 689957
+    "bytes": 690094
    },
    {
     "band": 14,
     "south": 50,
     "north": 60,
     "path": "grid/sensor=VIIRS_NOAA21/band=14.hist.parquet",
-    "bytes": 490928
+    "bytes": 490993
    },
    {
     "band": 15,
     "south": 60,
     "north": 70,
     "path": "grid/sensor=VIIRS_NOAA21/band=15.hist.parquet",
-    "bytes": 136235
+    "bytes": 136250
    },
    {
     "band": 16,
     "south": 70,
     "north": 80,
     "path": "grid/sensor=VIIRS_NOAA21/band=16.hist.parquet",
-    "bytes": 7132
+    "bytes": 7127
    },
    {
     "band": 17,
@@ -391,112 +391,112 @@
     "south": -80,
     "north": -70,
     "path": "grid/sensor=VIIRS_SNPP/band=1.hist.parquet",
-    "bytes": 4538
+    "bytes": 4537
    },
    {
     "band": 2,
     "south": -70,
     "north": -60,
     "path": "grid/sensor=VIIRS_SNPP/band=2.hist.parquet",
-    "bytes": 1730
+    "bytes": 1739
    },
    {
     "band": 3,
     "south": -60,
     "north": -50,
     "path": "grid/sensor=VIIRS_SNPP/band=3.hist.parquet",
-    "bytes": 10821
+    "bytes": 10814
    },
    {
     "band": 4,
     "south": -50,
     "north": -40,
     "path": "grid/sensor=VIIRS_SNPP/band=4.hist.parquet",
-    "bytes": 110783
+    "bytes": 110815
    },
    {
     "band": 5,
     "south": -40,
     "north": -30,
     "path": "grid/sensor=VIIRS_SNPP/band=5.hist.parquet",
-    "bytes": 1116484
+    "bytes": 1116367
    },
    {
     "band": 6,
     "south": -30,
     "north": -20,
     "path": "grid/sensor=VIIRS_SNPP/band=6.hist.parquet",
-    "bytes": 2878230
+    "bytes": 2880086
    },
    {
     "band": 7,
     "south": -20,
     "north": -10,
     "path": "grid/sensor=VIIRS_SNPP/band=7.hist.parquet",
-    "bytes": 4861496
+    "bytes": 4860320
    },
    {
     "band": 8,
     "south": -10,
     "north": 0,
     "path": "grid/sensor=VIIRS_SNPP/band=8.hist.parquet",
-    "bytes": 4642556
+    "bytes": 4642786
    },
    {
     "band": 9,
     "south": 0,
     "north": 10,
     "path": "grid/sensor=VIIRS_SNPP/band=9.hist.parquet",
-    "bytes": 4275052
+    "bytes": 4272258
    },
    {
     "band": 10,
     "south": 10,
     "north": 20,
     "path": "grid/sensor=VIIRS_SNPP/band=10.hist.parquet",
-    "bytes": 3865581
+    "bytes": 3865053
    },
    {
     "band": 11,
     "south": 20,
     "north": 30,
     "path": "grid/sensor=VIIRS_SNPP/band=11.hist.parquet",
-    "bytes": 3427956
+    "bytes": 3428090
    },
    {
     "band": 12,
     "south": 30,
     "north": 40,
     "path": "grid/sensor=VIIRS_SNPP/band=12.hist.parquet",
-    "bytes": 4367144
+    "bytes": 4369791
    },
    {
     "band": 13,
     "south": 40,
     "north": 50,
     "path": "grid/sensor=VIIRS_SNPP/band=13.hist.parquet",
-    "bytes": 3340746
+    "bytes": 3340849
    },
    {
     "band": 14,
     "south": 50,
     "north": 60,
     "path": "grid/sensor=VIIRS_SNPP/band=14.hist.parquet",
-    "bytes": 2486461
+    "bytes": 2485682
    },
    {
     "band": 15,
     "south": 60,
     "north": 70,
     "path": "grid/sensor=VIIRS_SNPP/band=15.hist.parquet",
-    "bytes": 605137
+    "bytes": 603991
    },
    {
     "band": 16,
     "south": 70,
     "north": 80,
     "path": "grid/sensor=VIIRS_SNPP/band=16.hist.parquet",
-    "bytes": 19192
+    "bytes": 19179
    },
    {
     "band": 17,
@@ -504,6 +504,248 @@
     "north": 90,
     "path": "grid/sensor=VIIRS_SNPP/band=17.hist.parquet",
     "bytes": 1151
+   }
+  ],
+  "HARM_LONG": [
+   {
+    "band": 1,
+    "south": -80,
+    "north": -70,
+    "path": "grid/sensor=HARM_LONG/band=1.hist.parquet",
+    "bytes": 889
+   },
+   {
+    "band": 2,
+    "south": -70,
+    "north": -60,
+    "path": "grid/sensor=HARM_LONG/band=2.hist.parquet",
+    "bytes": 1219
+   },
+   {
+    "band": 3,
+    "south": -60,
+    "north": -50,
+    "path": "grid/sensor=HARM_LONG/band=3.hist.parquet",
+    "bytes": 3406
+   },
+   {
+    "band": 4,
+    "south": -50,
+    "north": -40,
+    "path": "grid/sensor=HARM_LONG/band=4.hist.parquet",
+    "bytes": 27585
+   },
+   {
+    "band": 5,
+    "south": -40,
+    "north": -30,
+    "path": "grid/sensor=HARM_LONG/band=5.hist.parquet",
+    "bytes": 174699
+   },
+   {
+    "band": 6,
+    "south": -30,
+    "north": -20,
+    "path": "grid/sensor=HARM_LONG/band=6.hist.parquet",
+    "bytes": 339951
+   },
+   {
+    "band": 7,
+    "south": -20,
+    "north": -10,
+    "path": "grid/sensor=HARM_LONG/band=7.hist.parquet",
+    "bytes": 469575
+   },
+   {
+    "band": 8,
+    "south": -10,
+    "north": 0,
+    "path": "grid/sensor=HARM_LONG/band=8.hist.parquet",
+    "bytes": 480955
+   },
+   {
+    "band": 9,
+    "south": 0,
+    "north": 10,
+    "path": "grid/sensor=HARM_LONG/band=9.hist.parquet",
+    "bytes": 422268
+   },
+   {
+    "band": 10,
+    "south": 10,
+    "north": 20,
+    "path": "grid/sensor=HARM_LONG/band=10.hist.parquet",
+    "bytes": 370475
+   },
+   {
+    "band": 11,
+    "south": 20,
+    "north": 30,
+    "path": "grid/sensor=HARM_LONG/band=11.hist.parquet",
+    "bytes": 351988
+   },
+   {
+    "band": 12,
+    "south": 30,
+    "north": 40,
+    "path": "grid/sensor=HARM_LONG/band=12.hist.parquet",
+    "bytes": 465751
+   },
+   {
+    "band": 13,
+    "south": 40,
+    "north": 50,
+    "path": "grid/sensor=HARM_LONG/band=13.hist.parquet",
+    "bytes": 466080
+   },
+   {
+    "band": 14,
+    "south": 50,
+    "north": 60,
+    "path": "grid/sensor=HARM_LONG/band=14.hist.parquet",
+    "bytes": 376889
+   },
+   {
+    "band": 15,
+    "south": 60,
+    "north": 70,
+    "path": "grid/sensor=HARM_LONG/band=15.hist.parquet",
+    "bytes": 111778
+   },
+   {
+    "band": 16,
+    "south": 70,
+    "north": 80,
+    "path": "grid/sensor=HARM_LONG/band=16.hist.parquet",
+    "bytes": 5373
+   }
+  ],
+  "HARM_DETAIL": [
+   {
+    "band": 0,
+    "south": -90,
+    "north": -80,
+    "path": "grid/sensor=HARM_DETAIL/band=0.hist.parquet",
+    "bytes": 2438
+   },
+   {
+    "band": 1,
+    "south": -80,
+    "north": -70,
+    "path": "grid/sensor=HARM_DETAIL/band=1.hist.parquet",
+    "bytes": 3075
+   },
+   {
+    "band": 2,
+    "south": -70,
+    "north": -60,
+    "path": "grid/sensor=HARM_DETAIL/band=2.hist.parquet",
+    "bytes": 2010
+   },
+   {
+    "band": 3,
+    "south": -60,
+    "north": -50,
+    "path": "grid/sensor=HARM_DETAIL/band=3.hist.parquet",
+    "bytes": 4638
+   },
+   {
+    "band": 4,
+    "south": -50,
+    "north": -40,
+    "path": "grid/sensor=HARM_DETAIL/band=4.hist.parquet",
+    "bytes": 24681
+   },
+   {
+    "band": 5,
+    "south": -40,
+    "north": -30,
+    "path": "grid/sensor=HARM_DETAIL/band=5.hist.parquet",
+    "bytes": 137983
+   },
+   {
+    "band": 6,
+    "south": -30,
+    "north": -20,
+    "path": "grid/sensor=HARM_DETAIL/band=6.hist.parquet",
+    "bytes": 268114
+   },
+   {
+    "band": 7,
+    "south": -20,
+    "north": -10,
+    "path": "grid/sensor=HARM_DETAIL/band=7.hist.parquet",
+    "bytes": 352120
+   },
+   {
+    "band": 8,
+    "south": -10,
+    "north": 0,
+    "path": "grid/sensor=HARM_DETAIL/band=8.hist.parquet",
+    "bytes": 357209
+   },
+   {
+    "band": 9,
+    "south": 0,
+    "north": 10,
+    "path": "grid/sensor=HARM_DETAIL/band=9.hist.parquet",
+    "bytes": 319536
+   },
+   {
+    "band": 10,
+    "south": 10,
+    "north": 20,
+    "path": "grid/sensor=HARM_DETAIL/band=10.hist.parquet",
+    "bytes": 309963
+   },
+   {
+    "band": 11,
+    "south": 20,
+    "north": 30,
+    "path": "grid/sensor=HARM_DETAIL/band=11.hist.parquet",
+    "bytes": 309274
+   },
+   {
+    "band": 12,
+    "south": 30,
+    "north": 40,
+    "path": "grid/sensor=HARM_DETAIL/band=12.hist.parquet",
+    "bytes": 430106
+   },
+   {
+    "band": 13,
+    "south": 40,
+    "north": 50,
+    "path": "grid/sensor=HARM_DETAIL/band=13.hist.parquet",
+    "bytes": 444832
+   },
+   {
+    "band": 14,
+    "south": 50,
+    "north": 60,
+    "path": "grid/sensor=HARM_DETAIL/band=14.hist.parquet",
+    "bytes": 362538
+   },
+   {
+    "band": 15,
+    "south": 60,
+    "north": 70,
+    "path": "grid/sensor=HARM_DETAIL/band=15.hist.parquet",
+    "bytes": 111765
+   },
+   {
+    "band": 16,
+    "south": 70,
+    "north": 80,
+    "path": "grid/sensor=HARM_DETAIL/band=16.hist.parquet",
+    "bytes": 7610
+   },
+   {
+    "band": 17,
+    "south": 80,
+    "north": 90,
+    "path": "grid/sensor=HARM_DETAIL/band=17.hist.parquet",
+    "bytes": 1484
    }
   ]
  },
@@ -525,7 +767,7 @@
     "year": 2001,
     "path": "points/sensor=MODIS/year=2001.parquet",
     "rows": 122062,
-    "bytes": 1162093,
+    "bytes": 1162075,
     "region": [
      -25.0,
      27.0,
@@ -537,7 +779,7 @@
     "year": 2002,
     "path": "points/sensor=MODIS/year=2002.parquet",
     "rows": 184142,
-    "bytes": 1798839,
+    "bytes": 1798846,
     "region": [
      -25.0,
      27.0,
@@ -549,7 +791,7 @@
     "year": 2003,
     "path": "points/sensor=MODIS/year=2003.parquet",
     "rows": 142238,
-    "bytes": 1418172,
+    "bytes": 1418234,
     "region": [
      -25.0,
      27.0,
@@ -561,7 +803,7 @@
     "year": 2004,
     "path": "points/sensor=MODIS/year=2004.parquet",
     "rows": 160627,
-    "bytes": 1583434,
+    "bytes": 1583449,
     "region": [
      -25.0,
      27.0,
@@ -573,7 +815,7 @@
     "year": 2005,
     "path": "points/sensor=MODIS/year=2005.parquet",
     "rows": 196000,
-    "bytes": 1921540,
+    "bytes": 1921517,
     "region": [
      -25.0,
      27.0,
@@ -585,7 +827,7 @@
     "year": 2006,
     "path": "points/sensor=MODIS/year=2006.parquet",
     "rows": 225032,
-    "bytes": 2187563,
+    "bytes": 2187438,
     "region": [
      -25.0,
      27.0,
@@ -597,7 +839,7 @@
     "year": 2007,
     "path": "points/sensor=MODIS/year=2007.parquet",
     "rows": 206147,
-    "bytes": 2041113,
+    "bytes": 2041071,
     "region": [
      -25.0,
      27.0,
@@ -609,7 +851,7 @@
     "year": 2008,
     "path": "points/sensor=MODIS/year=2008.parquet",
     "rows": 214915,
-    "bytes": 2109242,
+    "bytes": 2109206,
     "region": [
      -25.0,
      27.0,
@@ -621,7 +863,7 @@
     "year": 2009,
     "path": "points/sensor=MODIS/year=2009.parquet",
     "rows": 218444,
-    "bytes": 2116210,
+    "bytes": 2116413,
     "region": [
      -25.0,
      27.0,
@@ -633,7 +875,7 @@
     "year": 2010,
     "path": "points/sensor=MODIS/year=2010.parquet",
     "rows": 171454,
-    "bytes": 1693725,
+    "bytes": 1693797,
     "region": [
      -25.0,
      27.0,
@@ -645,7 +887,7 @@
     "year": 2011,
     "path": "points/sensor=MODIS/year=2011.parquet",
     "rows": 151869,
-    "bytes": 1513058,
+    "bytes": 1513077,
     "region": [
      -25.0,
      27.0,
@@ -657,7 +899,7 @@
     "year": 2012,
     "path": "points/sensor=MODIS/year=2012.parquet",
     "rows": 142438,
-    "bytes": 1422343,
+    "bytes": 1422315,
     "region": [
      -25.0,
      27.0,
@@ -669,7 +911,7 @@
     "year": 2013,
     "path": "points/sensor=MODIS/year=2013.parquet",
     "rows": 114174,
-    "bytes": 1150640,
+    "bytes": 1150716,
     "region": [
      -25.0,
      27.0,
@@ -681,7 +923,7 @@
     "year": 2014,
     "path": "points/sensor=MODIS/year=2014.parquet",
     "rows": 189439,
-    "bytes": 1854859,
+    "bytes": 1855001,
     "region": [
      -25.0,
      27.0,
@@ -693,7 +935,7 @@
     "year": 2015,
     "path": "points/sensor=MODIS/year=2015.parquet",
     "rows": 178569,
-    "bytes": 1761728,
+    "bytes": 1761748,
     "region": [
      -25.0,
      27.0,
@@ -705,7 +947,7 @@
     "year": 2016,
     "path": "points/sensor=MODIS/year=2016.parquet",
     "rows": 129452,
-    "bytes": 1287776,
+    "bytes": 1287855,
     "region": [
      -25.0,
      27.0,
@@ -717,7 +959,7 @@
     "year": 2017,
     "path": "points/sensor=MODIS/year=2017.parquet",
     "rows": 158521,
-    "bytes": 1577811,
+    "bytes": 1577625,
     "region": [
      -25.0,
      27.0,
@@ -729,7 +971,7 @@
     "year": 2018,
     "path": "points/sensor=MODIS/year=2018.parquet",
     "rows": 109263,
-    "bytes": 1089446,
+    "bytes": 1089428,
     "region": [
      -25.0,
      27.0,
@@ -741,7 +983,7 @@
     "year": 2019,
     "path": "points/sensor=MODIS/year=2019.parquet",
     "rows": 157175,
-    "bytes": 1551876,
+    "bytes": 1551795,
     "region": [
      -25.0,
      27.0,
@@ -753,7 +995,7 @@
     "year": 2020,
     "path": "points/sensor=MODIS/year=2020.parquet",
     "rows": 134905,
-    "bytes": 1347260,
+    "bytes": 1347279,
     "region": [
      -25.0,
      27.0,
@@ -765,7 +1007,7 @@
     "year": 2021,
     "path": "points/sensor=MODIS/year=2021.parquet",
     "rows": 101920,
-    "bytes": 1044390,
+    "bytes": 1044504,
     "region": [
      -25.0,
      27.0,
@@ -777,7 +1019,7 @@
     "year": 2022,
     "path": "points/sensor=MODIS/year=2022.parquet",
     "rows": 91060,
-    "bytes": 927230,
+    "bytes": 927174,
     "region": [
      -25.0,
      27.0,
@@ -789,7 +1031,7 @@
     "year": 2023,
     "path": "points/sensor=MODIS/year=2023.parquet",
     "rows": 88416,
-    "bytes": 901044,
+    "bytes": 901031,
     "region": [
      -25.0,
      27.0,
@@ -801,7 +1043,7 @@
     "year": 2024,
     "path": "points/sensor=MODIS/year=2024.parquet",
     "rows": 111217,
-    "bytes": 1134440,
+    "bytes": 1134498,
     "region": [
      -25.0,
      27.0,
@@ -813,7 +1055,7 @@
     "year": 2025,
     "path": "points/sensor=MODIS/year=2025.parquet",
     "rows": 109938,
-    "bytes": 1124986,
+    "bytes": 1125018,
     "region": [
      -25.0,
      27.0,
@@ -827,7 +1069,7 @@
     "year": 2018,
     "path": "points/sensor=VIIRS_NOAA20/year=2018.parquet",
     "rows": 536136,
-    "bytes": 5446261,
+    "bytes": 5446301,
     "region": [
      -25.0,
      27.0,
@@ -839,7 +1081,7 @@
     "year": 2019,
     "path": "points/sensor=VIIRS_NOAA20/year=2019.parquet",
     "rows": 759737,
-    "bytes": 7703456,
+    "bytes": 7703467,
     "region": [
      -25.0,
      27.0,
@@ -851,7 +1093,7 @@
     "year": 2020,
     "path": "points/sensor=VIIRS_NOAA20/year=2020.parquet",
     "rows": 665072,
-    "bytes": 6748132,
+    "bytes": 6748134,
     "region": [
      -25.0,
      27.0,
@@ -863,7 +1105,7 @@
     "year": 2021,
     "path": "points/sensor=VIIRS_NOAA20/year=2021.parquet",
     "rows": 589620,
-    "bytes": 6011465,
+    "bytes": 6011406,
     "region": [
      -25.0,
      27.0,
@@ -875,7 +1117,7 @@
     "year": 2022,
     "path": "points/sensor=VIIRS_NOAA20/year=2022.parquet",
     "rows": 566105,
-    "bytes": 5768755,
+    "bytes": 5768807,
     "region": [
      -25.0,
      27.0,
@@ -887,7 +1129,7 @@
     "year": 2023,
     "path": "points/sensor=VIIRS_NOAA20/year=2023.parquet",
     "rows": 522057,
-    "bytes": 5328947,
+    "bytes": 5328958,
     "region": [
      -25.0,
      27.0,
@@ -899,7 +1141,7 @@
     "year": 2024,
     "path": "points/sensor=VIIRS_NOAA20/year=2024.parquet",
     "rows": 633691,
-    "bytes": 6432608,
+    "bytes": 6432583,
     "region": [
      -25.0,
      27.0,
@@ -911,7 +1153,7 @@
     "year": 2025,
     "path": "points/sensor=VIIRS_NOAA20/year=2025.parquet",
     "rows": 599509,
-    "bytes": 6136358,
+    "bytes": 6136701,
     "region": [
      -25.0,
      27.0,
@@ -925,7 +1167,7 @@
     "year": 2023,
     "path": "points/sensor=VIIRS_NOAA21/year=2023.parquet",
     "rows": 471571,
-    "bytes": 4857091,
+    "bytes": 4857114,
     "region": [
      -25.0,
      27.0,
@@ -937,7 +1179,7 @@
     "year": 2024,
     "path": "points/sensor=VIIRS_NOAA21/year=2024.parquet",
     "rows": 609102,
-    "bytes": 6238378,
+    "bytes": 6238259,
     "region": [
      -25.0,
      27.0,
@@ -949,7 +1191,7 @@
     "year": 2025,
     "path": "points/sensor=VIIRS_NOAA21/year=2025.parquet",
     "rows": 575628,
-    "bytes": 5946460,
+    "bytes": 5946600,
     "region": [
      -25.0,
      27.0,
@@ -963,7 +1205,7 @@
     "year": 2012,
     "path": "points/sensor=VIIRS_SNPP/year=2012.parquet",
     "rows": 701464,
-    "bytes": 7095190,
+    "bytes": 7095191,
     "region": [
      -25.0,
      27.0,
@@ -975,7 +1217,7 @@
     "year": 2013,
     "path": "points/sensor=VIIRS_SNPP/year=2013.parquet",
     "rows": 625138,
-    "bytes": 6350310,
+    "bytes": 6350320,
     "region": [
      -25.0,
      27.0,
@@ -987,7 +1229,7 @@
     "year": 2014,
     "path": "points/sensor=VIIRS_SNPP/year=2014.parquet",
     "rows": 869495,
-    "bytes": 8711264,
+    "bytes": 8711042,
     "region": [
      -25.0,
      27.0,
@@ -999,7 +1241,7 @@
     "year": 2015,
     "path": "points/sensor=VIIRS_SNPP/year=2015.parquet",
     "rows": 831302,
-    "bytes": 8362208,
+    "bytes": 8362122,
     "region": [
      -25.0,
      27.0,
@@ -1011,7 +1253,7 @@
     "year": 2016,
     "path": "points/sensor=VIIRS_SNPP/year=2016.parquet",
     "rows": 669022,
-    "bytes": 6779203,
+    "bytes": 6779451,
     "region": [
      -25.0,
      27.0,
@@ -1023,7 +1265,7 @@
     "year": 2017,
     "path": "points/sensor=VIIRS_SNPP/year=2017.parquet",
     "rows": 763198,
-    "bytes": 7728509,
+    "bytes": 7728795,
     "region": [
      -25.0,
      27.0,
@@ -1035,7 +1277,7 @@
     "year": 2018,
     "path": "points/sensor=VIIRS_SNPP/year=2018.parquet",
     "rows": 612803,
-    "bytes": 6205047,
+    "bytes": 6204982,
     "region": [
      -25.0,
      27.0,
@@ -1047,7 +1289,7 @@
     "year": 2019,
     "path": "points/sensor=VIIRS_SNPP/year=2019.parquet",
     "rows": 769641,
-    "bytes": 7796673,
+    "bytes": 7796604,
     "region": [
      -25.0,
      27.0,
@@ -1059,7 +1301,7 @@
     "year": 2020,
     "path": "points/sensor=VIIRS_SNPP/year=2020.parquet",
     "rows": 675673,
-    "bytes": 6845963,
+    "bytes": 6846023,
     "region": [
      -25.0,
      27.0,
@@ -1071,7 +1313,7 @@
     "year": 2021,
     "path": "points/sensor=VIIRS_SNPP/year=2021.parquet",
     "rows": 588985,
-    "bytes": 5987785,
+    "bytes": 5987473,
     "region": [
      -25.0,
      27.0,
@@ -1083,7 +1325,7 @@
     "year": 2022,
     "path": "points/sensor=VIIRS_SNPP/year=2022.parquet",
     "rows": 527188,
-    "bytes": 5363199,
+    "bytes": 5363360,
     "region": [
      -25.0,
      27.0,
@@ -1095,7 +1337,7 @@
     "year": 2023,
     "path": "points/sensor=VIIRS_SNPP/year=2023.parquet",
     "rows": 525501,
-    "bytes": 5356317,
+    "bytes": 5356302,
     "region": [
      -25.0,
      27.0,
@@ -1107,7 +1349,7 @@
     "year": 2024,
     "path": "points/sensor=VIIRS_SNPP/year=2024.parquet",
     "rows": 587156,
-    "bytes": 5947165,
+    "bytes": 5947150,
     "region": [
      -25.0,
      27.0,
@@ -1119,7 +1361,7 @@
     "year": 2025,
     "path": "points/sensor=VIIRS_SNPP/year=2025.parquet",
     "rows": 596202,
-    "bytes": 6093471,
+    "bytes": 6093298,
     "region": [
      -25.0,
      27.0,
@@ -1129,5 +1371,6 @@
    }
   ]
  },
- "harmonized": false
+ "harmonized": false,
+ "intervals": "interval_table.json"
 }

@@ -27,6 +27,9 @@ def merge_frames(manifests: list[dict]) -> dict:
         for s, v in m["sensors"].items():
             cur = out["sensors"].setdefault(s, {"label": v["label"], "months": [], "partial_last_month": False})
             cur["months"] = sorted(set(cur["months"]) | set(v["months"]))
+            for k in ("metrics", "max", "harmonized"):
+                if k in v:
+                    cur[k] = v[k]
             if v["months"] and v["months"][-1] == cur["months"][-1]:
                 cur["partial_last_month"] = v.get("partial_last_month", False)
     return out
@@ -52,6 +55,8 @@ def merge_static(manifests: list[dict]) -> dict:
                 if cur is None or _area(f["region"]) >= _area(cur["region"]):
                     best[f["year"]] = f
             out["points"][s] = sorted(best.values(), key=lambda f: f["year"])
+        if m.get("intervals"):
+            out["intervals"] = m["intervals"]
     return out
 
 

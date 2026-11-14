@@ -16,6 +16,8 @@ on:
       - "globe_kit/**"
       - "site_data/**"
       - "data_pipeline/firms_pipeline.py"
+      - "data_pipeline/harmonize.py"
+      - "data_pipeline/data/harmonized/**"
       - ".github/workflows/pages.yml"
 
 permissions:
@@ -29,6 +31,8 @@ concurrency:
 
 env:
   # Recent part: from this date to today. Move it forward after rebuilding site_data/ with newer years.
+  # It must be the FIRST DAY of a month (and of a year, to match the site_data split): harmonize.py apply needs
+  # whole months and refuses a start month without data from its first days.
   RECENT_FROM: "2026-01-01"
   RECENT_SENSORS: "MODIS,VIIRS_SNPP,VIIRS_NOAA20,VIIRS_NOAA21"
   # Single detections of the recent part published on Pages, worldwide (the active sensors only,
@@ -72,9 +76,12 @@ jobs:
           python firms_pipeline.py --sensors "$RECENT_SENSORS" download-recent --start "$RECENT_FROM"
           python firms_pipeline.py --sensors "$RECENT_SENSORS" build
           python firms_pipeline.py aggregate
+          # Harmonized series: frozen coefficients (data/harmonized/coefficients.parquet, in the repo) applied to the new months
+          python harmonize.py apply --from "${RECENT_FROM:0:7}"
+          H=../data_pipeline/data/harmonized/harm_map.parquet
           cd ../globe_kit
-          python scripts/make_fire_frames.py --from-year "$Y0" --scale-from ../site_data/frames/manifest.json --out ../build/recent/frames
-          python scripts/make_static_data.py --from-year "$Y0" --tag recent --out ../build/recent/data \
+          python scripts/make_fire_frames.py --from-year "$Y0" --scale-from ../site_data/frames/manifest.json --out ../build/recent/frames --harmonized "$H"
+          python scripts/make_static_data.py --from-year "$Y0" --tag recent --out ../build/recent/data --harmonized "$H" \
             --region=-180,-90,180,90 --points-sensors "$RECENT_POINT_SENSORS"
 
       - name: Merge historical and recent data

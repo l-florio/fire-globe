@@ -17,7 +17,11 @@ diagnostica/
 
 # --- generated data (site_data/ IS committed: it is the historical part of the site)
 build/
-data_pipeline/data/
+data_pipeline/data/*
+!data_pipeline/data/harmonized/
+data_pipeline/data/harmonized/*
+!data_pipeline/data/harmonized/coefficients.parquet
+!data_pipeline/data/harmonized/interval_table.json
 data_pipeline/.venv/
 data_pipeline/*.log
 globe_kit/node_modules/

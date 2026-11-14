@@ -9,7 +9,7 @@
     <div id="globe"></div>
     <aside id="panel" class="panel">
       <h1>Active fires from space, 2000-2026</h1>
-      <p class="sub">NASA FIRMS, monthly, 0.25&deg; grid. <span class="badge">Raw per-sensor data, not harmonized</span></p>
+      <p class="sub"><span id="sub-text">NASA FIRMS, monthly, 0.25&deg; grid.</span> <span class="badge" id="data-badge">Raw per-sensor data, not harmonized</span></p>
       <label>Variable
         <select id="metric"></select>
       </label>
@@ -19,6 +19,7 @@
           <button type="button" role="radio" data-mode="MODIS">MODIS</button>
           <button type="button" role="radio" data-mode="VIIRS">VIIRS</button>
           <button type="button" role="radio" data-mode="BOTH">Both</button>
+          <button type="button" role="radio" data-mode="HARM" title="MODIS and VIIRS harmonized into one consistent series">Harmonized</button>
         </div>
       </div>
       <div class="field">
@@ -28,6 +29,9 @@
           <button type="button" role="radio" data-step="day">Day</button>
         </div>
       </div>
+      <label id="harm-wrap" hidden>Harmonized series
+        <select id="harm"></select>
+      </label>
       <label id="viirs-wrap">VIIRS satellite
         <select id="viirs"></select>
       </label>

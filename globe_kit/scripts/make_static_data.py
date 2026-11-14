@@ -41,6 +41,7 @@ def main() -> None:
     ap.add_argument("--to-year", type=int, default=9999)
     ap.add_argument("--tag", default="all", help="suffix of the grid file names, e.g. hist or recent")
     ap.add_argument("--skip-grid", action="store_true")
+    ap.add_argument("--harmonized", help="harm_map.parquet: adds grid files for HARM_LONG / HARM_DETAIL and interval_table.json")
     ap.add_argument("--skip-points", action="store_true")
     ap.add_argument("--points-sensors", help="comma list; default all sensors")
     a = ap.parse_args()
@@ -84,6 +85,38 @@ def main() -> None:
                           "path": f.relative_to(out).as_posix(), "bytes": f.stat().st_size})
         manifest["grid"][sensor] = files
         print(f"grid {sensor}: {len(files)} files, {sum(x['bytes'] for x in files) / 1e6:.1f} MB")
+
+    # ---- harmonized series: same grid layout, 1 degree cells, plus origin o (0 aqua_obs, 1 viirs_conv, 2 viirs_native)
+    if a.harmonized and not a.skip_grid:
+        harm = Path(a.harmonized)
+        con.execute(f"""
+            CREATE OR REPLACE TEMP TABLE hg AS
+            SELECT series,
+                   CAST((year(month) - 2000) * 12 + month(month) - 1 AS SMALLINT) AS m,
+                   CAST(cell_lat AS FLOAT) AS lat, CAST(cell_lon AS FLOAT) AS lon, CAST(0 AS TINYINT) AS cls,
+                   CAST(value AS FLOAT) AS n, CAST(0 AS FLOAT) AS frp,
+                   CAST(CASE origin WHEN 'aqua_obs' THEN 0 WHEN 'viirs_conv' THEN 1 ELSE 2 END AS TINYINT) AS o,
+                   CAST(floor((cell_lat + 90) / 10) AS INTEGER) AS band
+            FROM read_parquet('{harm.as_posix()}')
+            WHERE year(month) BETWEEN {a.from_year} AND {a.to_year} AND value > 0
+        """)
+        for sensor, series in (("HARM_LONG", "long"), ("HARM_DETAIL", "detail")):
+            files = []
+            for (band,) in con.execute("SELECT DISTINCT band FROM hg WHERE series = ? ORDER BY 1", [series]).fetchall():
+                d = out / "grid" / f"sensor={sensor}"
+                d.mkdir(parents=True, exist_ok=True)
+                f = d / f"band={band}.{a.tag}.parquet"
+                con.execute(f"""COPY (SELECT m, lat, lon, cls, n, frp, o FROM hg WHERE series = '{series}' AND band = {band} ORDER BY lat, lon, m)
+                                TO '{f.as_posix()}' (FORMAT PARQUET, COMPRESSION ZSTD, ROW_GROUP_SIZE 65536)""")
+                files.append({"band": band, "south": band * 10 - 90, "north": band * 10 - 80,
+                              "path": f.relative_to(out).as_posix(), "bytes": f.stat().st_size})
+            if files:
+                manifest["grid"][sensor] = files
+                print(f"grid {sensor}: {len(files)} files, {sum(x['bytes'] for x in files) / 1e6:.1f} MB (harmonized)")
+        it = harm.with_name("interval_table.json")
+        if it.exists():
+            shutil.copy(it, out / "interval_table.json")
+            manifest["intervals"] = "interval_table.json"
 
     # ---- single detections in the region, by sensor and year
     pq = data / "parquet"

@@ -13,6 +13,8 @@ Usage: python make_fire_frames.py [--grid PATH] [--out DIR] [--types 0,-1]
                                  [--from-year Y] [--to-year Y] [--scale-from other/manifest.json]
   --from-year/--to-year: only these years (historical part up to 2025, recent part from 2026).
   --scale-from: reuse the per-metric max of another manifest, so both parts share one colour scale.
+  --harmonized: also write frames of the harmonized series (data_pipeline/data/harmonized/harm_map.parquet) as
+                sensors HARM_LONG and HARM_DETAIL, 1 degree cells, detections only, one colour scale per series.
 Requires: duckdb, numpy, pillow
 """
 from __future__ import annotations
@@ -32,6 +34,10 @@ METRICS = {
     "n": {"expr": "sum(n)", "label": "Active fire detections", "unit": "detections / cell / month"},
     "frp": {"expr": "sum(frp_sum)", "label": "Fire radiative power", "unit": "MW / cell / month (sum)"},
 }
+HARM_SERIES = {
+    "HARM_LONG": ("long", "Harmonized, long-term (Aqua-equivalent, 2003+)"),
+    "HARM_DETAIL": ("detail", "Harmonized, detail (VIIRS 375 m, 2013+)"),
+}
 SENSOR_LABELS = {
     "MODIS": "MODIS (Terra + Aqua, 1 km)",
     "VIIRS_SNPP": "VIIRS S-NPP (375 m)",
@@ -48,6 +54,7 @@ def main() -> None:
     ap.add_argument("--from-year", type=int, default=1900)
     ap.add_argument("--to-year", type=int, default=9999)
     ap.add_argument("--scale-from", help="manifest.json whose per-metric max is reused")
+    ap.add_argument("--harmonized", help="harm_map.parquet of the harmonized series")
     a = ap.parse_args()
     fixed = json.loads(Path(a.scale_from).read_text(encoding="utf-8"))["metrics"] if a.scale_from else {}
 
@@ -98,8 +105,45 @@ def main() -> None:
             s["months"] = months
             s["partial_last_month"] = last.strftime("%Y-%m") == dt.date.today().strftime("%Y-%m")
             print(f"{metric} {sensor}: {len(months)} frames")
+    if a.harmonized:
+        write_harmonized(con, a, out, manifest)
     (out / "manifest.json").write_text(json.dumps(manifest, indent=1), encoding="utf-8")
     print(f"manifest in {out / 'manifest.json'}")
+
+
+def write_harmonized(con, a, out: Path, manifest: dict) -> None:
+    """Frames of the harmonized series on 1 degree cells (360 x 180), same log encoding, own max per series."""
+    w, h = 360, 180
+    fixed = json.loads(Path(a.scale_from).read_text(encoding="utf-8")).get("sensors", {}) if a.scale_from else {}
+    con.execute(f"""
+        CREATE OR REPLACE TEMP TABLE hm AS
+        SELECT series, month, CAST(floor(90 - cell_lat) AS INTEGER) AS r, CAST(floor(cell_lon + 180) AS INTEGER) AS c,
+               value, partial
+        FROM read_parquet('{Path(a.harmonized).as_posix()}')
+        WHERE year(month) BETWEEN {a.from_year} AND {a.to_year} AND value > 0
+    """)
+    for sensor, (series, label) in HARM_SERIES.items():
+        if not con.execute("SELECT count(*) FROM hm WHERE series = ?", [series]).fetchone()[0]:
+            continue
+        vmax = fixed.get(sensor, {}).get("max") or float(con.execute("SELECT max(value) FROM hm WHERE series = ?", [series]).fetchone()[0])
+        scale = 255.0 / np.log1p(vmax)
+        rows = con.execute("""
+            SELECT month, list(r), list(c), list(value), bool_or(partial) FROM hm WHERE series = ? GROUP BY month ORDER BY month
+        """, [series]).fetchall()
+        d = out / "n" / sensor
+        d.mkdir(parents=True, exist_ok=True)
+        months, last_partial = [], False
+        for month, rr, cc, vv, part in rows:
+            img = np.zeros((h, w), dtype=np.uint8)
+            v = np.clip(np.rint(np.log1p(np.asarray(vv, dtype=np.float64)) * scale), 1, 255)
+            img[np.asarray(rr), np.asarray(cc)] = v.astype(np.uint8)
+            key = month.strftime("%Y-%m")
+            Image.fromarray(img, mode="L").save(d / f"{key}.png", optimize=True)
+            months.append(key)
+            last_partial = bool(part)
+        manifest["sensors"][sensor] = {"label": label, "months": months, "partial_last_month": last_partial,
+                                       "metrics": ["n"], "max": vmax, "harmonized": True}
+        print(f"n {sensor}: {len(months)} frames (harmonized)")
 
 
 if __name__ == "__main__":

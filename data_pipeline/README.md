@@ -69,7 +69,7 @@ Esempio di aggiornamento periodico, per esempio da GitHub Actions: `download-rec
 
 Regola SP contro NRT: in aggregazione i dati NRT vengono usati solo dopo l'ultima data Standard Processing dello stesso sensore.
 
-**Nessuna armonizzazione MODIS/VIIRS è applicata**: gli aggregati restano separati per sensore. Il metodo di armonizzazione è parte della soluzione e va definito dal team.
+**Nessuna armonizzazione MODIS/VIIRS è applicata agli aggregati**: restano separati per sensore. La serie armonizzata (metodo congelato il 14/11/2026) è prodotta a parte da `harmonize.py` in `data/harmonized/`; vedi `HARMONIZATION.md`.
 
 ## Tempi e spazio (stime)
 

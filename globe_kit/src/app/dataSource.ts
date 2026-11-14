@@ -8,9 +8,12 @@ export interface Detections {
   outside?: string;
 }
 
+/** [YYYY-MM, value, FRP, origin?]; origin only for harmonized series: 0 measured (Aqua), 1 converted, 2 VIIRS native. */
+export type MonthRow = [string, number, number, number?];
+
 export interface CalendarResult {
-  source: 'detections' | 'grid';
-  months: [string, number, number][];
+  source: 'detections' | 'grid' | 'harmonized';
+  months: MonthRow[];
 }
 
 /**

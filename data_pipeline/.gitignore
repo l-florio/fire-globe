@@ -1,5 +1,10 @@
-data/
+data/*
+!data/harmonized/
+data/harmonized/*
+!data/harmonized/coefficients.parquet
+!data/harmonized/interval_table.json
 .venv/
 __pycache__/
 .firms_key
 download.log
+harmonize_*.log

@@ -24,10 +24,11 @@ interface Manifest {
   rectangle: [number, number, number, number];
   harmonized: boolean;
   metrics: Record<string, { label: string; unit: string; max: number }>;
-  sensors: Record<string, { label: string; months: string[]; partial_last_month: boolean }>;
+  sensors: Record<string, { label: string; months: string[]; partial_last_month: boolean; metrics?: string[]; max?: number; harmonized?: boolean }>;
 }
 
-type Mode = 'MODIS' | 'VIIRS' | 'BOTH';
+type Mode = 'MODIS' | 'VIIRS' | 'BOTH' | 'HARM';
+const isHarm = (s: string) => s.startsWith('HARM_');
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -56,6 +57,7 @@ async function main() {
   const manifest: Manifest = await (await fetch(`${base}/manifest.json`)).json();
   const metrics = Object.keys(manifest.metrics);
   const viirsSensors = Object.keys(manifest.sensors).filter((s) => s.startsWith('VIIRS'));
+  const harmSensors = Object.keys(manifest.sensors).filter(isHarm);
 
   const globe = createGlobe({
     container: 'globe',
@@ -85,6 +87,10 @@ async function main() {
   const borders = $<HTMLInputElement>('borders');
   metricSel.innerHTML = metrics.map((m) => `<option value="${m}">${manifest.metrics[m].label}</option>`).join('');
   viirsSel.innerHTML = viirsSensors.map((s) => `<option value="${s}">${manifest.sensors[s].label}</option>`).join('');
+  const harmSel = $<HTMLSelectElement>('harm');
+  const harmWrap = $<HTMLLabelElement>('harm-wrap');
+  harmSel.innerHTML = harmSensors.map((s) => `<option value="${s}">${manifest.sensors[s].label}</option>`).join('');
+  if (!harmSensors.length) modeSeg.querySelector<HTMLButtonElement>('[data-mode=HARM]')!.hidden = true;
   basemapSel.innerHTML = (Object.keys(BASEMAPS) as BasemapId[])
     .map((b) => `<option value="${b}">${BASEMAPS[b].label}</option>`)
     .join('');
@@ -102,29 +108,30 @@ async function main() {
   /** Sensors on screen: [left] in single mode, [left, right] in compare mode. */
   function shown(): string[] {
     const v = viirsSel.value;
+    if (mode === 'HARM') return [harmSel.value];
     if (mode === 'MODIS') return ['MODIS'];
     if (mode === 'VIIRS') return [v];
     return swapped ? [v, 'MODIS'] : ['MODIS', v];
   }
 
   // ---- display scale: frames hold log1p(x)/log1p(max); the slider sets the value at the top of the ramp
-  const displayMax = () => {
-    const max = manifest.metrics[metricSel.value].max;
-    return Math.expm1(Number(gain.value) * Math.log1p(max)) || 1;
-  };
-  const transfer = () => {
-    const k = Math.log1p(manifest.metrics[metricSel.value].max) / Math.log1p(displayMax());
+  // Harmonized series have their own colour scale (1 degree cells) and detections only.
+  const metricOf = (s: string) => (isHarm(s) ? 'n' : metricSel.value);
+  const maxOf = (s: string) => (isHarm(s) ? manifest.sensors[s].max ?? 1 : manifest.metrics[metricSel.value].max);
+  const displayMax = (s = shown()[0]) => Math.expm1(Number(gain.value) * Math.log1p(maxOf(s))) || 1;
+  const transfer = (s = shown()[0]) => {
+    const k = Math.log1p(maxOf(s)) / Math.log1p(displayMax(s));
     return (b: number) => (b / 255) * k;
   };
 
-  const frameUrl = (sensor: string) => (key: string) => `${base}/${metricSel.value}/${sensor}/${key}.png`;
+  const frameUrl = (sensor: string) => (key: string) => `${base}/${metricOf(sensor)}/${sensor}/${key}.png`;
   const mk = (sensor: string) =>
     new TimeRasterLayer(viewer, {
       frameUrl: frameUrl(sensor),
       keys: manifest.sensors[sensor].months,
       rectangle: manifest.rectangle,
       ramp: RAMPS.fire,
-      transfer: transfer(),
+      transfer: transfer(sensor),
     });
   const [s0, s1] = shown();
   const left = mk(s0);
@@ -156,12 +163,18 @@ async function main() {
       legend.update('Single detection: fire radiative power (MW, log scale)', RAMPS.fire, ticks);
       return;
     }
-    const m = manifest.metrics[metricSel.value];
-    const top = displayMax();
+    const s0 = shown()[0];
+    const top = displayMax(s0);
     const ticks = [0, 0.25, 0.5, 0.75, 1].map((t) => ({
       at: t,
       label: `${t === 1 ? '≥ ' : ''}${fmtNum(Math.expm1(t * Math.log1p(top)))}`,
     }));
+    if (isHarm(s0)) {
+      const unit = s0 === 'HARM_LONG' ? 'Aqua-equivalent detections' : 'VIIRS detections (S-NPP level)';
+      legend.update(`Harmonized: ${unit} / 1 degree cell / month, log scale`, RAMPS.fire, ticks);
+      return;
+    }
+    const m = manifest.metrics[metricSel.value];
     legend.update(`${m.label} (${m.unit}, log scale)`, RAMPS.fire, ticks);
   }
 
@@ -194,7 +207,15 @@ async function main() {
     const [a, b] = shown();
     for (const btn of modeSeg.querySelectorAll<HTMLButtonElement>('button'))
       btn.setAttribute('aria-checked', String(btn.dataset.mode === mode));
-    viirsWrap.style.display = mode !== 'MODIS' && viirsSensors.length > 1 ? '' : 'none';
+    viirsWrap.style.display = mode !== 'MODIS' && mode !== 'HARM' && viirsSensors.length > 1 ? '' : 'none';
+    harmWrap.hidden = mode !== 'HARM';
+    $('data-badge').textContent = mode === 'HARM' ? 'MODIS and VIIRS harmonized: one consistent series' : 'Raw per-sensor data, not harmonized';
+    $('sub-text').textContent = mode === 'HARM' ? 'NASA FIRMS, monthly, 1° cells.' : 'NASA FIRMS, monthly, 0.25° grid.';
+    metricSel.disabled = mode === 'HARM';
+    if (mode === 'HARM' && step === 'day') {
+      step = 'month';
+      slider.setKeys(allKeys());
+    }
     sides.style.display = b ? '' : 'none';
     $('side-l').textContent = a.startsWith('VIIRS') ? 'VIIRS' : 'MODIS';
     $('side-r').textContent = b ? (b.startsWith('VIIRS') ? 'VIIRS' : 'MODIS') : '';
@@ -202,8 +223,12 @@ async function main() {
     left.setSplit(b ? Cesium.SplitDirection.LEFT : Cesium.SplitDirection.NONE);
     right.setSplit(Cesium.SplitDirection.RIGHT);
     left.setSource(frameUrl(a), manifest.sensors[a].months);
-    if (b) right.setSource(frameUrl(b), manifest.sensors[b].months);
-    else right.destroy();
+    left.restyle({ transfer: transfer(a) });
+    if (b) {
+      right.setSource(frameUrl(b), manifest.sensors[b].months);
+      right.restyle({ transfer: transfer(b) });
+    } else right.destroy();
+    refreshLegend();
     if (!b) {
       labL.style.right = '50%';
       labL.style.marginRight = '0';
@@ -214,8 +239,9 @@ async function main() {
     }
     slider.setKeys(allKeys());
     refreshControls();
+    // Single detections exist for the sensors, not for the harmonized series.
     detail?.setSides(
-      shown().map((s, k) => ({
+      shown().filter((s) => !isHarm(s)).map((s, k) => ({
         sensor: s,
         raster: k === 0 ? left : right,
         split: !b ? Cesium.SplitDirection.NONE : k === 0 ? Cesium.SplitDirection.LEFT : Cesium.SplitDirection.RIGHT,
@@ -240,8 +266,13 @@ async function main() {
     for (const btn of stepSeg.querySelectorAll<HTMLButtonElement>('button')) {
       btn.setAttribute('aria-checked', String(btn.dataset.step === step));
       if (btn.dataset.step === 'day') {
-        btn.disabled = !apiOk;
-        btn.title = apiOk ? 'One day at a time, individual detections' : 'Needs the data service or the static data files';
+        btn.disabled = !apiOk || mode === 'HARM';
+        btn.title =
+          mode === 'HARM'
+            ? 'The harmonized series is monthly'
+            : apiOk
+              ? 'One day at a time, individual detections'
+              : 'Needs the data service or the static data files';
       }
     }
     for (const btn of passSeg.querySelectorAll<HTMLButtonElement>('button'))
@@ -308,20 +339,17 @@ async function main() {
     applySelection();
   };
   viirsSel.onchange = applySelection;
+  harmSel.onchange = applySelection;
   swapBtn.onclick = () => {
     swapped = !swapped;
     applySelection();
   };
-  metricSel.onchange = () => {
-    applySelection();
-    left.restyle({ transfer: transfer() });
-    right.restyle({ transfer: transfer() });
-    refreshLegend();
-  };
+  metricSel.onchange = () => applySelection();
   gain.oninput = () => refreshLegend();
   gain.onchange = () => {
-    left.restyle({ transfer: transfer() });
-    right.restyle({ transfer: transfer() });
+    const [a, b] = shown();
+    left.restyle({ transfer: transfer(a) });
+    if (b) right.restyle({ transfer: transfer(b) });
   };
   basemapSel.onchange = () => globe.setBasemap(basemapSel.value as BasemapId);
   borders.onchange = () => {

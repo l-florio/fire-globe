@@ -219,6 +219,12 @@ body {
   color: #111;
 }
 
+#mode.seg {
+  grid-template-columns: repeat(4, 1fr);
+}
+#harm-wrap[hidden] {
+  display: none;
+}
 .seg.seg2 {
   grid-template-columns: repeat(2, 1fr);
 }
