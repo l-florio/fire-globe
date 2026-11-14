@@ -132,7 +132,7 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
       <span class="cal-range">${t('cal.range.from')} <input type="date" data-c="from" /> ${t('cal.range.to')} <input type="date" data-c="to" /></span>
       <button type="button" data-a="csvpts">${t('cal.csvPts')}</button>
     </section>
-    <p class="note">${t('cal.raw')}</p>
+    <p class="note cal-raw">${t('cal.raw')}</p>
     <p class="note cal-src"></p>
     <p class="note">${t('cal.credits', {
       nominatim: '<a href="https://nominatim.openstreetmap.org/" target="_blank" rel="noopener">Nominatim</a>',
@@ -249,9 +249,11 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
       const name = `${MON[Number(s.key.slice(5, 7)) - 1]} ${s.key.slice(0, 4)}`;
       parts.push(
         t('cal.sum.month', { name, value: f(s.value), unit }) +
-          (s.median !== undefined
+          (s.partial
+            ? t('cal.sum.partial')
+            : s.median !== undefined && s.ratio !== undefined
             ? t('cal.sum.median', {
-                ratio: fmtFixed(s.ratio!, 1),
+                ratio: fmtFixed(s.ratio, 1),
                 median: f(s.median),
                 years: tn('cal.sum.years', s.baselineYears),
                 pct: Math.round(s.percentile!),
@@ -323,7 +325,11 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
       const extra = isHarm() ? [s?.lo?.toFixed(2) ?? '', s?.hi?.toFixed(2) ?? '', row?.[3] !== undefined ? ORIG[row[3]] : ''] : [];
       return [sensorSel.value, key.slice(0, 4), key.slice(5, 7), v, s?.median ?? '', s?.ratio?.toFixed(3) ?? '', s?.percentile?.toFixed(1) ?? '', ...extra].join(',');
     });
-    const meta = `# area: ${areaLabel(area)}; types: ${types()}; raw sensor values, not harmonized; source: NASA FIRMS`;
+    const what = isHarm()
+      ? `harmonized ${sensorSel.value === 'HARM_LONG' ? 'long-term series (Aqua-equivalent detections, 1 degree cells overlapping the area)' : 'detail series (VIIRS 375 m at S-NPP level, 1 degree cells overlapping the area)'}`
+      : 'raw values of one sensor, not harmonized';
+    const last = o.sensors[sensorSel.value].partial_last_month ? `; last month ${o.sensors[sensorSel.value].months.slice(-1)[0]} is partial` : '';
+    const meta = `# area: ${areaLabel(area)}; types: ${types()}; ${what}${last}; ratio_to_median = value / median (empty when the median is 0); source: NASA FIRMS`;
     const blob = new Blob([[meta, head, ...lines].join('\n') + '\n'], { type: 'text/csv' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -552,6 +558,7 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
   };
   function refreshHarmControls() {
     const h = isHarm();
+    $<HTMLParagraphElement>('.cal-raw').hidden = h; // the warning is about raw counts only
     if (h) varSel.value = 'n';
     varSel.disabled = h;
     excl.disabled = h; // the static-source mask is already applied in the harmonized series

@@ -1,8 +1,47 @@
 # globe-kit
 
-Reusable CesiumJS globe, with a demo app: monthly NASA FIRMS active fires 2000-2026, comparing two sensors side by side.
+Web app of the Fire Globe project (NASA Space Apps Challenge 2026, "Harmonization of MODIS and VIIRS Hot Spots") and the reusable CesiumJS globe library it is built on. Project overview: `../README.md`. Method: `../data_pipeline/HARMONIZATION.md`.
 
-SI disclosure: code generated with the assistance of Claude (Anthropic). Declare it in the submission and in the repo metadata.
+## What the app does
+
+- **Globe modes:** MODIS, VIIRS, both (split compare), Harmonized (Aqua-equivalent long series from 2003, VIIRS 375 m detail series from 2013). Monthly and daily steps.
+- **Single detections:** below 2,500 km of camera height, colored by FRP, with a list of the detections in view. Overpass filters (day/night, Terra/Aqua). Not available for the harmonized series.
+- **Area fire calendar:** area by place search (OpenStreetMap Nominatim), continent (Natural Earth), GFED region, drawn box, current view, or point plus radius. Month x year calendar; color by value (log) or anomaly (ratio to the median of the same month in the other years); 90% interval for harmonized series; the current month is partial and excluded from medians. CSV and PNG export.
+- **Data explorer (Table tab):** datasets (harmonized regions, harmonized 1 degree grid, raw 0.25 degree grid, single detections), Excel-like filters, no-code builder, SQL on DuckDB-WASM, charts.
+- **Export:** map PNG and time-animation video. English and Italian UI.
+
+Harmonized values are on 1 degree cells (small areas count whole cells) and are detections, not burned area.
+
+## Run
+
+```bash
+npm install
+npm run dev        # http://localhost:5199
+npm run static     # build + preview on 5197, no data service: simulates the published site
+npm run build      # tsc + vite build, writes dist/
+```
+
+Optional local data service (DuckDB over `data_pipeline/data/parquet`; Vite proxies `/api` to 127.0.0.1:5198):
+
+```bash
+python server/fire_api.py
+```
+
+Without the service the app uses static data: DuckDB-WASM queries the Parquet files in `public/data/` with HTTP range requests. Day steps and single detections then need static points for the region in view.
+
+## Build the site data
+
+`public/data/` and `public/frames/` are generated and excluded from git. Python: `pip install -r scripts/requirements.txt`.
+
+| Script | Purpose |
+|---|---|
+| `scripts/make_fire_frames.py` | Monthly PNG frames per sensor and metric from the 0.25 degree grid; `--harmonized <harm_map.parquet>` adds the harmonized series (own color scale) |
+| `scripts/make_static_data.py` | Parquet for the browser: grids, regions, interval table, single detections (`--region`, `--points-sensors`, `--harmonized`) |
+| `scripts/assemble_site.py` | Merges the historical part (`site_data/`) and the recent part into `public/` |
+| `scripts/check_site.py` | Consistency checks of the assembled data |
+| `scripts/make_continents.py` | Continent cells (Natural Earth) for the calendar |
+
+Historical part: built once locally with `--to-year 2025 --tag hist` and committed in `site_data/`. Recent part: built nightly by `.github/workflows/pages.yml` with `--from-year 2026 --tag recent` after `harmonize.py apply`. Worldwide single detections of past years are hosted on a Hugging Face dataset (repository variable `POINTS_BASE`); without it, only Europe and the Mediterranean are available.
 
 ## Library (`src/globe`)
 
@@ -10,13 +49,13 @@ No account and no token needed: NASA GIBS basemaps, no Cesium ion.
 
 | Module | Purpose |
 |---|---|
-| `createGlobe.ts` | Viewer without ion: no Bing, no geocoder, no ion terrain. Render on demand, zoom limits, basemap and overlay switching |
-| `basemaps.ts` | Basemaps:<br>- NASA GIBS: Blue Marble, Black Marble, daily VIIRS true color;<br>- Esri World Imagery;<br>- OSM.<br>Overlays: GIBS coastlines, borders, labels |
-| `timeRaster.ts` | `TimeRasterLayer`: one equirectangular 8-bit PNG per time key, colored in the browser. Palette and range change without regenerating data. Also handles the split direction, an LRU cache and prefetch |
-| `controls.ts` | Split divider (`scene.splitPosition`), time slider (play, speed, arrow keys), legend |
-| `colormaps.ts` | Ramps `fire`, `viridis`, `diverging`, lookup tables, CSS gradients |
-
-Minimal use:
+| `createGlobe.ts` | Viewer without ion: no Bing, geocoder or ion terrain. Render on demand, zoom limits, basemap and overlay switching |
+| `basemaps.ts` | NASA GIBS (Blue Marble, Black Marble, VIIRS true color), Esri World Imagery, OSM; overlays: GIBS coastlines, borders, labels, Esri labels |
+| `timeRaster.ts` | `TimeRasterLayer`: one equirectangular 8-bit PNG per time key, colored in the browser; split direction, LRU cache, prefetch |
+| `pointLayer.ts` | Many points with a color ramp, fast show/hide filter, split direction; `viewRectangle`, `cameraHeight` helpers |
+| `controls.ts` | Split divider, time slider, legend |
+| `colormaps.ts` | Ramps `fire`, `viridis`, `diverging` |
+| `areaPicker.ts`, `calendar.ts`, `cells.ts` | Area selection and month x year calendar heatmap (any monthly series) |
 
 ```ts
 import { createGlobe, TimeRasterLayer, createTimeSlider } from './globe';
@@ -25,132 +64,18 @@ const layer = new TimeRasterLayer(globe.viewer, { frameUrl: (k) => `frames/${k}.
 createTimeSlider(el, { keys, onChange: (k) => layer.show(k) });
 ```
 
-Frame format:
-- grayscale PNG, row 0 = north, column 0 = 180 W;
-- 0 = no data;
-- 1..255 = encoded value.
-
-The demo uses `round(255 * log1p(x) / log1p(max))`.
-
-## FIRMS demo (`src/app`, `scripts`)
-
-`scripts/make_fire_frames.py` reads `../data_pipeline/data/agg/grid_0.25deg_month.parquet` and writes `public/frames/<metric>/<sensor>/<YYYY-MM>.png` plus `manifest.json`:
-- metrics: detections and FRP;
-- FIRMS type kept: 0 and -1;
-- one max per metric shared by all sensors, so frames are comparable;
-- no harmonization.
-
-It requires `duckdb numpy pillow`.
-
-```bash
-python scripts/make_fire_frames.py
-```
-```bash
-npm install
-```
-```bash
-npm run dev
-```
-
-### Zoomed-in detail: individual detections
-
-Below 2,500 km of camera height, the app loads the single detections of the current month for the visible area.
-- **Source:** the local service `server/fire_api.py`, which runs DuckDB on `data_pipeline/data/parquet` (about 0.1-0.3 s per query).
-- **Display:** points are colored by FRP and the monthly raster fades into the background.
-- **Day filter:** the "Day" menu filters one day without reloading.
-- **Time step "Day":** the slider moves one day at a time. Detections are loaded for the visible area, or worldwide when zoomed out, and the monthly raster is hidden. It needs the service.
-- **Overpass filters:** daytime or night pass; MODIS Terra (about 10:30 and 22:30 local) or Aqua (about 13:30 and 01:30). An hourly series is not meaningful: each satellite sees a place about twice a day.
-- **Zoom:**
-  - mouse wheel;
-  - touchpad pinch, handled explicitly because Cesium ignores ctrl+wheel;
-  - double click on a point;
-  - +/- buttons, keys + - 0.
-- **Large areas:** at most the 150,000 strongest detections per sensor are loaded, and the panel says so.
-- **NRT data:** used only after the last standard-processing date, the same rule as the aggregates.
-
-```bash
-data_pipeline\.venv\Scripts\python globe_kit\server\fire_api.py
-```
-
-Vite forwards `/api` to `127.0.0.1:5198`. In `.claude/launch.json` there are two configurations, `globe-kit` and `fire-api`. On a static site with no service, the globe still works and the panel says that the detail view needs the service.
-
-### Area fire calendar
-
-The **Area fire calendar** button opens a panel with the year x month calendar of one sensor over an area.
-- **Choosing the area:** draw a box (two clicks), use the current view, or enter a point and a radius.
-- **Colour:**
-  - value: viridis, log scale;
-  - anomaly: ratio to the median of the same month in the other years, diverging ramp from 1/4x to 4x.
-- **Partial month:** the current month has a dashed outline and is left out of the medians.
-- **Summary:** the selected month's value, its ratio to the median and its percentile; the peak month; the most active years.
-- **Navigation:** clicking a cell moves the globe to that month.
-- **CSV export:**
-  - the calendar, built in the browser;
-  - the single detections of the area and period, from `/api/export`.
-- **Source and speed:**
-  - areas under 25 square degrees are counted from single detections, larger ones from the 0.25 degree grid;
-  - each query takes about 0.2-0.7 s.
-- **Not harmonized yet:** values are raw counts of one sensor.
-
-Service endpoints:
-
-| Endpoint | Area | Other parameters | Returns |
-|---|---|---|---|
-| `/api/calendar` | `bbox=w,s,e,n` or `circle=lat,lon,km` | `types`, `pass` | JSON with the monthly counts |
-| `/api/export` | same as above | `from`, `to`, `types` | CSV with at most 2 million rows |
-
-### Online version without a server (static)
-
-When the local service is not running (for example on GitHub Pages or static hosting), the app switches to static data on its own:
-- **Engine:** DuckDB-WASM in the browser queries the Parquet files in `public/data/` with HTTP range requests, so only the parts needed by each query are downloaded.
-- **Calendar:** worldwide, from the 0.25 degree grid (75 MB).
-- **Single detections** (zoom, day view, hotspot CSV): only for one region, Europe and the Mediterranean by default (`--region`). They take 139 MB for 13.8 million detections.
-- **Outside the region:** the panel says so.
-- **File size:** every file is under 40 MB, the per-file limit of Porkbun static hosting.
-
-```bash
-python scripts/make_static_data.py --region -25,27,45,72
-```
-```bash
-npm run static
-```
-
-`npm run static` = build + preview on port 5197, with no proxy to the service: it simulates the published site. The launch configuration is `globe-static`.
-
-Measured locally on 14/11/2026:
-- **Sicily calendar** (120 km): about 2 s on first use, including the DuckDB-WASM start.
-- **Detections of one month in view:** about 1.5 s.
-- **CSV of one month:** 0.2 s.
-- **Results:** the same as the service; the calendar differs by less than 1% because it counts grid cells.
-
-`public/data/` and `public/frames/` are generated and excluded from git.
-
-They are built from two parts, merged by `scripts/assemble_site.py`:
-
-| Part | Years | Built by | Where | How |
-|---|---|---|---|---|
-| historical | up to 2025 | you, once, locally | `site_data/` in the repo | `--to-year 2025 --tag hist` |
-| recent | from 2026 | the nightly GitHub Action, with the `FIRMS_MAP_KEY` secret | built on each run | `--from-year 2026 --tag recent`, with `--scale-from` on the frames so the colour scale stays the same |
-
-The workflow is `.github/workflows/pages.yml` in the repo root.
-
-Library: `createAreaPicker` (`src/globe/areaPicker.ts`) and `createCalendarHeatmap` (`src/globe/calendar.ts`) are generic: any monthly series.
-
-Library: `PointLayer` in `src/globe/pointLayer.ts` handles many points with a color ramp, a fast show/hide filter and the split direction. `viewRectangle` and `cameraHeight` are helpers.
-
-`npm run build` writes `dist/` (about 67 MB, frames included). It is a static site and works on GitHub Pages.
+Frame format: grayscale PNG, row 0 = north, column 0 = 180 W; 0 = no data; 1..255 = `round(255 * log1p(x) / log1p(max))`.
 
 ## Notes
 
-- Versions are pinned:
-  - `cesium` 1.147.0. With 1.146.0 the caret dependencies install `@cesium/engine` 26.5, whose exports are incompatible.
-  - `vite` 8.3.8.
-- GIBS is used through the Web Mercator endpoints (`epsg3857`). The EPSG:4326 endpoints use a level-0 tile of 288 degrees, which does not match Cesium's geographic tiling.
-- `Reference_Features_15m` (borders, roads) is drawn only at higher zoom levels; at global scale use `Coastlines_15m`.
+- Versions are pinned: `cesium` 1.147.0 (with 1.146.0 the caret dependencies install an incompatible `@cesium/engine` 26.5), `vite` 8.3.8.
+- GIBS is used through the Web Mercator endpoints (`epsg3857`); the EPSG:4326 endpoints use a 288 degree level-0 tile that does not match Cesium's tiling.
+- `Reference_Features_15m` is drawn only at higher zoom; at global scale use `Coastlines_15m`.
 
 ## Credits
 
-- [CesiumJS](https://cesium.com/platform/cesiumjs/), Apache 2.0.
-- Imagery: [NASA GIBS](https://www.earthdata.nasa.gov/engage/open-data-services-software/earthdata-developer-portal/gibs-api), Esri, OpenStreetMap contributors.
-- Data: [NASA FIRMS](https://firms.modaps.eosdis.nasa.gov/) (MODIS C6.1, VIIRS 375 m).
-- Viewer setup without ion, inspired by [gods-eye-view](https://github.com/bilawalsidhu/gods-eye-view) (MIT, Bilawal Sidhu). No code copied verbatim.
+CesiumJS (Apache-2.0); NASA GIBS; Esri; OpenStreetMap contributors; Natural Earth; NASA FIRMS (MODIS C6.1, VIIRS 375 m); DuckDB-WASM, Tabulator, Chart.js, html-to-image. Viewer setup without ion inspired by [gods-eye-view](https://github.com/bilawalsidhu/gods-eye-view) (MIT, Bilawal Sidhu); no code copied verbatim. Full list: `../README.md`.
+
+## Use of AI
+
+AI assistants (Claude, Codex) were used to write code, run analyses and draft documentation. The method and design choices were selected by the team from the tests; AI was not used to ideate the solution.

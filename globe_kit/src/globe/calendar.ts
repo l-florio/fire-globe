@@ -49,6 +49,8 @@ export interface MonthStats {
   hi?: number;
   /** True when an interval exists and does not contain the median. */
   significant?: boolean;
+  /** Month still being filled (newest month): not compared with full months. */
+  partial?: boolean;
 }
 
 const MONTHS_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -106,16 +108,19 @@ export function createCalendarHeatmap(parent: HTMLElement, o: CalendarOptions = 
       .map((k) => values.get(k) ?? 0);
     const med = median(others);
     const iv = intervals.get(key);
+    // A partial month is not compared with full months: it would always look low.
+    const part = partial.has(key);
     return {
       key,
       value: v,
       median: med,
-      ratio: med !== undefined ? (v + 1) / (med + 1) : undefined,
-      percentile: others.length ? (100 * others.filter((x) => x < v).length) / others.length : undefined,
+      ratio: !part && med !== undefined && med > 0 ? v / med : undefined,
+      percentile: !part && others.length ? (100 * others.filter((x) => x < v).length) / others.length : undefined,
       baselineYears: others.length,
       lo: iv?.[0],
       hi: iv?.[1],
-      significant: iv && med !== undefined ? med < iv[0] || med > iv[1] : undefined,
+      significant: !part && iv && med !== undefined ? med < iv[0] || med > iv[1] : undefined,
+      partial: part,
     };
   }
 
@@ -128,7 +133,8 @@ export function createCalendarHeatmap(parent: HTMLElement, o: CalendarOptions = 
       i = max > 0 ? Math.round((Math.log1p(v) / Math.log1p(max)) * 255) : 0;
     } else {
       const s = stats(key);
-      const r = s?.ratio ?? 1;
+      // Colour on a smoothed ratio, so that months with a median of 0 still get a colour; partial months neutral.
+      const r = !s || s.partial || s.median === undefined ? 1 : (s.value + 1) / (s.median + 1);
       i = Math.round(Math.min(1, Math.max(0, 0.5 + Math.log2(r) / 4)) * 255); // 1/4x..4x
       table = DIVERGING;
     }

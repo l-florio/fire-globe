@@ -11,6 +11,7 @@ const TEXT = {
   above: 'Above usual',
   below: 'Below usual',
   within: 'Within usual',
+  partial: 'Partial month',
   sensorModis: 'MODIS (Terra + Aqua)',
   sensorSnpp: 'VIIRS S-NPP',
   sensorN20: 'VIIRS NOAA-20',
@@ -150,7 +151,7 @@ const REGION_COLS: ColDef[] = [
   col('usual', 'num', 'Median of the same calendar month in the other years'),
   col('ratio_to_usual', 'num', 'detections / usual (empty when usual is 0)'),
   col('percentile', 'num', 'Share of the other years below this one, 0-100 (ties count half)'),
-  col('signal', 'text', 'Above/Below usual when the 90% interval excludes the usual value, else Within usual'),
+  col('signal', 'text', 'Above/Below usual when the 90% interval excludes the usual value, else Within usual; Partial month for the month still being filled (not compared)'),
 ];
 
 /** Harmonized regional values, filled with 0 where a region has no row, with usual, ratio, percentile and signal. */
@@ -162,6 +163,9 @@ function regionsSql(man: Manifest, s: { series?: string; rt?: string }, where: s
     const later = files.slice(i + 1).map((g) => g.from);
     return `    SELECT series, rt, id, m, v, lo, hi, o FROM read_parquet(${list([f.path])}) WHERE m >= ${f.from}${later.length ? ` AND m < ${Math.min(...later)}` : ''}${cond}`;
   });
+  // The current month is still being filled: it is neither compared nor part of the baseline.
+  const now = new Date();
+  const pm = (now.getUTCFullYear() - 2000) * 12 + now.getUTCMonth();
   const sql = `WITH src AS (
 ${parts.join('\n    UNION ALL\n')}
   ),
@@ -176,7 +180,7 @@ ${parts.join('\n    UNION ALL\n')}
     SELECT a.series, a.rt, a.id, a.m, median(b.v) AS usual, count(b.v) AS k,
            count(b.v) FILTER (WHERE b.v < a.v) AS below, count(b.v) FILTER (WHERE b.v = a.v) AS ties
     FROM full_grid a LEFT JOIN full_grid b
-      ON b.series = a.series AND b.rt = a.rt AND b.id = a.id AND b.m % 12 = a.m % 12 AND b.m <> a.m
+      ON b.series = a.series AND b.rt = a.rt AND b.id = a.id AND b.m % 12 = a.m % 12 AND b.m <> a.m AND b.m < ${pm}
     GROUP BY a.series, a.rt, a.id, a.m
   )
   SELECT a.series, a.rt AS region_type,
@@ -187,9 +191,9 @@ ${parts.join('\n    UNION ALL\n')}
          CAST(a.v AS DOUBLE) AS detections, CAST(a.lo AS DOUBLE) AS lo90, CAST(a.hi AS DOUBLE) AS hi90,
          ${originSql('a.o')} AS origin,
          CAST(t.usual AS DOUBLE) AS usual,
-         CASE WHEN t.usual > 0 THEN a.v / t.usual END AS ratio_to_usual,
-         CASE WHEN t.k > 0 THEN 100.0 * (t.below + 0.5 * t.ties) / t.k END AS percentile,
-         CASE WHEN t.usual IS NULL THEN NULL WHEN a.lo > t.usual THEN ${ql(TEXT.above)}
+         CASE WHEN t.usual > 0 AND a.m < ${pm} THEN a.v / t.usual END AS ratio_to_usual,
+         CASE WHEN t.k > 0 AND a.m < ${pm} THEN 100.0 * (t.below + 0.5 * t.ties) / t.k END AS percentile,
+         CASE WHEN a.m >= ${pm} THEN ${ql(TEXT.partial)} WHEN t.usual IS NULL THEN NULL WHEN a.lo > t.usual THEN ${ql(TEXT.above)}
               WHEN a.hi < t.usual THEN ${ql(TEXT.below)} ELSE ${ql(TEXT.within)} END AS signal
   FROM full_grid a
   JOIN stat t ON t.series = a.series AND t.rt = a.rt AND t.id = a.id AND t.m = a.m
