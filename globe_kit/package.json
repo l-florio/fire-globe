@@ -4,7 +4,7 @@
   "private": true,
   "description": "Reusable CesiumJS globe (keyless basemaps, time-raster layers, split compare) with a FIRMS demo",
   "type": "module",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

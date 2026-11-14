@@ -1,0 +1,19 @@
+Fire Globe - harmonized MODIS and VIIRS fire activity
+Copyright 2026 Lorenzo Florio
+
+This product includes software developed for the NASA Space Apps Challenge 2026,
+challenge "Harmonization of MODIS and VIIRS Hot Spots".
+Code written with the assistance of Claude (Anthropic).
+
+Third-party software (distributed under their own licenses, see package-lock.json):
+- CesiumJS, Apache License 2.0, https://cesium.com/platform/cesiumjs/
+- DuckDB and DuckDB-WASM, MIT License, https://duckdb.org/
+- Vite, MIT License, https://vite.dev/
+The globe viewer setup without Cesium ion was inspired by gods-eye-view
+(MIT License, Bilawal Sidhu, https://github.com/bilawalsidhu/gods-eye-view); no code was copied.
+
+Data (not covered by this license; each source keeps its own terms):
+- NASA FIRMS active fire data (MODIS Collection 6.1, VIIRS 375 m: Suomi NPP, NOAA-20, NOAA-21),
+  https://firms.modaps.eosdis.nasa.gov/ . NASA data are not copyrighted in the United States;
+  please cite the source.
+- Basemaps: NASA GIBS; Esri World Imagery and World Boundaries and Places; OpenStreetMap contributors (ODbL).

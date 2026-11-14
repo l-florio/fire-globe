@@ -60,6 +60,10 @@ With the full archive, also start the local data service: `python globe_kit/serv
   - Vite (MIT).
 - Viewer setup without Cesium ion inspired by gods-eye-view (MIT, Bilawal Sidhu).
 
+## License
+
+Code: Apache License 2.0 (see `LICENSE` and `NOTICE`). Data keep the terms of their sources (see `NOTICE`).
+
 ## Use of AI
 
 Code in this repository was written with the assistance of Claude (Anthropic), as required by the Space Apps rules on AI disclosure. The method choices and the product design are the team's.
