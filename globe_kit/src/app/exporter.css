@@ -1,0 +1,142 @@
+.gk-export-btn {
+  font: 600 13px var(--gk-font);
+  color: var(--gk-text);
+  background: var(--gk-panel);
+  border: 1px solid var(--gk-border);
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+}
+.gk-export-btn:hover,
+.gk-export-btn[aria-expanded='true'] {
+  border-color: var(--gk-accent);
+}
+.gk-export-btn:focus-visible,
+.gk-export-pop button:focus-visible,
+.gk-export-pop select:focus-visible,
+.gk-export-pop input:focus-visible {
+  outline: 2px solid var(--gk-accent);
+  outline-offset: 2px;
+}
+.gk-export-pop {
+  position: fixed;
+  z-index: 10000;
+  box-sizing: border-box;
+  width: 300px;
+  max-width: calc(100vw - 16px);
+  max-height: calc(100vh - 16px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px;
+  font: 13px/1.35 var(--gk-font);
+  color: var(--gk-text);
+  background: rgba(12, 18, 30, 0.96);
+  border: 1px solid var(--gk-border);
+  border-radius: 10px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+}
+.gk-export-pop[hidden] {
+  display: none;
+}
+.gk-export-pop * {
+  box-sizing: border-box;
+}
+.gk-export-act {
+  display: block;
+  width: 100%;
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  text-align: left;
+  font: 600 13px var(--gk-font);
+  color: var(--gk-text);
+  background: transparent;
+  border: 1px solid var(--gk-border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.gk-export-act:hover:not(:disabled) {
+  border-color: var(--gk-accent);
+}
+.gk-export-act:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.gk-export-act.primary {
+  color: #111;
+  background: var(--gk-accent);
+  border-color: var(--gk-accent);
+  text-align: center;
+  margin-bottom: 0;
+}
+.gk-export-act.primary:disabled {
+  color: #111;
+}
+.gk-export-sec {
+  margin: 12px 0 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--gk-border);
+  font-weight: 700;
+  color: var(--gk-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 11px;
+}
+.gk-export-row {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 6px 8px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.gk-export-row label {
+  color: var(--gk-muted);
+}
+.gk-export-row select,
+.gk-export-row input {
+  width: 100%;
+  min-width: 0;
+  font: 13px var(--gk-font);
+  color: var(--gk-text);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--gk-border);
+  border-radius: 6px;
+  padding: 5px 6px;
+}
+.gk-export-row select option {
+  color: #111;
+}
+.gk-export-info,
+.gk-export-status {
+  margin: 6px 0 8px;
+  color: var(--gk-muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.gk-export-status.error {
+  color: #ff8080;
+}
+.gk-export-progress {
+  display: none;
+  margin: 8px 0;
+}
+.gk-export-progress.on {
+  display: block;
+}
+.gk-export-progress progress {
+  width: 100%;
+  height: 10px;
+  accent-color: var(--gk-accent);
+}
+.gk-export-cancel {
+  display: none;
+  margin-top: 8px;
+}
+.gk-export-cancel.on {
+  display: block;
+}
+@media (max-width: 420px) {
+  .gk-export-pop {
+    width: calc(100vw - 16px);
+  }
+}

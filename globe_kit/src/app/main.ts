@@ -12,9 +12,12 @@ import {
   type BasemapId,
 } from '../globe';
 import { createCalendarPanel } from './calendarPanel';
-import { createTablePanel } from './tablePanel';
+import type { createExplorer } from './explorer/explorer';
+import { createDetectionsPanel } from './detectionsPanel';
+import { createExporter } from './exporter';
 import { detectSource, lazySource } from './dataSource';
 import { createDetail, DETECTION_FRP_TOP, type Pass, type Sat, type Step } from './detail';
+import { applyI18n, fmtFixed, locale, monthsShort, t, tOr } from './i18n';
 import './app.css';
 
 declare const CESIUM_BASE_URL: string;
@@ -32,7 +35,7 @@ type Mode = 'MODIS' | 'VIIRS' | 'BOTH' | 'HARM';
 const isHarm = (s: string) => s.startsWith('HARM_');
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTHS = monthsShort;
 const fmtMonth = (k: string) => `${MONTHS[Number(k.slice(5, 7)) - 1]} ${k.slice(0, 4)}`;
 const fmtDay = (k: string) => `${Number(k.slice(8, 10))} ${fmtMonth(k)}`;
 const TODAY = new Date().toISOString().slice(0, 10);
@@ -50,12 +53,19 @@ function daysOf(months: string[]): string[] {
   return out;
 }
 const fmtNum = (x: number) =>
-  x >= 1e6 ? `${(x / 1e6).toFixed(1)}M` : x >= 1e3 ? `${(x / 1e3).toFixed(x >= 1e4 ? 0 : 1)}k` : x >= 10 ? x.toFixed(0) : x.toFixed(1);
+  x >= 1e6 ? `${fmtFixed(x / 1e6, 1)}M` : x >= 1e3 ? `${fmtFixed(x / 1e3, x >= 1e4 ? 0 : 1)}k` : x >= 10 ? fmtFixed(x, 0) : fmtFixed(x, 1);
 const HOME = { lon: 12, lat: 30, height: 18_000_000 };
 
 async function main() {
+  applyI18n();
   const base = `${import.meta.env.BASE_URL}frames`;
   const manifest: Manifest = await (await fetch(`${base}/manifest.json`)).json();
+  // Names from the data manifest are English: use the translated ones when the dictionary has them.
+  for (const [k, m] of Object.entries(manifest.metrics)) {
+    m.label = tOr(`metric.${k}`, m.label);
+    m.unit = tOr(`metric.${k}.unit`, m.unit);
+  }
+  for (const [k, v] of Object.entries(manifest.sensors)) v.label = tOr(`sensor.${k}`, v.label);
   const metrics = Object.keys(manifest.metrics);
   const viirsSensors = Object.keys(manifest.sensors).filter((s) => s.startsWith('VIIRS'));
   const harmSensors = Object.keys(manifest.sensors).filter(isHarm);
@@ -70,11 +80,18 @@ async function main() {
   const zoomBox = document.createElement('div');
   zoomBox.id = 'zoom';
   document.body.appendChild(zoomBox);
-  createZoomControls(viewer, zoomBox, HOME);
+  createZoomControls(viewer, zoomBox, HOME, {
+    zoomIn: t('zoom.in'),
+    zoomInTitle: t('zoom.in.title'),
+    zoomOut: t('zoom.out'),
+    zoomOutTitle: t('zoom.out.title'),
+    home: t('zoom.home'),
+    homeTitle: t('zoom.home.title'),
+  });
   const scaleBox = document.createElement('div');
   scaleBox.id = 'scale';
   document.body.appendChild(scaleBox);
-  createScaleBar(viewer, scaleBox);
+  createScaleBar(viewer, scaleBox, 120, locale);
 
   // ---- controls
   const metricSel = $<HTMLSelectElement>('metric');
@@ -93,7 +110,7 @@ async function main() {
   harmSel.innerHTML = harmSensors.map((s) => `<option value="${s}">${manifest.sensors[s].label}</option>`).join('');
   if (!harmSensors.length) modeSeg.querySelector<HTMLButtonElement>('[data-mode=HARM]')!.hidden = true;
   basemapSel.innerHTML = (Object.keys(BASEMAPS) as BasemapId[])
-    .map((b) => `<option value="${b}">${BASEMAPS[b].label}</option>`)
+    .map((b) => `<option value="${b}">${tOr(`basemap.${b}`, BASEMAPS[b].label)}</option>`)
     .join('');
 
   let mode: Mode = 'BOTH';
@@ -142,12 +159,17 @@ async function main() {
 
   const labL = $<HTMLSpanElement>('lab-left');
   const labR = $<HTMLSpanElement>('lab-right');
-  const splitter = createSplitter(viewer, document.body, (f) => {
-    labL.style.right = `${(1 - f) * 100}%`;
-    labL.style.marginRight = '12px';
-    labR.style.left = `${f * 100}%`;
-    labR.style.marginLeft = '12px';
-  });
+  const splitter = createSplitter(
+    viewer,
+    document.body,
+    (f) => {
+      labL.style.right = `${(1 - f) * 100}%`;
+      labL.style.marginRight = '12px';
+      labR.style.left = `${f * 100}%`;
+      labR.style.marginLeft = '12px';
+    },
+    { drag: t('split.drag') },
+  );
 
   const legend = createLegend($('legend'));
   const note = $<HTMLParagraphElement>('note');
@@ -163,7 +185,7 @@ async function main() {
         at: t,
         label: `${t === 1 ? '≥ ' : ''}${fmtNum(Math.expm1(t * Math.log1p(DETECTION_FRP_TOP)))}`,
       }));
-      legend.update('Single detection: fire radiative power (MW, log scale)', RAMPS.fire, ticks);
+      legend.update(t('legend.detection'), RAMPS.fire, ticks);
       return;
     }
     const s0 = shown()[0];
@@ -173,12 +195,12 @@ async function main() {
       label: `${t === 1 ? '≥ ' : ''}${fmtNum(Math.expm1(t * Math.log1p(top)))}`,
     }));
     if (isHarm(s0)) {
-      const unit = s0 === 'HARM_LONG' ? 'Aqua-equivalent detections' : 'VIIRS detections (S-NPP level)';
-      legend.update(`Harmonized: ${unit} / 1 degree cell / month, log scale`, RAMPS.fire, ticks);
+      const unit = s0 === 'HARM_LONG' ? t('legend.harm.long') : t('legend.harm.detail');
+      legend.update(t('legend.harm', { unit }), RAMPS.fire, ticks);
       return;
     }
     const m = manifest.metrics[metricSel.value];
-    legend.update(`${m.label} (${m.unit}, log scale)`, RAMPS.fire, ticks);
+    legend.update(t('legend.metric', { label: m.label, unit: m.unit }), RAMPS.fire, ticks);
   }
 
   function refreshLabels(key: string) {
@@ -186,7 +208,7 @@ async function main() {
     const day = key;
     key = key.slice(0, 7);
     const [a, b] = shown();
-    const lab = (s: string) => `${manifest.sensors[s].label}${manifest.sensors[s].months.includes(key) ? '' : ' - no data'}`;
+    const lab = (s: string) => `${manifest.sensors[s].label}${manifest.sensors[s].months.includes(key) ? '' : t('note.noData')}`;
     labL.textContent = lab(a);
     labR.textContent = b ? lab(b) : '';
     labR.style.display = b ? '' : 'none';
@@ -198,8 +220,8 @@ async function main() {
       return manifest.sensors[s].partial_last_month && ms[ms.length - 1] === key;
     });
     note.textContent = [
-      partial.length && step === 'month' ? `${fmtMonth(key)} is a partial month (data up to today).` : '',
-      missing.length ? `No ${missing.map((s) => manifest.sensors[s].label).join(', ')} data for ${fmt(day)}.` : '',
+      partial.length && step === 'month' ? t('note.partial', { month: fmtMonth(key) }) : '',
+      missing.length ? t('note.missing', { sensors: missing.map((s) => manifest.sensors[s].label).join(', '), date: fmt(day) }) : '',
     ]
       .filter(Boolean)
       .join(' ');
@@ -212,8 +234,8 @@ async function main() {
       btn.setAttribute('aria-checked', String(btn.dataset.mode === mode));
     viirsWrap.style.display = mode !== 'MODIS' && mode !== 'HARM' && viirsSensors.length > 1 ? '' : 'none';
     harmWrap.hidden = mode !== 'HARM';
-    $('data-badge').textContent = mode === 'HARM' ? 'MODIS and VIIRS harmonized: one consistent series' : 'Raw per-sensor data, not harmonized';
-    $('sub-text').textContent = mode === 'HARM' ? 'NASA FIRMS, monthly, 1° cells.' : 'NASA FIRMS, monthly, 0.25° grid.';
+    $('data-badge').textContent = t(mode === 'HARM' ? 'badge.harm' : 'badge.raw');
+    $('sub-text').textContent = t(mode === 'HARM' ? 'sub.harm' : 'sub.raw');
     metricSel.disabled = mode === 'HARM';
     if (mode === 'HARM' && step === 'day') {
       step = 'month';
@@ -242,8 +264,7 @@ async function main() {
     }
     slider.setKeys(allKeys());
     refreshControls();
-    detailNote.textContent =
-      mode === 'HARM' ? 'Single detections are shown in the MODIS and VIIRS views.' : 'Zoom in below 2,500 km to see individual detections.';
+    detailNote.textContent = t(mode === 'HARM' ? 'note.harmDetections' : 'note.zoom');
     // Single detections exist for the sensors, not for the harmonized series.
     detail?.setSides(
       shown().filter((s) => !isHarm(s)).map((s, k) => ({
@@ -256,7 +277,7 @@ async function main() {
 
   // eslint-disable-next-line prefer-const
   let calPanel: ReturnType<typeof createCalendarPanel> | undefined;
-  let table: ReturnType<typeof createTablePanel> | undefined;
+  let table: ReturnType<typeof createExplorer> | undefined;
   // eslint-disable-next-line prefer-const
   let detail: ReturnType<typeof createDetail> | undefined;
   const daySel = $<HTMLSelectElement>('day');
@@ -273,12 +294,7 @@ async function main() {
       btn.setAttribute('aria-checked', String(btn.dataset.step === step));
       if (btn.dataset.step === 'day') {
         btn.disabled = !apiOk || mode === 'HARM';
-        btn.title =
-          mode === 'HARM'
-            ? 'The harmonized series is monthly'
-            : apiOk
-              ? 'One day at a time, individual detections'
-              : 'Needs the data service or the static data files';
+        btn.title = t(mode === 'HARM' ? 'ctl.stepDay.harm' : apiOk ? 'ctl.stepDay.ok' : 'ctl.stepDay.noData');
       }
     }
     for (const btn of passSeg.querySelectorAll<HTMLButtonElement>('button'))
@@ -293,8 +309,8 @@ async function main() {
     const n = new Date(Date.UTC(y, m, 0)).getUTCDate();
     const keep = Math.min(Number(daySel.value) || 0, n);
     daySel.innerHTML =
-      '<option value="0">All days</option>' +
-      Array.from({ length: n }, (_, i) => `<option value="${i + 1}">${MONTHS[m - 1]} ${i + 1}</option>`).join('');
+      `<option value="0">${t('ctl.allDays')}</option>` +
+      Array.from({ length: n }, (_, i) => `<option value="${i + 1}">${t('ctl.dayOfMonth', { m: MONTHS[m - 1], d: i + 1 })}</option>`).join('');
     daySel.value = String(keep);
     detail?.setFilters({ day: keep });
   };
@@ -302,6 +318,17 @@ async function main() {
   const slider = createTimeSlider($('time'), {
     keys: allKeys(),
     format: (k) => (k.length > 7 ? fmtDay(k) : fmtMonth(k)),
+    months: MONTHS,
+    labels: {
+      play: t('slider.play'),
+      pause: t('slider.pause'),
+      time: t('slider.time'),
+      date: t('slider.date'),
+      speed: t('slider.speed'),
+      year: t('slider.year'),
+      month: t('slider.month'),
+      day: t('slider.day'),
+    },
     onChange: async (key) => {
       refreshLabels(key);
       calPanel?.select(key);
@@ -322,7 +349,7 @@ async function main() {
   const panelToggle = $<HTMLButtonElement>('panel-toggle');
   const setPanel = (open: boolean) => {
     panelEl.classList.toggle('collapsed', !open);
-    panelToggle.textContent = open ? 'Hide' : 'Controls';
+    panelToggle.textContent = t(open ? 'panel.hide' : 'panel.controls');
     panelToggle.setAttribute('aria-expanded', String(open));
   };
   setPanel(!window.matchMedia('(max-width: 760px)').matches);
@@ -383,16 +410,33 @@ async function main() {
         refreshControls();
         refreshLegend();
         if (!on)
-          detailNote.textContent =
-            mode === 'HARM'
-              ? 'Single detections are shown in the MODIS and VIIRS views.'
-              : 'Zoom in below 2,500 km to see individual detections.';
+          detailNote.textContent = t(mode === 'HARM' ? 'note.harmDetections' : 'note.zoom');
       },
-      onStatus(text) {
-        if (text) detailNote.textContent = text;
+      onStatus(text, busy) {
+        if (!text) return;
+        detailNote.textContent = text;
+        // Loaded detections: a button opens the list (strongest first, linked to the globe).
+        if (detail?.active && !busy) {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'det-open';
+          b.textContent = t('ctl.list');
+          b.title = t('ctl.list.title');
+          b.onclick = () => {
+            calPanel?.toggle(false);
+            detPanel.toggle(true);
+          };
+          detailNote.append(' ', b);
+        }
+        detPanel.refresh();
       },
     },
   );
+  const detPanel = createDetectionsPanel({
+    viewer,
+    list: (n) => detail?.list(n) ?? { rows: [], total: 0 },
+    highlight: (r) => detail?.highlight(r),
+  });
   daySel.onchange = () => detail?.setFilters({ day: Number(daySel.value) });
 
   // ---- area fire calendar
@@ -408,17 +452,33 @@ async function main() {
   const calBtn = document.createElement('button');
   calBtn.id = 'cal-toggle';
   calBtn.type = 'button';
-  calBtn.textContent = 'Area fire calendar';
+  calBtn.textContent = t('cal.button');
   calBtn.disabled = !apiOk;
-  calBtn.title = apiOk ? `Calendar of fire activity for an area, with CSV export. ${ds!.note}` : 'Needs the data service or the static data files';
-  calBtn.onclick = () => calPanel?.toggle();
+  calBtn.title = apiOk ? t('cal.button.title', { note: ds!.note }) : t('ctl.stepDay.noData');
+  calBtn.onclick = () => {
+    if (calPanel?.toggle()) detPanel.toggle(false);
+  };
   void dsReady.then((d) => {
     apiOk = !!d;
     calBtn.disabled = !apiOk;
-    calBtn.title = apiOk ? `Calendar of fire activity for an area, with CSV export. ${d!.note}` : 'Needs the data service or the static data files';
+    calBtn.title = apiOk ? t('cal.button.title', { note: d!.note }) : t('ctl.stepDay.noData');
     refreshControls();
   });
-  document.body.appendChild(calBtn);
+  // ---- top-right actions: export, area calendar
+  const exporter = createExporter({
+    viewer,
+    slider,
+    keys: allKeys,
+    formatKey: (k) => (k.length > 7 ? fmtDay(k) : fmtMonth(k)),
+    title: () => [labL.textContent, labR.style.display === 'none' ? '' : labR.textContent].filter(Boolean).join('  |  '),
+    legend: () => $('legend').querySelector<HTMLElement>('.gk-legend'),
+  });
+  exporter.button.id = 'export-toggle';
+  calPanel.onExportPng = (el) => exporter.exportElementPng(el, 'fire_calendar.png');
+  const actions = document.createElement('div');
+  actions.id = 'top-actions';
+  actions.append(exporter.button, calBtn);
+  document.body.appendChild(actions);
   calPanel.select(slider.key);
 
   // ---- Globe | Table view
@@ -426,21 +486,42 @@ async function main() {
   tabs.id = 'view-tabs';
   tabs.className = 'seg seg2';
   tabs.setAttribute('role', 'tablist');
-  tabs.innerHTML = '<button type="button" role="tab" data-v="globe">Globe</button><button type="button" role="tab" data-v="table" title="Harmonized data by country or region, as a table">Table</button>';
+  tabs.innerHTML = `<button type="button" role="tab" data-v="globe">${t('view.globe')}</button><button type="button" role="tab" data-v="table" title="${t('view.table.title')}">${t('view.table')}</button>`;
   const setView = (v: 'globe' | 'table') => {
     for (const b of tabs.querySelectorAll('button')) b.setAttribute('aria-selected', String(b.dataset.v === v));
     document.body.classList.toggle('view-table', v === 'table');
     table?.show(v === 'table');
   };
-  table = createTablePanel({
-    data: ds!,
-    onPick: (type, id, name) => {
-      setView('globe');
-      if (type === 'gfed') calPanel?.pickRegion(id);
-      else calPanel?.searchPlace(name, 'country');
+  // The data explorer (Tabulator, Chart.js) is loaded on first use, so it does not slow down the globe.
+  let explorer: Promise<ReturnType<typeof createExplorer>> | undefined;
+  let tableKey = slider.key;
+  const getExplorer = () =>
+    (explorer ??= import('./explorer/explorer').then((m) => {
+      const x = m.createExplorer({
+        baseUrl: `${import.meta.env.BASE_URL}data/`,
+        onPick: (type, id, name) => {
+          setView('globe');
+          if (type === 'gfed') calPanel?.pickRegion(id);
+          else calPanel?.searchPlace(name, 'country');
+        },
+      });
+      x.select(tableKey);
+      return x;
+    }));
+  let tableVisible = false;
+  table = {
+    get visible() {
+      return tableVisible;
     },
-  });
-  table.select(slider.key);
+    show(on: boolean) {
+      tableVisible = on;
+      if (on || explorer) void getExplorer().then((x) => x.show(on));
+    },
+    select(key: string) {
+      tableKey = key;
+      void explorer?.then((x) => x.select(key));
+    },
+  };
   tabs.onclick = (e) => {
     const v = (e.target as HTMLElement).closest('button')?.dataset.v as 'globe' | 'table' | undefined;
     if (v) setView(v);

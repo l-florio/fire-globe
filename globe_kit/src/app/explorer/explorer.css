@@ -1,0 +1,430 @@
+/* Data explorer. Position and size come from .tablepanel; everything here is scoped to .explorer. */
+.explorer {
+  gap: 6px;
+  min-width: 0;
+  padding: 10px 12px;
+}
+.explorer [hidden] {
+  display: none !important;
+}
+.explorer button,
+.explorer select,
+.explorer input,
+.explorer textarea {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--gk-text);
+  border: 1px solid var(--gk-border);
+  border-radius: 6px;
+  padding: 5px 7px;
+  font: inherit;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.explorer select option {
+  color: #111;
+}
+.explorer button {
+  cursor: pointer;
+  font-weight: 600;
+}
+.explorer button:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+.explorer button:focus-visible,
+.explorer select:focus-visible,
+.explorer input:focus-visible,
+.explorer textarea:focus-visible,
+.explorer summary:focus-visible {
+  outline: 2px solid var(--gk-accent);
+  outline-offset: 1px;
+}
+.explorer .ex-primary {
+  background: var(--gk-accent);
+  border-color: var(--gk-accent);
+  color: #0a0f19;
+}
+.explorer .ex-primary:hover {
+  background: var(--gk-accent);
+  filter: brightness(1.12);
+}
+.explorer button[aria-pressed='true'],
+.explorer .ex-tabs button[aria-selected='true'] {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: var(--gk-accent);
+}
+
+/* header and tabs */
+.ex-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+.ex-head h2 {
+  margin: 0;
+  font-size: 16px;
+}
+.ex-tabs,
+.ex-seg {
+  display: flex;
+  gap: 4px;
+}
+.ex-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* controls */
+.ex-controls {
+  flex: 0 1 auto;
+  max-height: 48%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  scrollbar-width: thin;
+}
+.ex-scope,
+.ex-builder,
+.ex-sqlmode {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.ex-row,
+.ex-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  align-items: flex-end;
+  min-width: 0;
+}
+.ex-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+/* Grow sideways only inside rows: in a column container the basis would become a height. */
+.ex-row > .ex-field.ex-grow,
+.ex-bar > .ex-field.ex-grow {
+  flex: 1 1 220px;
+}
+.ex-flabel {
+  font-size: 11px;
+  color: var(--gk-muted);
+}
+.explorer .ex-note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--gk-muted);
+  align-self: center;
+}
+.ex-bbox {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 4px 8px 6px;
+  border: 1px solid var(--gk-border);
+  border-radius: 6px;
+  min-width: 0;
+}
+.ex-bbox legend,
+.ex-group legend {
+  font-size: 11px;
+  color: var(--gk-muted);
+  padding: 0 4px;
+}
+.ex-bbox input {
+  width: 84px;
+}
+.ex-group {
+  margin: 0;
+  padding: 2px 8px 6px;
+  border: 1px solid var(--gk-border);
+  border-radius: 6px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+}
+.ex-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+.ex-item {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+.ex-item input[type='text'] {
+  flex: 1 1 120px;
+}
+.ex-item input[type='number'] {
+  width: 90px;
+}
+.ex-x {
+  padding: 3px 9px;
+  line-height: 1;
+}
+.explorer .ex-sqlview,
+.explorer .ex-editor {
+  width: 100%;
+  font: 12px/1.45 ui-monospace, Consolas, 'Courier New', monospace;
+  resize: vertical;
+  white-space: pre;
+  overflow: auto;
+}
+.explorer .ex-sqlview {
+  color: var(--gk-muted);
+}
+.ex-help {
+  border: 1px solid var(--gk-border);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+.ex-help summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.ex-table {
+  margin-top: 6px;
+}
+.explorer .ex-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--gk-accent);
+  font-family: ui-monospace, Consolas, monospace;
+  text-decoration: underline;
+}
+.ex-cols {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px 6px;
+  margin-top: 2px;
+}
+.ex-cols code {
+  font-size: 11px;
+  color: var(--gk-muted);
+}
+.ex-examples .ex-flabel {
+  align-self: center;
+}
+
+/* results */
+.ex-results {
+  flex: 1 1 0;
+  min-height: 170px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ex-rbar {
+  align-items: center;
+}
+.ex-status {
+  flex: 1 1 160px;
+  font-size: 12px;
+  color: var(--gk-muted);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.ex-menu {
+  position: relative;
+}
+.ex-menu summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 5px 9px;
+  border: 1px solid var(--gk-border);
+  border-radius: 6px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.06);
+}
+.ex-menu summary::-webkit-details-marker {
+  display: none;
+}
+.ex-menubody {
+  position: absolute;
+  z-index: 5;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  min-width: 190px;
+  max-width: min(320px, 80vw);
+  max-height: 50vh;
+  overflow-y: auto;
+  padding: 8px;
+  background: #101826;
+  border: 1px solid var(--gk-border);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ex-collist {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.ex-check {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 12px;
+}
+.explorer .ex-check input {
+  padding: 0;
+}
+.ex-sqlbox {
+  font-size: 12px;
+}
+.ex-sqlbox summary {
+  cursor: pointer;
+  color: var(--gk-muted);
+}
+.ex-sqlshow {
+  margin: 4px 0 0;
+  max-height: 160px;
+  overflow: auto;
+  font: 11px/1.4 ui-monospace, Consolas, monospace;
+  color: var(--gk-muted);
+}
+.ex-rbody {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+.ex-grid,
+.ex-chart {
+  position: absolute;
+  inset: 0;
+}
+.ex-tab {
+  height: 100%;
+}
+.ex-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ex-chart-canvas {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+/* Tabulator, dark */
+.explorer .tabulator {
+  background: #0b111c;
+  border: 1px solid var(--gk-border);
+  color: var(--gk-text);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.explorer .tabulator .tabulator-header,
+.explorer .tabulator .tabulator-header .tabulator-col,
+.explorer .tabulator .tabulator-header .tabulator-frozen {
+  background: #101826;
+  color: var(--gk-muted);
+  border-color: var(--gk-border);
+}
+.explorer .tabulator .tabulator-header .tabulator-col .tabulator-col-content {
+  padding: 4px 6px;
+}
+.explorer .tabulator .tabulator-header .tabulator-col .tabulator-header-filter {
+  margin-top: 3px;
+}
+.explorer .tabulator .tabulator-header .tabulator-col .tabulator-header-filter input,
+.explorer .tabulator .tabulator-header .tabulator-col .tabulator-header-filter select {
+  padding: 2px 4px;
+  font-size: 11px;
+  min-width: 0;
+}
+.explorer .ex-minmax {
+  display: flex;
+  gap: 3px;
+}
+.explorer .ex-minmax input {
+  width: 50%;
+  min-width: 0;
+  flex: 1;
+}
+.explorer .tabulator .tabulator-header .tabulator-col .tabulator-arrow {
+  border-bottom-color: var(--gk-muted);
+  border-top-color: var(--gk-muted);
+}
+.explorer .tabulator .tabulator-tableholder .tabulator-table {
+  background: transparent;
+  color: var(--gk-text);
+}
+.explorer .tabulator-row {
+  background: #0b111c;
+  border-color: rgba(255, 255, 255, 0.06);
+  min-height: 26px;
+}
+.explorer .tabulator-row.tabulator-row-even {
+  background: #0e1522;
+}
+.explorer .tabulator-row .tabulator-cell {
+  border-color: rgba(255, 255, 255, 0.05);
+  padding: 4px 8px;
+}
+.explorer .tabulator-row:hover,
+.explorer .tabulator-row.tabulator-row-even:hover {
+  background: #1a2536;
+}
+.explorer .tabulator .tabulator-frozen.tabulator-frozen-left,
+.explorer .tabulator .tabulator-frozen.tabulator-frozen-right {
+  border-color: var(--gk-border);
+}
+.explorer .tabulator-row .tabulator-cell.tabulator-frozen {
+  background: inherit;
+}
+.explorer .tabulator .tabulator-placeholder span {
+  color: var(--gk-muted);
+}
+.explorer .ex-globe {
+  padding: 1px 8px;
+  font-size: 11px;
+}
+.explorer .ex-sig {
+  font-weight: 600;
+}
+.explorer .ex-sig-above {
+  color: #ff8a3d;
+}
+.explorer .ex-sig-below {
+  color: #6fb6ff;
+}
+.explorer .ex-sig-within {
+  color: var(--gk-muted);
+  font-weight: 400;
+}
+
+@media (max-width: 760px) {
+  .explorer {
+    padding: 8px;
+  }
+  .ex-controls {
+    max-height: 42%;
+  }
+  .ex-bbox input {
+    width: calc(50% - 6px);
+  }
+}

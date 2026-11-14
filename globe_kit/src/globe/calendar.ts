@@ -14,6 +14,26 @@ export interface CalendarOptions {
   /** Value formatter for tooltips and totals. */
   format?: (v: number) => string;
   unit?: string;
+  /** Locale for numbers (default 'en'). */
+  locale?: string;
+  /** Texts (English defaults); the app passes translated ones. */
+  labels?: Partial<CalendarLabels>;
+}
+
+/** Everything the heatmap writes. Month names are short, January first. */
+export interface CalendarLabels {
+  months: string[];
+  /** One-letter column headers; default: first letter of each month. */
+  initials: string[];
+  empty: string;
+  year: string;
+  medianRow: string;
+  noData(month: string, year: number): string;
+  /** Appended to the tooltip of a partial month. */
+  partial(tip: string): string;
+  /** Tooltip of a month with data; numbers are already formatted. */
+  tip(p: { month: string; year: number; value: string; unit?: string; interval?: [string, string]; ratio?: string; median?: string; years?: number; percentile?: number }): string;
+  medianTip(month: string, value: string): string;
 }
 
 export interface MonthStats {
@@ -31,7 +51,23 @@ export interface MonthStats {
   significant?: boolean;
 }
 
-const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTHS_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const LABELS_EN: CalendarLabels = {
+  months: MONTHS_EN,
+  initials: MONTHS_EN.map((m) => m[0]),
+  empty: 'No data for this area.',
+  year: 'Year',
+  medianRow: 'Med.',
+  noData: (month, year) => `${month} ${year}: no data`,
+  partial: (tip) => `${tip} (partial month, data still arriving)`,
+  tip: (p) =>
+    `${p.month} ${p.year}: ${p.value}${p.unit ? ' ' + p.unit : ''}` +
+    (p.interval ? ` (90%: ${p.interval[0]}-${p.interval[1]})` : '') +
+    (p.median !== undefined
+      ? `; ${p.ratio}x the ${p.month} median (${p.median}, ${p.years} other years); higher than ${Math.round(p.percentile!)}% of them`
+      : ''),
+  medianTip: (month, value) => `Median ${month}: ${value}`,
+};
 const VIRIDIS = lut(RAMPS.viridis);
 const DIVERGING = lut(RAMPS.diverging);
 
@@ -46,7 +82,12 @@ export function createCalendarHeatmap(parent: HTMLElement, o: CalendarOptions = 
   const el = document.createElement('div');
   el.className = 'gk-cal';
   parent.appendChild(el);
-  const fmt = o.format ?? ((v: number) => Math.round(v).toLocaleString('en'));
+  const loc = o.locale ?? 'en';
+  const L: CalendarLabels = { ...LABELS_EN, ...o.labels };
+  if (o.labels?.months && !o.labels.initials) L.initials = L.months.map((m) => m[0]);
+  const MON = L.months;
+  const fmt = o.format ?? ((v: number) => Math.round(v).toLocaleString(loc));
+  const ratioTxt = (r: number) => r.toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   let values = new Map<string, number>();
   let covered = new Set<string>();
   let partial = new Set<string>();
@@ -100,7 +141,7 @@ export function createCalendarHeatmap(parent: HTMLElement, o: CalendarOptions = 
   function render() {
     const keys = [...covered].sort();
     if (!keys.length) {
-      el.innerHTML = values.size || covered.size ? '<p class="gk-cal-empty">No data for this area.</p>' : '';
+      el.innerHTML = values.size || covered.size ? `<p class="gk-cal-empty">${L.empty}</p>` : '';
       return;
     }
     const y0 = Number(keys[0].slice(0, 4));
@@ -110,7 +151,7 @@ export function createCalendarHeatmap(parent: HTMLElement, o: CalendarOptions = 
     for (const k of keys) yearTotals.set(Number(k.slice(0, 4)), (yearTotals.get(Number(k.slice(0, 4))) ?? 0) + (values.get(k) ?? 0));
     const maxYear = Math.max(1, ...yearTotals.values());
     let html = '<div class="gk-cal-grid" role="grid"><div></div>';
-    html += MON.map((m) => `<div class="gk-cal-h">${m[0]}</div>`).join('') + '<div class="gk-cal-h gk-cal-tot">Year</div>';
+    html += L.initials.map((m) => `<div class="gk-cal-h">${m}</div>`).join('') + `<div class="gk-cal-h gk-cal-tot">${L.year}</div>`;
     for (let y = y1; y >= y0; y--) {
       html += `<div class="gk-cal-y">${y}</div>`;
       for (let m = 1; m <= 12; m++) {
@@ -118,25 +159,31 @@ export function createCalendarHeatmap(parent: HTMLElement, o: CalendarOptions = 
         const has = covered.has(key);
         const s = has ? stats(key) : undefined;
         const tip = has
-          ? `${MON[m - 1]} ${y}: ${fmt(s!.value)}${o.unit ? ' ' + o.unit : ''}` +
-            (s!.lo !== undefined ? ` (90%: ${fmt(s!.lo)}-${fmt(s!.hi!)})` : '') +
-            (s!.median !== undefined
-              ? `; ${s!.ratio!.toFixed(2)}x the ${MON[m - 1]} median (${fmt(s!.median)}, ${s!.baselineYears} other years); higher than ${Math.round(s!.percentile!)}% of them`
-              : '')
-          : `${MON[m - 1]} ${y}: no data`;
+          ? L.tip({
+              month: MON[m - 1],
+              year: y,
+              value: fmt(s!.value),
+              unit: o.unit,
+              interval: s!.lo !== undefined ? [fmt(s!.lo), fmt(s!.hi!)] : undefined,
+              ratio: s!.ratio !== undefined ? ratioTxt(s!.ratio) : undefined,
+              median: s!.median !== undefined ? fmt(s!.median) : undefined,
+              years: s!.baselineYears,
+              percentile: s!.percentile,
+            })
+          : L.noData(MON[m - 1], y);
         const part = partial.has(key);
-        const t2 = part ? `${tip} (partial month, data still arriving)` : tip;
+        const t2 = part ? L.partial(tip) : tip;
         html += `<button type="button" class="gk-cal-c${has ? '' : ' gk-cal-na'}${part ? ' gk-cal-part' : ''}${key === selected ? ' gk-cal-sel' : ''}" data-k="${key}" ${has ? '' : 'disabled'} style="background:${color(key, max)}" title="${t2}" aria-label="${t2}"></button>`;
       }
       const tot = yearTotals.get(y) ?? 0;
       html += `<div class="gk-cal-bar" title="${y}: ${fmt(tot)}"><span style="width:${((tot / maxYear) * 100).toFixed(1)}%"></span></div>`;
     }
     // Median row: typical seasonality.
-    html += '<div class="gk-cal-y">Med.</div>';
+    html += `<div class="gk-cal-y">${L.medianRow}</div>`;
     for (let m = 1; m <= 12; m++) {
       const mm = String(m).padStart(2, '0');
       const med = median(keys.filter((k) => k.slice(5, 7) === mm).map((k) => values.get(k) ?? 0)) ?? 0;
-      html += `<div class="gk-cal-med" title="Median ${MON[m - 1]}: ${fmt(med)}">${fmt(med)}</div>`;
+      html += `<div class="gk-cal-med" title="${L.medianTip(MON[m - 1], fmt(med))}">${fmt(med)}</div>`;
     }
     html += '<div></div></div>';
     el.innerHTML = html;

@@ -1,6 +1,7 @@
 import type * as Cesium from 'cesium';
 import { areaLabel, cellsFromGeoJson, createAreaPicker, createCalendarHeatmap, type Area, type CellArea } from '../globe';
 import type { DataSource, MonthRow } from './dataSource';
+import { fmtFixed, fmtInt, lang, locale, monthsShort, monthInitials, t, tOr, tn } from './i18n';
 
 interface IntervalBins {
   level_upper_edges: (number | null)[];
@@ -16,19 +17,62 @@ interface IntervalTable {
 interface Place {
   display_name: string;
   addresstype?: string;
+  category?: string;
   type?: string;
+  osm_type?: string;
+  osm_id?: number;
   lat: string;
   lon: string;
+  boundingbox?: string[]; // south, north, west, east
   geojson?: { type: string; coordinates: unknown };
 }
+/** Continents (Natural Earth) on 1 degree cells: public/continents.json; also typed names, English and Italian. */
+const CONTINENT_NAMES: Record<string, string> = {
+  africa: 'AF', asia: 'AS', europe: 'EU', europa: 'EU', 'north america': 'NA', 'nord america': 'NA', 'america del nord': 'NA',
+  'south america': 'SA', 'sud america': 'SA', 'america del sud': 'SA', 'america meridionale': 'SA', oceania: 'OC', australia: 'OC',
+};
+/** OpenStreetMap feature types shown in the result list (translated through the place.* keys). */
+const KIND: Record<string, string> = { highway: 'street', building: 'address', place: 'place', boundary: 'area', amenity: 'place', shop: 'place' };
+const kindName = (k: string) => tOr(`place.${k}`, k);
 interface GfedRegions {
   regions: { code: string; name: string; ids: number[]; bbox: [number, number, number, number] }[];
 }
 const esc = (t: string) => t.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 
-const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const fmtInt = (v: number) => Math.round(v).toLocaleString('en');
-const fmtMw = (v: number) => (v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : v >= 1e3 ? `${(v / 1e3).toFixed(1)}k` : v.toFixed(0));
+const MON = monthsShort;
+const fmtMw = (v: number) => (v >= 1e6 ? `${fmtFixed(v / 1e6, 1)}M` : v >= 1e3 ? `${fmtFixed(v / 1e3, 1)}k` : fmtFixed(v, 0));
+
+/** Texts for the generic globe library (areaLabel and the calendar heatmap), translated here. */
+const AREA_LABELS = {
+  locale,
+  cells: (n: number, res: number, km2: string) => t('area.cells', { n, res, km2 }),
+  place: (label: string, cells: string, placeKm2?: string) =>
+    placeKm2 === undefined ? t('area.cellsPlain', { label, cells }) : t('area.cellsPlace', { label, cells, place: placeKm2 }),
+  box: (s: string, n: string, w: string, e: string, km2: string) => t('area.box', { s, n, w, e, km2 }),
+  circle: (km: number, lat: string, lon: string) => t('area.circle', { km, lat, lon }),
+};
+const HEAT_LABELS = {
+  months: MON,
+  initials: monthInitials,
+  empty: t('heat.empty'),
+  year: t('heat.year'),
+  medianRow: t('heat.median'),
+  noData: (month: string, year: number) => t('heat.noData', { month, year }),
+  partial: (tip: string) => t('heat.partial', { tip }),
+  tip: (p: { month: string; year: number; value: string; unit?: string; interval?: [string, string]; ratio?: string; median?: string; years?: number; percentile?: number }) =>
+    t('heat.tip', { month: p.month, year: p.year, value: p.value + (p.unit ? ' ' + p.unit : '') }) +
+    (p.interval ? t('heat.tip.interval', { lo: p.interval[0], hi: p.interval[1] }) : '') +
+    (p.median !== undefined
+      ? t('heat.tip.median', {
+          ratio: p.ratio ?? '',
+          month: p.month,
+          median: p.median,
+          years: tn('heat.tip.years', p.years ?? 0),
+          pct: Math.round(p.percentile ?? 0),
+        })
+      : ''),
+  medianTip: (month: string, value: string) => t('heat.medianTip', { month, value }),
+};
 
 export interface CalendarPanelOptions {
   viewer: Cesium.Viewer;
@@ -49,44 +93,51 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
   el.className = 'panel calpanel';
   el.hidden = true;
   el.innerHTML = `
-    <header class="cal-head"><h2>Area fire calendar</h2><button type="button" class="cal-x" aria-label="Close">&times;</button></header>
+    <header class="cal-head"><h2>${t('cal.title')}</h2><button type="button" class="cal-x" aria-label="${t('cal.close')}">&times;</button></header>
     <section class="cal-sec">
       <div class="cal-btns">
-        <button type="button" data-a="draw">Draw a box</button>
-        <button type="button" data-a="view">Use current view</button>
-        <button type="button" data-a="clear" title="Remove the area from the globe and reset the calendar">Clear area</button>
+        <button type="button" data-a="draw">${t('cal.draw')}</button>
+        <button type="button" data-a="view">${t('cal.view')}</button>
+        <button type="button" data-a="clear" title="${t('cal.clear.title')}">${t('cal.clear')}</button>
       </div>
       <form class="cal-search" role="search">
-        <input name="q" type="search" placeholder="Town, region, country or address" aria-label="Search a place" required />
-        <button type="submit">Search</button>
+        <input name="q" type="search" placeholder="${t('cal.search.placeholder')}" aria-label="${t('cal.search.aria')}" required />
+        <button type="submit">${t('cal.search.btn')}</button>
       </form>
       <div class="cal-results" hidden></div>
-      <select data-c="region" aria-label="Continental region"><option value="">Or a continental region (GFED)...</option></select>
+      <select data-c="region" aria-label="${t('cal.region.aria')}"><option value="">${t('cal.region.placeholder')}</option></select>
       <form class="cal-pt">
-        <input name="lat" type="number" step="any" min="-90" max="90" placeholder="Lat" aria-label="Latitude" required />
-        <input name="lon" type="number" step="any" min="-180" max="180" placeholder="Lon" aria-label="Longitude" required />
-        <input name="km" type="number" step="any" min="1" max="2000" value="25" aria-label="Radius in km" title="Radius (km)" />
-        <button type="submit">Point + km</button>
+        <input name="lat" type="number" step="any" min="-90" max="90" placeholder="${t('cal.lat')}" aria-label="${t('cal.lat.aria')}" required />
+        <input name="lon" type="number" step="any" min="-180" max="180" placeholder="${t('cal.lon')}" aria-label="${t('cal.lon.aria')}" required />
+        <input name="km" type="number" step="any" min="0.5" max="2000" value="25" aria-label="${t('cal.km.aria')}" title="${t('cal.km.title')}" />
+        <button type="submit">${t('cal.pt.btn')}</button>
       </form>
-      <p class="cal-area note">No area yet: search a place, pick a region, draw a box, use the view, or enter a point and a radius.</p>
+      <p class="cal-area note">${t('cal.noArea')}</p>
     </section>
     <div class="cal-row3">
-      <label>Sensor<select data-c="sensor">${sensors.map((s) => `<option value="${s}">${o.sensors[s].label}</option>`).join('')}</select></label>
-      <label>Variable<select data-c="var"><option value="n">Detections</option><option value="frp">FRP (MW)</option></select></label>
-      <label>Colour<select data-c="mode"><option value="value">Value</option><option value="anomaly">vs median</option></select></label>
+      <label>${t('cal.sensor')}<select data-c="sensor">${sensors.map((s) => `<option value="${s}">${o.sensors[s].label}</option>`).join('')}</select></label>
+      <label>${t('cal.variable')}<select data-c="var"><option value="n">${t('cal.var.n')}</option><option value="frp">${t('cal.var.frp')}</option></select></label>
+      <label>${t('cal.colour')}<select data-c="mode"><option value="value">${t('cal.colour.value')}</option><option value="anomaly">${t('cal.colour.anomaly')}</option></select></label>
     </div>
-    <label class="check"><input type="checkbox" data-c="excl" checked /> Exclude volcanoes and industrial sources</label>
-    <div class="cal-heat"></div>
-    <div class="cal-legend note"></div>
-    <div class="cal-stats"></div>
+    <label class="check"><input type="checkbox" data-c="excl" checked /> ${t('cal.excl')}</label>
+    <div class="cal-body">
+      <p class="cal-area-copy note"></p>
+      <div class="cal-heat"></div>
+      <div class="cal-legend note"></div>
+      <div class="cal-stats"></div>
+    </div>
     <section class="cal-sec cal-export">
-      <button type="button" data-a="csvcal">Calendar CSV</button>
-      <span class="cal-range">Hotspots from <input type="date" data-c="from" /> to <input type="date" data-c="to" /></span>
-      <button type="button" data-a="csvpts">Hotspots CSV</button>
+      <button type="button" data-a="csvcal">${t('cal.csvCal')}</button>
+      <button type="button" data-a="pngcal" title="${t('cal.pngCal.title')}">${t('cal.pngCal')}</button>
+      <span class="cal-range">${t('cal.range.from')} <input type="date" data-c="from" /> ${t('cal.range.to')} <input type="date" data-c="to" /></span>
+      <button type="button" data-a="csvpts">${t('cal.csvPts')}</button>
     </section>
-    <p class="note">Raw counts of one sensor. MODIS and VIIRS are not comparable until harmonized.</p>
+    <p class="note">${t('cal.raw')}</p>
     <p class="note cal-src"></p>
-    <p class="note">Place search: <a href="https://nominatim.openstreetmap.org/" target="_blank" rel="noopener">Nominatim</a>, data &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>. Regions: GFED basis regions (Giglio et al. 2013).</p>`;
+    <p class="note">${t('cal.credits', {
+      nominatim: '<a href="https://nominatim.openstreetmap.org/" target="_blank" rel="noopener">Nominatim</a>',
+      osm: '<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>',
+    })}</p>`;
   document.body.appendChild(el);
 
   const $ = <T extends HTMLElement>(sel: string) => el.querySelector(sel) as T;
@@ -116,6 +167,8 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
   const heat = createCalendarHeatmap($('.cal-heat'), {
     onSelect: (k) => o.onSelectMonth(k),
     format: (v) => (varSel.value === 'frp' ? fmtMw(v) : fmtInt(v)),
+    locale,
+    labels: HEAT_LABELS,
   });
   let area: Area | undefined;
   let rows: MonthRow[] = [];
@@ -128,7 +181,7 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
   async function load() {
     if (!area) return;
     const my = ++req;
-    statsEl.textContent = 'Loading...';
+    statsEl.textContent = t('cal.loading');
     try {
       const j = await o.data.calendar(sensorSel.value, area, types());
       if (my !== req) return;
@@ -136,19 +189,22 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
       rows = j.months;
       sourceNote =
         j.source === 'harmonized'
-          ? sensorSel.value === 'HARM_LONG'
-            ? `Harmonized long-term series, Aqua-equivalent detections on 1 degree cells ${area?.kind === 'cells' ? 'overlapping the place' : 'whose centre is in the area'}. 2003-2021 measured by Aqua; from 2022 (and Aug 2020) converted from VIIRS, with a 90% interval.`
-            : 'Harmonized detail series, VIIRS 375 m detections at S-NPP level (2013+), 1 degree cells. The band is the spread between satellite pairs, not a confidence interval.'
-          : j.source === 'grid'
-            ? 'Counted on the 0.25 degree grid (cells whose centre is in the area).'
-            : 'Counted from single detections.';
+          ? t(sensorSel.value === 'HARM_LONG' ? 'cal.src.harmLong' : 'cal.src.harmDetail')
+          : t(j.source === 'grid' ? 'cal.src.grid' : 'cal.src.detections');
       draw();
     } catch (err) {
-      statsEl.textContent = `Could not load the calendar: ${(err as Error).message}`;
+      statsEl.textContent = t('cal.loadError', { msg: (err as Error).message });
     }
   }
 
   function draw() {
+    $<HTMLParagraphElement>('.cal-area-copy').textContent = area
+      ? t('cal.areaCopy', {
+          area: areaLabel(area, AREA_LABELS),
+          sensor: o.sensors[sensorSel.value].label,
+          var: varSel.value === 'frp' ? t('cal.var.frp') : t('cal.var.n.lower'),
+        })
+      : '';
     const k = varSel.value === 'frp' ? 2 : 1;
     const s = o.sensors[sensorSel.value];
     const part = s.partial_last_month ? [s.months[s.months.length - 1]] : [];
@@ -157,9 +213,7 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
     heat.select(selected);
     legendEl.textContent =
       sourceNote +
-      (modeSel.value === 'anomaly'
-        ? ' Colour: ratio to the median of the same month in the other years, blue 1/4x, white 1x, red 4x.'
-        : ' Colour: viridis, log scale.');
+      t(modeSel.value === 'anomaly' ? 'cal.legend.anomaly' : 'cal.legend.value');
     summary();
   }
 
@@ -187,33 +241,34 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
 
   function summary() {
     if (!area) return;
-    const unit = varSel.value === 'frp' ? 'MW' : 'detections';
+    const unit = varSel.value === 'frp' ? 'MW' : t('cal.var.n.lower');
     const f = varSel.value === 'frp' ? fmtMw : fmtInt;
     const s = selected ? heat.stats(selected) : undefined;
     const parts: string[] = [];
     if (s) {
       const name = `${MON[Number(s.key.slice(5, 7)) - 1]} ${s.key.slice(0, 4)}`;
       parts.push(
-        `<b>${name}</b>: ${f(s.value)} ${unit}` +
+        t('cal.sum.month', { name, value: f(s.value), unit }) +
           (s.median !== undefined
-            ? `, <b>${s.ratio!.toFixed(1)}x</b> the median of the same month (${f(s.median)}, ${s.baselineYears} other years), higher than ${Math.round(s.percentile!)}% of them.`
+            ? t('cal.sum.median', {
+                ratio: fmtFixed(s.ratio!, 1),
+                median: f(s.median),
+                years: tn('cal.sum.years', s.baselineYears),
+                pct: Math.round(s.percentile!),
+              })
             : '.'),
       );
       if (s.lo !== undefined && s.hi !== undefined && s.hi > s.lo) {
-        const what = sensorSel.value === 'HARM_LONG' ? '90% interval' : 'spread between satellite pairs';
+        const what = t(sensorSel.value === 'HARM_LONG' ? 'cal.sum.interval' : 'cal.sum.spread');
         parts.push(
-          `${what}: ${f(s.lo)}-${f(s.hi)}. ` +
-            (s.significant === undefined
-              ? ''
-              : s.significant
-                ? 'The difference from the median is larger than the uncertainty.'
-                : 'The median is inside the interval: the difference is within the uncertainty.'),
+          t('cal.sum.intervalLine', { what, lo: f(s.lo), hi: f(s.hi) }) +
+            (s.significant === undefined ? '' : t(s.significant ? 'cal.sum.sig' : 'cal.sum.notSig')),
         );
       } else if (isHarm() && rows.find((r) => r[0] === s.key)?.[3] === 0) {
-        parts.push('Measured by Aqua MODIS (no conversion).');
+        parts.push(t('cal.sum.aqua'));
       }
     } else if (selected) {
-      parts.push(`No ${o.sensors[sensorSel.value].label} data for ${selected}.`);
+      parts.push(t('cal.sum.noData', { sensor: o.sensors[sensorSel.value].label, key: selected }));
     }
     // Seasonality and top years.
     const byMonth = Array.from({ length: 12 }, (_, m) => {
@@ -226,12 +281,12 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
     for (const r of rows) years.set(r[0].slice(0, 4), (years.get(r[0].slice(0, 4)) ?? 0) + (varSel.value === 'frp' ? r[2] : r[1]));
     const top = [...years.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
     if (rows.length) {
-      parts.push(`Peak month over the record: <b>${MON[peak]}</b>. Most active years: ${top.map(([y, v]) => `${y} (${f(v)})`).join(', ')}.`);
+      parts.push(t('cal.sum.peak', { month: MON[peak], years: top.map(([y, v]) => `${y} (${f(v)})`).join(', ') }));
     }
     statsEl.innerHTML = parts.map((p) => `<p>${p}</p>`).join('');
   }
 
-  const NO_AREA = 'No area yet: search a place, pick a region, draw a box, use the view, or enter a point and a radius.';
+  const NO_AREA = t('cal.noArea');
   function clearArea() {
     req++; // drop answers still in flight
     picker.cancel();
@@ -252,7 +307,7 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
   function setArea(a: Area | undefined) {
     if (!a) return;
     area = a;
-    areaP.textContent = areaLabel(a);
+    areaP.textContent = areaLabel(a, AREA_LABELS);
     void load();
   }
 
@@ -281,7 +336,7 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
     if (!area || !fromIn.value || !toIn.value) return;
     const btn = $<HTMLButtonElement>('[data-a=csvpts]');
     btn.disabled = true;
-    btn.textContent = 'Preparing...';
+    btn.textContent = t('cal.preparing');
     try {
       const blob = await o.data.exportCsv(sensorSel.value, area, fromIn.value, toIn.value, types());
       const a = document.createElement('a');
@@ -290,22 +345,28 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
       a.click();
       setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     } catch (err) {
-      statsEl.textContent = `Export failed: ${(err as Error).message}`;
+      statsEl.textContent = t('cal.exportFailed', { msg: (err as Error).message });
     } finally {
       btn.disabled = false;
-      btn.textContent = 'Hotspots CSV';
+      btn.textContent = t('cal.csvPts');
     }
   }
 
   el.addEventListener('click', async (e) => {
     const act = (e.target as HTMLElement).closest<HTMLButtonElement>('button')?.dataset.a;
     if (act === 'draw') {
-      areaP.textContent = 'Click two opposite corners on the globe (Esc cancels).';
+      areaP.textContent = t('cal.drawHint');
       setArea(await picker.drawBox());
       if (!area) areaP.textContent = NO_AREA;
     } else if (act === 'view') setArea(picker.fromView());
     else if (act === 'clear') clearArea();
     else if (act === 'csvcal') downloadCalendar();
+    else if (act === 'pngcal') {
+      // The exported image carries the area and the sensor (shown only while exporting).
+      const body = $<HTMLDivElement>('.cal-body');
+      body.classList.add('exporting');
+      void Promise.resolve(panel.onExportPng?.(body)).finally(() => body.classList.remove('exporting'));
+    }
     else if (act === 'csvpts') void downloadPoints();
   });
   $('.cal-x').onclick = () => panel.toggle(false);
@@ -315,25 +376,92 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
   const regionSel = $<HTMLSelectElement>('[data-c=region]');
   let places: Place[] = [];
   let lastSearch = 0;
+  /** Screen pixels covered by panels, so that the area is framed in the visible part of the globe. */
+  function viewPadding() {
+    const W = innerWidth;
+    const H = innerHeight;
+    const pad = { left: 0, right: 0, top: 0, bottom: 0 };
+    for (const e of document.querySelectorAll<HTMLElement>('#panel, .calpanel:not([hidden])')) {
+      const r = e.getBoundingClientRect();
+      if (!r.width) continue;
+      if (r.width > W * 0.6) pad.top = Math.max(pad.top, r.bottom);
+      else if (r.left + r.width / 2 < W / 2) pad.left = Math.max(pad.left, r.right);
+      else pad.right = Math.max(pad.right, W - r.left);
+    }
+    const b = document.getElementById('bottom')?.getBoundingClientRect();
+    if (b) pad.bottom = H - b.top;
+    return pad;
+  }
   function useArea(a: Area) {
     picker.show(a);
-    picker.zoomTo(a);
+    picker.zoomTo(a, viewPadding());
     setArea(a);
   }
-  function usePlace(p: Place) {
-    const name = p.display_name.split(',').slice(0, 3).join(',').trim();
-    const g = p.geojson;
-    let a: Area | undefined = g && /Polygon$/.test(g.type) ? cellsFromGeoJson(g, name) : undefined;
-    if (!a) {
-      // An address or a point: point + radius, as with the form below.
-      const km = Number($<HTMLInputElement>('.cal-pt [name=km]').value) || 25;
-      a = { kind: 'circle', lat: Number(p.lat), lon: Number(p.lon), km };
-      $<HTMLInputElement>('.cal-pt [name=lat]').value = Number(p.lat).toFixed(4);
-      $<HTMLInputElement>('.cal-pt [name=lon]').value = Number(p.lon).toFixed(4);
-    }
+  const ptInput = (n: string) => $<HTMLInputElement>(`.cal-pt [name=${n}]`);
+  /** A place or region replaces the point + radius: the form goes back to its defaults. */
+  function resetPoint() {
+    $<HTMLFormElement>('.cal-pt').reset();
+  }
+  /** Readable label: no postcode (often wrong in OpenStreetMap for streets), no repeated parts. */
+  function placeLabel(p: Place) {
+    const parts = p.display_name.split(', ').filter((x, i, arr) => !/^\d{4,6}$/.test(x) && arr.indexOf(x) === i);
+    return parts.join(', ');
+  }
+  function placeKind(p: Place) {
+    if (p.addresstype && p.category !== 'highway' && p.category !== 'building') return kindName(p.addresstype);
+    return kindName(KIND[p.category ?? ''] ?? p.addresstype ?? p.type ?? 'place');
+  }
+  async function nominatim(url: string) {
+    const wait = lastSearch + 1100 - Date.now(); // usage policy: at most one request per second
+    if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+    lastSearch = Date.now();
+    const r = await fetch(url);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return (await r.json()) as Place[];
+  }
+  /** Point + radius around an address or a point place (default 1 km: about one satellite pixel around it). */
+  function usePoint(p: Place, label: string) {
+    const km = 1;
+    ptInput('lat').value = Number(p.lat).toFixed(5);
+    ptInput('lon').value = Number(p.lon).toFixed(5);
+    ptInput('km').value = String(km);
     regionSel.value = '';
     resultsEl.hidden = true;
-    useArea(a);
+    useArea({ kind: 'circle', lat: Number(p.lat), lon: Number(p.lon), km });
+    areaP.textContent = t('cal.usePoint', { label, area: areaP.textContent ?? '', btn: t('cal.pt.btn') });
+  }
+  async function usePlace(p: Place) {
+    if (p.addresstype === 'continent' || p.type === 'continent') {
+      const code = CONTINENT_NAMES[p.display_name.split(',')[0].trim().toLowerCase()];
+      if (code) return pickRegion(`c:${code}`);
+    }
+    const label = placeLabel(p).split(', ').slice(0, 3).join(', ');
+    // Areas (relations, closed ways): fetch the outline, simplified in proportion to the size of the place,
+    // so that small places keep their real shape and countries stay light.
+    if (p.osm_type && p.osm_type !== 'node' && p.osm_id) {
+      const [s, n, w, e] = (p.boundingbox ?? []).map(Number);
+      const span = Math.max(Math.abs(n - s) || 0, Math.abs(e - w) || 0);
+      const tol = Math.min(0.01, Math.max(0.0002, span / 4000));
+      resultsEl.hidden = false;
+      resultsEl.textContent = t('cal.outline.loading');
+      try {
+        const [d] = await nominatim(
+          `https://nominatim.openstreetmap.org/lookup?format=jsonv2&polygon_geojson=1&polygon_threshold=${tol}&osm_ids=${p.osm_type[0].toUpperCase()}${p.osm_id}`,
+        );
+        const g = d?.geojson;
+        const a = g && /Polygon$/.test(g.type) ? cellsFromGeoJson(g, label) : undefined;
+        if (a) {
+          resetPoint();
+          regionSel.value = '';
+          resultsEl.hidden = true;
+          return useArea(a);
+        }
+      } catch (err) {
+        resultsEl.textContent = t('cal.outline.error', { msg: (err as Error).message });
+        return;
+      }
+    }
+    usePoint(p, label);
   }
   $<HTMLFormElement>('.cal-search').onsubmit = (e) => {
     e.preventDefault();
@@ -342,50 +470,76 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
   /** featureType: Nominatim filter (country, state, city, settlement). */
   async function search(q: string, featureType?: string) {
     if (!q) return;
-    const wait = lastSearch + 1100 - Date.now();
-    if (wait > 0) await new Promise((r) => setTimeout(r, wait));
-    lastSearch = Date.now();
+    // Continents are points in OpenStreetMap: use the continent cells instead.
+    const cont = CONTINENT_NAMES[q.trim().toLowerCase()];
+    if (cont) return pickRegion(`c:${cont}`);
     resultsEl.hidden = false;
-    resultsEl.textContent = 'Searching...';
+    resultsEl.textContent = t('cal.searching');
     try {
       const ft = featureType ? `&featureType=${featureType}` : '';
-      const u = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&polygon_geojson=1&polygon_threshold=0.01&accept-language=en${ft}&q=${encodeURIComponent(q)}`;
-      const r = await fetch(u);
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      places = (await r.json()) as Place[];
+      const found = await nominatim(
+        `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=8&accept-language=${lang}${ft}&q=${encodeURIComponent(q)}`,
+      );
+      // The same street is often several OpenStreetMap ways: keep one result per label.
+      const seen = new Set<string>();
+      places = found.filter((p) => {
+        const k = `${placeKind(p)}|${placeLabel(p)}`;
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      }).slice(0, 6);
       if (!places.length) {
-        resultsEl.textContent = 'No place found.';
+        resultsEl.textContent = t('cal.noPlace');
         return;
       }
       if (places.length === 1) return usePlace(places[0]);
       resultsEl.innerHTML = places
-        .map((p, i) => `<button type="button" data-p="${i}"><b>${esc(p.addresstype ?? p.type ?? 'place')}</b> ${esc(p.display_name)}</button>`)
+        .map((p, i) => `<button type="button" data-p="${i}"><b>${esc(placeKind(p))}</b> ${esc(placeLabel(p))}</button>`)
         .join('');
     } catch (err) {
-      resultsEl.textContent = `Search failed: ${(err as Error).message}`;
+      resultsEl.textContent = t('cal.searchFailed', { msg: (err as Error).message });
     }
   }
   resultsEl.addEventListener('click', (e) => {
     const i = (e.target as HTMLElement).closest<HTMLButtonElement>('button')?.dataset.p;
-    if (i !== undefined) usePlace(places[Number(i)]);
+    if (i !== undefined) void usePlace(places[Number(i)]);
   });
 
-  // ---- continental regions: the 14 GFED basis regions on 1 degree cells (public/regions_gfed.json)
-  let gfed: GfedRegions | undefined;
-  fetch(`${import.meta.env.BASE_URL}regions_gfed.json`)
-    .then((r) => (r.ok ? (r.json() as Promise<GfedRegions>) : undefined))
-    .then((j) => {
-      gfed = j;
-      for (const g of j?.regions ?? []) regionSel.add(new Option(`${g.name} (${g.code})`, g.code));
-    })
-    .catch(() => (regionSel.hidden = true));
-  regionSel.onchange = () => pickRegion(regionSel.value);
-  function pickRegion(code: string) {
-    const g = gfed?.regions.find((x) => x.code === code);
+  // ---- continents (Natural Earth, public/continents.json) and the 14 GFED basis regions (public/regions_gfed.json),
+  // both on 1 degree cells; select values "c:<code>" and "g:<code>".
+  const sets: Record<'c' | 'g', GfedRegions | undefined> = { c: undefined, g: undefined };
+  /** Region names come from the JSON files in English: use the dictionary when it has the code. */
+  const regionName = (k: 'c' | 'g', g: { code: string; name: string }) => tOr(`cal.${k === 'c' ? 'continent' : 'gfed'}.${g.code}`, g.name);
+  const loadSet = (k: 'c' | 'g', file: string, label: string, suffix: (code: string) => string) =>
+    fetch(`${import.meta.env.BASE_URL}${file}`)
+      .then((r) => (r.ok ? (r.json() as Promise<GfedRegions>) : undefined))
+      .then((j) => {
+        sets[k] = j;
+        if (!j) return;
+        const grp = document.createElement('optgroup');
+        grp.label = label;
+        for (const g of j.regions) {
+          g.name = regionName(k, g);
+          grp.appendChild(new Option(`${g.name}${suffix(g.code)}`, `${k}:${g.code}`));
+        }
+        regionSel.appendChild(grp);
+      })
+      .catch(() => undefined);
+  const setsReady = loadSet('c', 'continents.json', t('cal.region.continents'), () => '').then(() =>
+    loadSet('g', 'regions_gfed.json', t('cal.region.gfed'), (c) => ` (${c})`),
+  );
+  regionSel.onchange = () => void pickRegion(regionSel.value);
+  /** value: "c:EU" (continent), "g:EURO" (GFED region) or a bare GFED code. */
+  async function pickRegion(value: string) {
+    await setsReady;
+    const [k, code] = value.includes(':') ? (value.split(':') as ['c' | 'g', string]) : (['g', value] as const);
+    const g = sets[k]?.regions.find((x) => x.code === code);
     if (!g) return;
-    regionSel.value = code;
-    const a: CellArea = { kind: 'cells', res: 1, ids: g.ids, bbox: g.bbox, label: `${g.name} (GFED ${g.code})` };
+    regionSel.value = `${k}:${code}`;
+    const label = k === 'c' ? t('cal.regionLabel.continent', { name: g.name }) : t('cal.regionLabel.gfed', { name: g.name, code: g.code });
+    const a: CellArea = { kind: 'cells', res: 1, ids: g.ids, bbox: g.bbox, label };
     resultsEl.hidden = true;
+    resetPoint();
     useArea(a);
   }
   $<HTMLFormElement>('.cal-pt').onsubmit = (e) => {
@@ -393,6 +547,7 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
     const f = new FormData(e.target as HTMLFormElement);
     const a: Area = { kind: 'circle', lat: Number(f.get('lat')), lon: Number(f.get('lon')), km: Number(f.get('km')) || 25 };
     regionSel.value = '';
+    resultsEl.hidden = true;
     useArea(a);
   };
   function refreshHarmControls() {
@@ -402,7 +557,7 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
     excl.disabled = h; // the static-source mask is already applied in the harmonized series
     const pts = $<HTMLButtonElement>('[data-a=csvpts]');
     pts.disabled = h;
-    pts.title = h ? 'Single detections: choose MODIS or a VIIRS satellite' : '';
+    pts.title = h ? t('cal.csvPts.harm') : '';
   }
   refreshHarmControls();
   sensorSel.onchange = () => {
@@ -414,6 +569,8 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
   modeSel.onchange = draw;
 
   const panel = {
+    /** Set by the app: export an element (the calendar with its legend) as PNG. */
+    onExportPng: undefined as ((el: HTMLElement) => Promise<void>) | undefined,
     /** Open the calendar on a place by name (e.g. a country chosen in the table). */
     searchPlace(name: string, featureType?: string) {
       panel.toggle(true);
@@ -423,7 +580,7 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
     /** Open the calendar on a GFED region by code. */
     pickRegion(code: string) {
       panel.toggle(true);
-      pickRegion(code);
+      void pickRegion(code);
     },
     toggle(on?: boolean) {
       el.hidden = on === undefined ? !el.hidden : !on;

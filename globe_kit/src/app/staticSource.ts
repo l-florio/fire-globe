@@ -1,13 +1,10 @@
-import * as duckdb from '@duckdb/duckdb-wasm';
-import mvpWasm from '@duckdb/duckdb-wasm/dist/duckdb-mvp.wasm?url';
-import mvpWorker from '@duckdb/duckdb-wasm/dist/duckdb-browser-mvp.worker.js?url';
-import ehWasm from '@duckdb/duckdb-wasm/dist/duckdb-eh.wasm?url';
-import ehWorker from '@duckdb/duckdb-wasm/dist/duckdb-browser-eh.worker.js?url';
+import { getDb } from './duckdb';
 import { cellIdSql, type Area } from '../globe';
 import { areaFor, type CalendarResult, type DataSource, type Detections, type MonthRow, type RegionRow } from './dataSource';
 
 interface StaticManifest {
   region: [number, number, number, number];
+  grid_res_deg?: number;
   grid: Record<string, { band: number; south: number; north: number; path: string }[]>;
   points: Record<string, { year: number; path: string; rows: number; region?: [number, number, number, number] }[]>;
   /** Harmonized regional values; a later file replaces the earlier ones from its first month (m) on. */
@@ -48,14 +45,7 @@ export async function staticSource(baseUrl: string): Promise<DataSource | undefi
   const man = (await res.json()) as StaticManifest;
   const url = (p: string) => (/^https?:\/\//.test(p) ? p : new URL(`${baseUrl}${p}`, document.baseURI).href);
 
-  const bundle = await duckdb.selectBundle({
-    mvp: { mainModule: mvpWasm, mainWorker: mvpWorker },
-    eh: { mainModule: ehWasm, mainWorker: ehWorker },
-  });
-  const worker = new Worker(bundle.mainWorker!);
-  const db = new duckdb.AsyncDuckDB(new duckdb.VoidLogger(), worker);
-  await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
-  const conn = await db.connect();
+  const { db, conn } = await getDb();
   const list = (paths: string[]) => `[${paths.map((p) => `'${url(p)}'`).join(', ')}]`;
   const WORLD: [number, number, number, number] = [-180, -90, 180, 90];
   const regionOf = (f: { region?: [number, number, number, number] }) => f.region ?? man.region ?? WORLD;
@@ -114,7 +104,7 @@ export async function staticSource(baseUrl: string): Promise<DataSource | undefi
     },
 
     async calendar(sensor, place, types): Promise<CalendarResult> {
-      const area = areaFor(sensor, place);
+      const area = areaFor(sensor, place, man.grid_res_deg ?? 0.25);
       const [s, n] = latRange(area);
       const files = (man.grid[sensor] ?? []).filter((f) => f.north >= s && f.south <= n).map((f) => f.path);
       if (!files.length) return { source: 'grid', months: [] };

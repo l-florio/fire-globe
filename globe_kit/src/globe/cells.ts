@@ -87,7 +87,67 @@ export function coarsen(a: CellArea, res: number): CellArea {
     const lon = (id % ncol) * a.res - 180 + a.res / 2;
     set.add(cellId(lat, lon, res));
   }
-  return { ...a, res, ids: [...set].sort((x, y) => x - y) };
+  const ids = [...set].sort((x, y) => x - y);
+  // The bounding box grows to the coarse cells, or a query prefiltered on it would miss their centres.
+  const [w, s, e, n] = a.bbox;
+  const bbox: [number, number, number, number] = [
+    Math.max(-180, Math.floor(w / res) * res),
+    Math.max(-90, Math.floor(s / res) * res),
+    Math.min(180, Math.ceil(e / res) * res),
+    Math.min(90, Math.ceil(n / res) * res),
+  ];
+  return { ...a, res, ids, bbox };
+}
+
+/**
+ * Grid cells at resolution res overlapped by a box, a circle or a cell area (coarsened when finer).
+ * Shapes are given as plain objects so that this module does not depend on the area picker.
+ */
+export function toCells(
+  a: CellArea | { kind: 'bbox'; west: number; south: number; east: number; north: number } | { kind: 'circle'; lat: number; lon: number; km: number },
+  res: number,
+): CellArea {
+  if (a.kind === 'cells') return a.res >= res ? a : coarsen(a, res);
+  const box =
+    a.kind === 'bbox'
+      ? [a.west, a.south, a.east < a.west ? a.east + 360 : a.east, a.north]
+      : [a.lon - a.km / (111.32 * Math.max(0.01, Math.cos((a.lat * Math.PI) / 180))), a.lat - a.km / 110.57,
+         a.lon + a.km / (111.32 * Math.max(0.01, Math.cos((a.lat * Math.PI) / 180))), a.lat + a.km / 110.57];
+  const ids: number[] = [];
+  const s0 = Math.max(-90, Math.floor(box[1] / res) * res);
+  const w0 = Math.floor(box[0] / res) * res;
+  for (let y = s0; y < Math.min(90, box[3]); y += res)
+    for (let x = w0; x < box[2]; x += res) {
+      if (a.kind === 'circle') {
+        // nearest point of the cell to the centre, within the radius
+        const cy = Math.min(Math.max(a.lat, y), y + res);
+        const cx = Math.min(Math.max(a.lon, x), x + res);
+        const dy = (cy - a.lat) * 110.57;
+        const dx = (cx - a.lon) * 111.32 * Math.cos((a.lat * Math.PI) / 180);
+        if (dx * dx + dy * dy > a.km * a.km) continue;
+      }
+      const lon = ((((x + res / 2 + 180) % 360) + 360) % 360) - 180;
+      ids.push(cellId(y + res / 2, lon, res));
+    }
+  const bbox: [number, number, number, number] = [w0 > -180 ? w0 : -180, s0, Math.min(180, Math.ceil(box[2] / res) * res), Math.min(90, Math.ceil(box[3] / res) * res)];
+  // A box across the antimeridian: no bbox prefilter (the cell list alone selects).
+  if (box[2] > 180 || box[0] < -180) bbox.splice(0, 4, -180, s0, 180, bbox[3]);
+  return { kind: 'cells', res, ids: [...new Set(ids)], label: '', bbox };
+}
+
+/** Area of a GeoJSON (Multi)Polygon in km2 (outer rings minus holes, local equirectangular approximation). */
+export function polygonKm2(geom: unknown): number {
+  const ringKm2 = (r: number[][]) => {
+    const lat0 = (r.reduce((s, p) => s + p[1], 0) / r.length) * (Math.PI / 180);
+    const kx = 111.32 * Math.cos(lat0);
+    let a = 0;
+    for (let i = 0, j = r.length - 1; i < r.length; j = i++) a += (r[j][0] * kx) * (r[i][1] * 110.57) - (r[i][0] * kx) * (r[j][1] * 110.57);
+    return Math.abs(a) / 2;
+  };
+  return polygons(geom as { type: string; coordinates: unknown }).reduce(
+    (sum, p) => sum + ringKm2(p[0]) - p.slice(1).reduce((h, r) => h + ringKm2(r), 0),
+    0,
+  );
 }
 
 /** Outer rings of a GeoJSON (Multi)Polygon, for drawing outlines. */

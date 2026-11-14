@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium';
 import { PointLayer, cameraHeight, viewRectangle, type TimeRasterLayer } from '../globe';
 import type { DataSource } from './dataSource';
+import { fmtInt, t as tr } from './i18n';
 
 /** In monthly mode, below this camera height the app loads individual detections for the visible area. */
 export const DETAIL_HEIGHT_M = 2_500_000;
@@ -19,11 +20,24 @@ interface Side {
   raster: TimeRasterLayer;
 }
 
+/** One detection as listed in the detections popup. */
+export interface DetectionRecord {
+  sensor: string;
+  lon: number;
+  lat: number;
+  frp: number;
+  date: string; // YYYY-MM-DD
+  hourUtc: number; // decimal hours
+  night: boolean;
+  confidence: 'low' | 'nominal' | 'high';
+  satellite: string; // Terra, Aqua or the VIIRS satellite
+}
+
 export interface DetailEvents {
   /** Points on screen or not (legend and filters follow). */
   onMode(active: boolean): void;
-  /** Human-readable status for the panel. */
-  onStatus(text: string): void;
+  /** Human-readable status for the panel; busy: loading or failed (no detections to list yet). */
+  onStatus(text: string, busy?: boolean): void;
 }
 
 /**
@@ -46,6 +60,18 @@ export function createDetail(viewer: Cesium.Viewer, labels: Record<string, strin
   let timer: number | undefined;
   let baseStatus = '';
 
+  // Highlighted detection (hover or click in the list).
+  const mark = viewer.entities.add({
+    show: false,
+    position: Cesium.Cartesian3.fromDegrees(0, 0),
+    point: {
+      pixelSize: 16,
+      color: Cesium.Color.TRANSPARENT,
+      outlineColor: Cesium.Color.CYAN,
+      outlineWidth: 3,
+      disableDepthTestDistance: Number.POSITIVE_INFINITY,
+    },
+  });
   const t = (frp: number) => Math.log1p(Math.max(0, frp)) / Math.log1p(DETECTION_FRP_TOP);
   const rasterOpacity = () => (step === 'day' ? 0 : active ? 0.3 : 0.9);
 
@@ -87,10 +113,10 @@ export function createDetail(viewer: Cesium.Viewer, labels: Record<string, strin
         if (ok) c++;
         return ok;
       });
-      counts.push(`${(labels[sides[k]?.sensor] ?? sides[k]?.sensor ?? '').split(' ')[0]} ${c.toLocaleString('en')}`);
+      counts.push(`${(labels[sides[k]?.sensor] ?? sides[k]?.sensor ?? '').split(' ')[0]} ${fmtInt(c)}`);
     });
     const filtered = (step === 'month' && day) || pass !== 'all' || sat !== 'all';
-    if (baseStatus) ev.onStatus(filtered ? `${baseStatus} Shown after filters: ${counts.join(', ')}.` : baseStatus);
+    if (baseStatus) ev.onStatus(filtered ? `${baseStatus} ${tr('det.filtered', { counts: counts.join(', ') })}` : baseStatus);
   }
 
   async function load() {
@@ -110,11 +136,11 @@ export function createDetail(viewer: Cesium.Viewer, labels: Record<string, strin
       bbox = [((w - pw + 540) % 360) - 180, Math.max(-90, s - ph), ((e + pw + 540) % 360) - 180, Math.min(90, n + ph)];
     }
     if (!ds) {
-      ev.onStatus('Detections need the local data service or the static data files.');
+      ev.onStatus(tr('det.needService'), true);
       return;
     }
     const per = step === 'day' ? { date: period } : { month: period };
-    ev.onStatus('Loading detections...');
+    ev.onStatus(tr('det.loading'), true);
     let outside = '';
     try {
       const results = await Promise.all(
@@ -141,18 +167,18 @@ export function createDetail(viewer: Cesium.Viewer, labels: Record<string, strin
         const name = labels[sd.sensor] ?? sd.sensor;
         parts.push(
           count < total
-            ? `${name}: strongest ${count.toLocaleString('en')} of ${total.toLocaleString('en')}`
-            : `${name}: ${total.toLocaleString('en')}`,
+            ? tr('det.strongest', { name, n: fmtInt(count), total: fmtInt(total) })
+            : tr('det.total', { name, total: fmtInt(total) }),
         );
       });
-      const where = bbox === null ? (ds.kind === 'static' ? 'in the covered region' : 'worldwide') : 'in view';
+      const where = tr(bbox === null ? (ds.kind === 'static' ? 'det.where.region' : 'det.where.world') : 'det.where.view');
       baseStatus = outside
-        ? `${outside} Zoom or move there to see single detections.`
-        : `Detections ${where} (${step === 'day' ? period : `month ${period}`}) - ${parts.join('; ')}.`;
+        ? tr('det.outside', { outside })
+        : tr('det.status', { where, period: step === 'day' ? period : tr('det.month', { period }), parts: parts.join('; ') });
       applyFilters();
     } catch (err) {
       if ((err as Error).name === 'AbortError') return;
-      ev.onStatus(`Could not load detections: ${(err as Error).message}`);
+      ev.onStatus(tr('det.error', { msg: (err as Error).message }), true);
     }
   }
 
@@ -166,6 +192,42 @@ export function createDetail(viewer: Cesium.Viewer, labels: Record<string, strin
   return {
     get active() {
       return active;
+    },
+    /** Loaded detections after the filters, strongest first (both sides of a split view). */
+    list(limit = 500): { rows: DetectionRecord[]; total: number } {
+      const all: DetectionRecord[] = [];
+      let total = 0;
+      data.forEach((d, k) => {
+        const sensor = sides[k]?.sensor;
+        if (!d || !sensor) return;
+        const name = (labels[sensor] ?? sensor).split(' (')[0];
+        for (let i = 0; i < d.length / STRIDE; i++) {
+          if (!keep(d, i)) continue;
+          total++;
+          const o = i * STRIDE;
+          const flags = d[o + 5];
+          const sat = (flags >> 3) & 3;
+          all.push({
+            sensor,
+            lon: d[o],
+            lat: d[o + 1],
+            frp: d[o + 2],
+            date: step === 'day' ? period : `${period}-${String(d[o + 3]).padStart(2, '0')}`,
+            hourUtc: d[o + 4],
+            night: (flags & 1) === 1,
+            confidence: (['low', 'nominal', 'high'] as const)[(flags >> 1) & 3] ?? 'low',
+            satellite: sat === 1 ? 'Terra' : sat === 2 ? 'Aqua' : name,
+          });
+        }
+      });
+      all.sort((a, b) => b.frp - a.frp);
+      return { rows: all.slice(0, limit), total };
+    },
+    /** Ring around one detection on the globe; undefined hides it. */
+    highlight(r: DetectionRecord | undefined) {
+      mark.show = !!r;
+      if (r) mark.position = new Cesium.ConstantPositionProperty(Cesium.Cartesian3.fromDegrees(r.lon, r.lat));
+      viewer.scene.requestRender();
     },
     /** Time step and the current key (YYYY-MM for month, YYYY-MM-DD for day). */
     setPeriod(nextStep: Step, key: string) {

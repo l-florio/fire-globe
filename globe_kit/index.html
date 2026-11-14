@@ -8,68 +8,68 @@
   <body>
     <div id="globe"></div>
     <aside id="panel" class="panel">
-      <div class="panel-head"><h1>Active fires from space, 2000-2026</h1><button type="button" id="panel-toggle" aria-expanded="true" aria-controls="panel">Hide</button></div>
+      <div class="panel-head"><h1 data-i18n="panel.title">Active fires from space, 2000-2026</h1><span class="head-ctl"><select id="lang" class="lang-sel" data-i18n-aria="lang.label" data-i18n-title="lang.label" aria-label="Language" title="Language"><option value="en">EN</option><option value="it">IT</option></select><button type="button" id="panel-toggle" aria-expanded="true" aria-controls="panel">Hide</button></span></div>
       <p class="sub"><span id="sub-text">NASA FIRMS, monthly, 0.25&deg; grid.</span> <span class="badge" id="data-badge">Raw per-sensor data, not harmonized</span></p>
-      <label>Variable
+      <label><span data-i18n="ctl.variable">Variable</span>
         <select id="metric"></select>
       </label>
       <div class="field">
-        <span class="field-label">Show</span>
-        <div class="seg" id="mode" role="radiogroup" aria-label="Sensors shown">
+        <span class="field-label" data-i18n="ctl.show">Show</span>
+        <div class="seg" id="mode" role="radiogroup" data-i18n-aria="ctl.sensorsShown" aria-label="Sensors shown">
           <button type="button" role="radio" data-mode="MODIS">MODIS</button>
           <button type="button" role="radio" data-mode="VIIRS">VIIRS</button>
-          <button type="button" role="radio" data-mode="BOTH">Both</button>
-          <button type="button" role="radio" data-mode="HARM" title="MODIS and VIIRS harmonized into one consistent series">Harmonized</button>
+          <button type="button" role="radio" data-mode="BOTH" data-i18n="ctl.both">Both</button>
+          <button type="button" role="radio" data-mode="HARM" data-i18n="ctl.harmonized" data-i18n-title="ctl.harmonized.title" title="MODIS and VIIRS harmonized into one consistent series">Harmonized</button>
         </div>
       </div>
       <div class="field">
-        <span class="field-label">Time step</span>
-        <div class="seg seg2" id="step" role="radiogroup" aria-label="Time step">
-          <button type="button" role="radio" data-step="month">Month</button>
-          <button type="button" role="radio" data-step="day">Day</button>
+        <span class="field-label" data-i18n="ctl.timeStep">Time step</span>
+        <div class="seg seg2" id="step" role="radiogroup" data-i18n-aria="ctl.timeStep" aria-label="Time step">
+          <button type="button" role="radio" data-step="month" data-i18n="ctl.month">Month</button>
+          <button type="button" role="radio" data-step="day" data-i18n="ctl.day">Day</button>
         </div>
       </div>
-      <label id="harm-wrap" hidden>Harmonized series
+      <label id="harm-wrap" hidden><span data-i18n="ctl.harmSeries">Harmonized series</span>
         <select id="harm"></select>
       </label>
-      <label id="viirs-wrap">VIIRS satellite
+      <label id="viirs-wrap"><span data-i18n="ctl.viirsSat">VIIRS satellite</span>
         <select id="viirs"></select>
       </label>
       <div class="sides" id="sides">
-        <span>Left: <b id="side-l"></b></span>
-        <span>Right: <b id="side-r"></b></span>
-        <button type="button" id="swap" title="Swap left and right">&#8644; Swap sides</button>
+        <span><span data-i18n="ctl.left">Left:</span> <b id="side-l"></b></span>
+        <span><span data-i18n="ctl.right">Right:</span> <b id="side-r"></b></span>
+        <button type="button" id="swap" data-i18n-title="ctl.swap.title" title="Swap left and right"><span aria-hidden="true">&#8644;</span> <span data-i18n="ctl.swap">Swap sides</span></button>
       </div>
       <div id="filters" class="filters" hidden>
         <div class="field">
-          <span class="field-label">Overpass</span>
-          <div class="seg" id="pass" role="radiogroup" aria-label="Overpass">
-            <button type="button" role="radio" data-pass="all">All</button>
-            <button type="button" role="radio" data-pass="day">Daytime</button>
-            <button type="button" role="radio" data-pass="night">Night</button>
+          <span class="field-label" data-i18n="ctl.overpass">Overpass</span>
+          <div class="seg" id="pass" role="radiogroup" data-i18n-aria="ctl.overpass" aria-label="Overpass">
+            <button type="button" role="radio" data-pass="all" data-i18n="ctl.passAll">All</button>
+            <button type="button" role="radio" data-pass="day" data-i18n="ctl.passDay">Daytime</button>
+            <button type="button" role="radio" data-pass="night" data-i18n="ctl.passNight">Night</button>
           </div>
         </div>
-        <label id="sat-wrap">MODIS satellite
+        <label id="sat-wrap"><span data-i18n="ctl.modisSat">MODIS satellite</span>
           <select id="sat">
-            <option value="all">Terra + Aqua</option>
-            <option value="terra">Terra only (about 10:30 and 22:30 local)</option>
-            <option value="aqua">Aqua only (about 13:30 and 01:30 local)</option>
+            <option value="all" data-i18n="ctl.sat.all">Terra + Aqua</option>
+            <option value="terra" data-i18n="ctl.sat.terra">Terra only (about 10:30 and 22:30 local)</option>
+            <option value="aqua" data-i18n="ctl.sat.aqua">Aqua only (about 13:30 and 01:30 local)</option>
           </select>
         </label>
       </div>
-      <label id="gain-wrap">Color range (upper limit)
+      <label id="gain-wrap"><span data-i18n="ctl.gain">Color range (upper limit)</span>
         <input type="range" id="gain" min="0" max="1" step="0.01" value="0.75" />
       </label>
-      <label>Basemap
+      <label><span data-i18n="ctl.basemap">Basemap</span>
         <select id="basemap"></select>
       </label>
-      <label class="check"><input type="checkbox" id="borders" checked /> Coastlines, borders and place names</label>
+      <label class="check"><input type="checkbox" id="borders" checked /> <span data-i18n="ctl.borders">Coastlines, borders and place names</span></label>
       <p class="note" id="note"></p>
       <p class="note detail" id="detail-note">Zoom in below 2,500 km to see individual detections.</p>
     </aside>
     <footer id="bottom" class="panel bottom">
       <div id="time"></div>
-      <label id="day-wrap" class="day" hidden>Day
+      <label id="day-wrap" class="day" hidden><span data-i18n="ctl.dayLabel">Day</span>
         <select id="day"></select>
       </label>
       <div id="legend"></div>

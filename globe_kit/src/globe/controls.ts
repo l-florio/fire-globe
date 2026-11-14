@@ -2,10 +2,15 @@ import * as Cesium from 'cesium';
 import { cssGradient, type Stop } from './colormaps';
 
 /** Draggable vertical divider driving scene.splitPosition (layers set splitDirection LEFT/RIGHT). */
-export function createSplitter(viewer: Cesium.Viewer, parent: HTMLElement, onMove?: (fraction: number) => void) {
+export function createSplitter(
+  viewer: Cesium.Viewer,
+  parent: HTMLElement,
+  onMove?: (fraction: number) => void,
+  labels: { drag?: string } = {},
+) {
   const el = document.createElement('div');
   el.className = 'gk-splitter';
-  el.innerHTML = '<div class="gk-splitter-handle" title="Drag to compare"></div>';
+  el.innerHTML = `<div class="gk-splitter-handle" title="${labels.drag ?? 'Drag to compare'}"></div>`;
   parent.appendChild(el);
   const scene = viewer.scene;
   const place = (f: number) => {
@@ -36,6 +41,28 @@ export function createSplitter(viewer: Cesium.Viewer, parent: HTMLElement, onMov
   };
 }
 
+/** Texts of the time slider (English defaults); the app passes translated ones. */
+export interface TimeSliderLabels {
+  play: string;
+  pause: string;
+  time: string;
+  date: string;
+  speed: string;
+  year: string;
+  month: string;
+  day: string;
+}
+const SLIDER_LABELS: TimeSliderLabels = {
+  play: 'Play',
+  pause: 'Pause',
+  time: 'Time',
+  date: 'Date',
+  speed: 'Speed',
+  year: 'Year',
+  month: 'Month',
+  day: 'Day',
+};
+
 export interface TimeSliderOptions {
   keys: string[];
   initial?: string;
@@ -43,17 +70,21 @@ export interface TimeSliderOptions {
   onChange: (key: string) => void | Promise<void>;
   /** Frames per second while playing. */
   fps?: number;
+  labels?: Partial<TimeSliderLabels>;
+  /** Short month names, January first (default English). */
+  months?: string[];
 }
 
 /** Play/pause + range slider over discrete time keys. Arrow keys step, space plays. */
 export function createTimeSlider(parent: HTMLElement, o: TimeSliderOptions) {
+  const L = { ...SLIDER_LABELS, ...o.labels };
   const el = document.createElement('div');
   el.className = 'gk-time';
   el.innerHTML = `
-    <button class="gk-play" type="button" aria-label="Play">&#9654;</button>
-    <input class="gk-range" type="range" min="0" step="1" aria-label="Time" />
-    <span class="gk-picker" aria-label="Date"></span>
-    <select class="gk-speed" aria-label="Speed">
+    <button class="gk-play" type="button" aria-label="${L.play}">&#9654;</button>
+    <input class="gk-range" type="range" min="0" step="1" aria-label="${L.time}" />
+    <span class="gk-picker" aria-label="${L.date}"></span>
+    <select class="gk-speed" aria-label="${L.speed}">
       <option value="2">0.5x</option><option value="4" selected>1x</option><option value="8">2x</option><option value="16">4x</option>
     </select>`;
   parent.appendChild(el);
@@ -89,7 +120,7 @@ export function createTimeSlider(parent: HTMLElement, o: TimeSliderOptions) {
   function play() {
     if (idx >= keys.length - 1) void go(0);
     btn.innerHTML = '&#10073;&#10073;';
-    btn.setAttribute('aria-label', 'Pause');
+    btn.setAttribute('aria-label', L.pause);
     timer = window.setInterval(tick, 1000 / Number(speed.value));
   }
 
@@ -97,14 +128,14 @@ export function createTimeSlider(parent: HTMLElement, o: TimeSliderOptions) {
     window.clearInterval(timer);
     timer = undefined;
     btn.innerHTML = '&#9654;';
-    btn.setAttribute('aria-label', 'Play');
+    btn.setAttribute('aria-label', L.play);
   }
 
   /**
    * Year / month / day menus built from the keys (YYYY, YYYY-MM or YYYY-MM-DD).
    * Each menu lists only values that exist; picking one jumps to the first key with that prefix.
    */
-  const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const MON = o.months ?? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   function renderPicker() {
     const k = keys[idx] ?? '';
     const uniq = (xs: string[]) => [...new Set(xs)];
@@ -113,14 +144,14 @@ export function createTimeSlider(parent: HTMLElement, o: TimeSliderOptions) {
     const d = k.slice(8, 10);
     const opts = (vals: string[], cur: string, label: (v: string) => string) =>
       vals.map((v) => `<option value="${v}"${v === cur ? ' selected' : ''}>${label(v)}</option>`).join('');
-    let html = `<select data-p="y" aria-label="Year">${opts(uniq(keys.map((x) => x.slice(0, 4))), y, (v) => v)}</select>`;
+    let html = `<select data-p="y" aria-label="${L.year}">${opts(uniq(keys.map((x) => x.slice(0, 4))), y, (v) => v)}</select>`;
     if (k.length >= 7) {
       const ms = uniq(keys.filter((x) => x.startsWith(y)).map((x) => x.slice(5, 7)));
-      html += `<select data-p="m" aria-label="Month">${opts(ms, m, (v) => MON[Number(v) - 1])}</select>`;
+      html += `<select data-p="m" aria-label="${L.month}">${opts(ms, m, (v) => MON[Number(v) - 1])}</select>`;
     }
     if (k.length >= 10) {
       const ds = uniq(keys.filter((x) => x.startsWith(`${y}-${m}`)).map((x) => x.slice(8, 10)));
-      html += `<select data-p="d" aria-label="Day">${opts(ds, d, (v) => String(Number(v)))}</select>`;
+      html += `<select data-p="d" aria-label="${L.day}">${opts(ds, d, (v) => String(Number(v)))}</select>`;
     }
     picker.innerHTML = html;
     picker.title = fmt(k);
@@ -206,17 +237,35 @@ export function createLegend(parent: HTMLElement) {
  * Zoom in / zoom out / home buttons. Each step halves (or doubles) the camera height,
  * so a step feels the same at every scale. Keys: + and - zoom, 0 or Home resets.
  */
+export interface ZoomLabels {
+  zoomIn: string;
+  zoomInTitle: string;
+  zoomOut: string;
+  zoomOutTitle: string;
+  home: string;
+  homeTitle: string;
+}
 export function createZoomControls(
   viewer: Cesium.Viewer,
   parent: HTMLElement,
   home: { lon: number; lat: number; height: number },
+  labels: Partial<ZoomLabels> = {},
 ) {
+  const L: ZoomLabels = {
+    zoomIn: 'Zoom in',
+    zoomInTitle: 'Zoom in (+)',
+    zoomOut: 'Zoom out',
+    zoomOutTitle: 'Zoom out (-)',
+    home: 'Reset view',
+    homeTitle: 'Reset view (0)',
+    ...labels,
+  };
   const el = document.createElement('div');
   el.className = 'gk-zoom';
   el.innerHTML = `
-    <button type="button" data-z="in" aria-label="Zoom in" title="Zoom in (+)">+</button>
-    <button type="button" data-z="out" aria-label="Zoom out" title="Zoom out (-)">&minus;</button>
-    <button type="button" data-z="home" aria-label="Reset view" title="Reset view (0)">&#8962;</button>`;
+    <button type="button" data-z="in" aria-label="${L.zoomIn}" title="${L.zoomInTitle}">+</button>
+    <button type="button" data-z="out" aria-label="${L.zoomOut}" title="${L.zoomOutTitle}">&minus;</button>
+    <button type="button" data-z="home" aria-label="${L.home}" title="${L.homeTitle}">&#8962;</button>`;
   parent.appendChild(el);
   const cam = viewer.camera;
   const height = () => viewer.scene.globe.ellipsoid.cartesianToCartographic(cam.positionWC)?.height ?? home.height;
@@ -258,7 +307,7 @@ export function createZoomControls(
  * Scale bar: ground length of a bar at the centre of the screen, rounded to 1, 2 or 5 x 10^n.
  * Updates while the camera moves; hidden when the screen centre is not on the globe.
  */
-export function createScaleBar(viewer: Cesium.Viewer, parent: HTMLElement, maxPx = 120) {
+export function createScaleBar(viewer: Cesium.Viewer, parent: HTMLElement, maxPx = 120, locale = 'en') {
   const el = document.createElement('div');
   el.className = 'gk-scale';
   el.innerHTML = '<div class="gk-scale-label"></div><div class="gk-scale-bar"></div>';
@@ -282,7 +331,7 @@ export function createScaleBar(viewer: Cesium.Viewer, parent: HTMLElement, maxPx
     const pow = Math.pow(10, Math.floor(Math.log10(maxM)));
     const nice = [5, 2, 1].map((k) => k * pow).find((v) => v <= maxM) ?? pow;
     bar.style.width = `${Math.round(nice / mPerPx)}px`;
-    label.textContent = nice >= 1000 ? `${(nice / 1000).toLocaleString('en')} km` : `${nice} m`;
+    label.textContent = nice >= 1000 ? `${(nice / 1000).toLocaleString(locale)} km` : `${nice} m`;
     el.style.visibility = '';
   }
   viewer.camera.percentageChanged = Math.min(viewer.camera.percentageChanged, 0.05);

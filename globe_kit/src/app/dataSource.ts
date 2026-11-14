@@ -1,8 +1,14 @@
-import { areaQuery, coarsen, type Area } from '../globe';
+import { areaQuery, toCells, type Area } from '../globe';
+import { t } from './i18n';
 
-/** The harmonized series live on 1 degree cells: a place counts every 1 degree cell it overlaps. */
-export function areaFor(sensor: string, a: Area): Area {
-  return a.kind === 'cells' && sensor.startsWith('HARM_') ? coarsen(a, 1) : a;
+/**
+ * The area as counted on a grid: every grid cell the area overlaps (so that a small circle or box still has data).
+ * Harmonized series: 1 degree cells. rawGridRes: resolution of the raw per-sensor grid when the calendar is computed
+ * from it (static version, 0.25); undefined when raw counts come from single detections (local service).
+ */
+export function areaFor(sensor: string, a: Area, rawGridRes?: number): Area {
+  const res = sensor.startsWith('HARM_') ? 1 : rawGridRes;
+  return res ? toCells(a, res) : a;
 }
 
 /** GET for boxes and circles; POST with a JSON body for places (cell lists are too long for a URL). */
@@ -57,7 +63,7 @@ export interface DataSource {
 export function apiSource(): DataSource {
   return {
     kind: 'api',
-    note: 'Local data service: full FIRMS archive.',
+    note: t('data.note.api'),
     async detections(sensor, period, bbox, limit, signal) {
       const p = period.date ? `date=${period.date}` : `month=${period.month}`;
       const b = bbox ? `&bbox=${bbox.map((v) => v.toFixed(3)).join(',')}` : '';
@@ -100,7 +106,7 @@ export function lazySource(p: Promise<DataSource | undefined>): DataSource {
   let real: DataSource | undefined;
   const get = async () => {
     const d = real ?? (await p);
-    if (!d) throw new Error('no data source available');
+    if (!d) throw new Error(t('data.noSource'));
     return d;
   };
   void p.then((d) => (real = d));
@@ -109,7 +115,7 @@ export function lazySource(p: Promise<DataSource | undefined>): DataSource {
       return real?.kind ?? 'static';
     },
     get note() {
-      return real?.note ?? 'Loading the data engine...';
+      return real?.note ?? t('data.loadingEngine');
     },
     detections: async (...a) => (await get()).detections(...a),
     calendar: async (...a) => (await get()).calendar(...a),

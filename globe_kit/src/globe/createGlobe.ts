@@ -44,6 +44,8 @@ export function createGlobe(opts: GlobeOptions): Globe {
     selectionIndicator: false,
     infoBox: false,
     msaaSamples: 4,
+    // Keep the last frame readable, so that the map can be exported as an image or video (small GPU cost).
+    contextOptions: { webgl: { preserveDrawingBuffer: true } },
     requestRenderMode: true, // render only on change: the data is static between frames
     maximumRenderTimeChange: Infinity,
   });
