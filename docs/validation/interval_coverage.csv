@@ -1,0 +1,37 @@
+level,rule,period,n,coverage_pct
+cell (1 deg),"cell-sum rule (fine values, table long)",2013-2020,763828,90.3
+cell (1 deg),"cell-sum rule (fine values, table long)",2021,101873,91.7
+cell (1 deg),"cell-sum rule (fine values, table long)",2021-2025,508486,90.6
+cell (2.5 deg),"cell-sum rule (fine values, table long)",2013-2020,194300,89.1
+cell (2.5 deg),"cell-sum rule (fine values, table long)",2021,25393,90.0
+cell (2.5 deg),"cell-sum rule (fine values, table long)",2021-2025,127028,88.4
+block (10 deg),"harm_region product (coarse values, table long_region)",2013-2020,22639,90.4
+block (10 deg),"harm_region product (coarse values, table long_region)",2021,2954,91.7
+block (10 deg),"harm_region product (coarse values, table long_region)",2021-2025,14514,89.1
+block (10 deg),"cell-sum rule (fine values, table long)",2013-2020,22639,88.5
+block (10 deg),"cell-sum rule (fine values, table long)",2021,2954,89.8
+block (10 deg),"cell-sum rule (fine values, table long)",2021-2025,14514,87.2
+GFED region,"harm_region product (coarse values, table long_region)",2013-2020,1330,92.5
+GFED region,"harm_region product (coarse values, table long_region)",2021,168,94.6
+GFED region,"harm_region product (coarse values, table long_region)",2021-2025,840,93.0
+GFED region,"cell-sum rule (fine values, table long)",2013-2020,1330,90.7
+GFED region,"cell-sum rule (fine values, table long)",2021,168,93.5
+GFED region,"cell-sum rule (fine values, table long)",2021-2025,840,90.0
+country,"harm_region product (coarse values, table long_region)",2013-2020,17262,89.1
+country,"harm_region product (coarse values, table long_region)",2021,2236,90.4
+country,"harm_region product (coarse values, table long_region)",2021-2025,11040,89.7
+country,"cell-sum rule (fine values, table long)",2013-2020,17262,88.5
+country,"cell-sum rule (fine values, table long)",2021,2236,89.0
+country,"cell-sum rule (fine values, table long)",2021-2025,11040,88.0
+continent (GFED groups),"harm_region product (coarse values, table long_region)",2013-2020,570,94.7
+continent (GFED groups),"harm_region product (coarse values, table long_region)",2021,72,95.8
+continent (GFED groups),"harm_region product (coarse values, table long_region)",2021-2025,360,94.7
+continent (GFED groups),"cell-sum rule (fine values, table long)",2013-2020,570,91.4
+continent (GFED groups),"cell-sum rule (fine values, table long)",2021,72,93.1
+continent (GFED groups),"cell-sum rule (fine values, table long)",2021-2025,360,92.2
+world,"harm_region product (coarse values, table long_region)",2013-2020,95,92.6
+world,"harm_region product (coarse values, table long_region)",2021,12,75.0
+world,"harm_region product (coarse values, table long_region)",2021-2025,60,93.3
+world,"cell-sum rule (fine values, table long)",2013-2020,95,90.5
+world,"cell-sum rule (fine values, table long)",2021,12,83.3
+world,"cell-sum rule (fine values, table long)",2021-2025,60,93.3

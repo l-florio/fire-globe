@@ -1,0 +1,13 @@
+level,period,annual_filter,n_annual,annual_median_abs_pct_err,annual_mean_abs_pct_err,annual_max_abs_pct_err,monthly_median_abs_log_err,monthly_share_within_factor2_pct
+cell (1 deg),2013-2020,Aqua >= 20 per year,51325,11.1,16.2,395.8,0.24,84.9
+cell (1 deg),2021,Aqua >= 20 per year,6287,11.6,16.5,322.8,0.221,86.3
+cell (1 deg),2021-2025,Aqua >= 20 per year,31214,13.4,19.7,1348.2,0.236,84.6
+cell (2.5 deg),2013-2020,Aqua >= 20 per year,14269,8.6,13.7,189.8,0.22,86.1
+cell (2.5 deg),2021,Aqua >= 20 per year,1772,9.7,14.7,115.3,0.212,86.2
+cell (2.5 deg),2021-2025,Aqua >= 20 per year,8830,11.8,17.7,284.0,0.234,84.3
+GFED region,2013-2020,none,112,1.7,2.4,14.5,0.05,98.6
+GFED region,2021,none,14,3.9,3.8,7.7,0.063,98.2
+GFED region,2021-2025,none,70,4.3,5.1,24.3,0.068,96.9
+world,2013-2020,none,8,0.3,0.4,1.1,0.015,100.0
+world,2021,none,1,0.1,0.1,0.1,0.022,100.0
+world,2021-2025,none,5,2.0,1.9,3.1,0.02,98.3

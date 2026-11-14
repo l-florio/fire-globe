@@ -1,0 +1,449 @@
+{
+ "generated_utc": "2026-11-14T22:17:24Z",
+ "error_summary": [
+  {
+   "level": "cell (1 deg)",
+   "period": "2013-2020",
+   "annual_filter": "Aqua >= 20 per year",
+   "n_annual": 51325,
+   "annual_median_abs_pct_err": 11.1,
+   "annual_mean_abs_pct_err": 16.2,
+   "annual_max_abs_pct_err": 395.8,
+   "monthly_median_abs_log_err": 0.24,
+   "monthly_share_within_factor2_pct": 84.9
+  },
+  {
+   "level": "cell (1 deg)",
+   "period": "2021",
+   "annual_filter": "Aqua >= 20 per year",
+   "n_annual": 6287,
+   "annual_median_abs_pct_err": 11.6,
+   "annual_mean_abs_pct_err": 16.5,
+   "annual_max_abs_pct_err": 322.8,
+   "monthly_median_abs_log_err": 0.221,
+   "monthly_share_within_factor2_pct": 86.3
+  },
+  {
+   "level": "cell (1 deg)",
+   "period": "2021-2025",
+   "annual_filter": "Aqua >= 20 per year",
+   "n_annual": 31214,
+   "annual_median_abs_pct_err": 13.4,
+   "annual_mean_abs_pct_err": 19.7,
+   "annual_max_abs_pct_err": 1348.2,
+   "monthly_median_abs_log_err": 0.236,
+   "monthly_share_within_factor2_pct": 84.6
+  },
+  {
+   "level": "cell (2.5 deg)",
+   "period": "2013-2020",
+   "annual_filter": "Aqua >= 20 per year",
+   "n_annual": 14269,
+   "annual_median_abs_pct_err": 8.6,
+   "annual_mean_abs_pct_err": 13.7,
+   "annual_max_abs_pct_err": 189.8,
+   "monthly_median_abs_log_err": 0.22,
+   "monthly_share_within_factor2_pct": 86.1
+  },
+  {
+   "level": "cell (2.5 deg)",
+   "period": "2021",
+   "annual_filter": "Aqua >= 20 per year",
+   "n_annual": 1772,
+   "annual_median_abs_pct_err": 9.7,
+   "annual_mean_abs_pct_err": 14.7,
+   "annual_max_abs_pct_err": 115.3,
+   "monthly_median_abs_log_err": 0.212,
+   "monthly_share_within_factor2_pct": 86.2
+  },
+  {
+   "level": "cell (2.5 deg)",
+   "period": "2021-2025",
+   "annual_filter": "Aqua >= 20 per year",
+   "n_annual": 8830,
+   "annual_median_abs_pct_err": 11.8,
+   "annual_mean_abs_pct_err": 17.7,
+   "annual_max_abs_pct_err": 284.0,
+   "monthly_median_abs_log_err": 0.234,
+   "monthly_share_within_factor2_pct": 84.3
+  },
+  {
+   "level": "GFED region",
+   "period": "2013-2020",
+   "annual_filter": "none",
+   "n_annual": 112,
+   "annual_median_abs_pct_err": 1.7,
+   "annual_mean_abs_pct_err": 2.4,
+   "annual_max_abs_pct_err": 14.5,
+   "monthly_median_abs_log_err": 0.05,
+   "monthly_share_within_factor2_pct": 98.6
+  },
+  {
+   "level": "GFED region",
+   "period": "2021",
+   "annual_filter": "none",
+   "n_annual": 14,
+   "annual_median_abs_pct_err": 3.9,
+   "annual_mean_abs_pct_err": 3.8,
+   "annual_max_abs_pct_err": 7.7,
+   "monthly_median_abs_log_err": 0.063,
+   "monthly_share_within_factor2_pct": 98.2
+  },
+  {
+   "level": "GFED region",
+   "period": "2021-2025",
+   "annual_filter": "none",
+   "n_annual": 70,
+   "annual_median_abs_pct_err": 4.3,
+   "annual_mean_abs_pct_err": 5.1,
+   "annual_max_abs_pct_err": 24.3,
+   "monthly_median_abs_log_err": 0.068,
+   "monthly_share_within_factor2_pct": 96.9
+  },
+  {
+   "level": "world",
+   "period": "2013-2020",
+   "annual_filter": "none",
+   "n_annual": 8,
+   "annual_median_abs_pct_err": 0.3,
+   "annual_mean_abs_pct_err": 0.4,
+   "annual_max_abs_pct_err": 1.1,
+   "monthly_median_abs_log_err": 0.015,
+   "monthly_share_within_factor2_pct": 100.0
+  },
+  {
+   "level": "world",
+   "period": "2021",
+   "annual_filter": "none",
+   "n_annual": 1,
+   "annual_median_abs_pct_err": 0.1,
+   "annual_mean_abs_pct_err": 0.1,
+   "annual_max_abs_pct_err": 0.1,
+   "monthly_median_abs_log_err": 0.022,
+   "monthly_share_within_factor2_pct": 100.0
+  },
+  {
+   "level": "world",
+   "period": "2021-2025",
+   "annual_filter": "none",
+   "n_annual": 5,
+   "annual_median_abs_pct_err": 2.0,
+   "annual_mean_abs_pct_err": 1.9,
+   "annual_max_abs_pct_err": 3.1,
+   "monthly_median_abs_log_err": 0.02,
+   "monthly_share_within_factor2_pct": 98.3
+  }
+ ],
+ "interval_coverage": [
+  {
+   "level": "cell (1 deg)",
+   "rule": "cell-sum rule (fine values, table long)",
+   "period": "2013-2020",
+   "n": 763828,
+   "coverage_pct": 90.3
+  },
+  {
+   "level": "cell (1 deg)",
+   "rule": "cell-sum rule (fine values, table long)",
+   "period": "2021",
+   "n": 101873,
+   "coverage_pct": 91.7
+  },
+  {
+   "level": "cell (1 deg)",
+   "rule": "cell-sum rule (fine values, table long)",
+   "period": "2021-2025",
+   "n": 508486,
+   "coverage_pct": 90.6
+  },
+  {
+   "level": "cell (2.5 deg)",
+   "rule": "cell-sum rule (fine values, table long)",
+   "period": "2013-2020",
+   "n": 194300,
+   "coverage_pct": 89.1
+  },
+  {
+   "level": "cell (2.5 deg)",
+   "rule": "cell-sum rule (fine values, table long)",
+   "period": "2021",
+   "n": 25393,
+   "coverage_pct": 90.0
+  },
+  {
+   "level": "cell (2.5 deg)",
+   "rule": "cell-sum rule (fine values, table long)",
+   "period": "2021-2025",
+   "n": 127028,
+   "coverage_pct": 88.4
+  },
+  {
+   "level": "block (10 deg)",
+   "rule": "harm_region product (coarse values, table long_region)",
+   "period": "2013-2020",
+   "n": 22639,
+   "coverage_pct": 90.4
+  },
+  {
+   "level": "block (10 deg)",
+   "rule": "harm_region product (coarse values, table long_region)",
+   "period": "2021",
+   "n": 2954,
+   "coverage_pct": 91.7
+  },
+  {
+   "level": "block (10 deg)",
+   "rule": "harm_region product (coarse values, table long_region)",
+   "period": "2021-2025",
+   "n": 14514,
+   "coverage_pct": 89.1
+  },
+  {
+   "level": "block (10 deg)",
+   "rule": "cell-sum rule (fine values, table long)",
+   "period": "2013-2020",
+   "n": 22639,
+   "coverage_pct": 88.5
+  },
+  {
+   "level": "block (10 deg)",
+   "rule": "cell-sum rule (fine values, table long)",
+   "period": "2021",
+   "n": 2954,
+   "coverage_pct": 89.8
+  },
+  {
+   "level": "block (10 deg)",
+   "rule": "cell-sum rule (fine values, table long)",
+   "period": "2021-2025",
+   "n": 14514,
+   "coverage_pct": 87.2
+  },
+  {
+   "level": "GFED region",
+   "rule": "harm_region product (coarse values, table long_region)",
+   "period": "2013-2020",
+   "n": 1330,
+   "coverage_pct": 92.5
+  },
+  {
+   "level": "GFED region",
+   "rule": "harm_region product (coarse values, table long_region)",
+   "period": "2021",
+   "n": 168,
+   "coverage_pct": 94.6
+  },
+  {
+   "level": "GFED region",
+   "rule": "harm_region product (coarse values, table long_region)",
+   "period": "2021-2025",
+   "n": 840,
+   "coverage_pct": 93.0
+  },
+  {
+   "level": "GFED region",
+   "rule": "cell-sum rule (fine values, table long)",
+   "period": "2013-2020",
+   "n": 1330,
+   "coverage_pct": 90.7
+  },
+  {
+   "level": "GFED region",
+   "rule": "cell-sum rule (fine values, table long)",
+   "period": "2021",
+   "n": 168,
+   "coverage_pct": 93.5
+  },
+  {
+   "level": "GFED region",
+   "rule": "cell-sum rule (fine values, table long)",
+   "period": "2021-2025",
+   "n": 840,
+   "coverage_pct": 90.0
+  },
+  {
+   "level": "country",
+   "rule": "harm_region product (coarse values, table long_region)",
+   "period": "2013-2020",
+   "n": 17262,
+   "coverage_pct": 89.1
+  },
+  {
+   "level": "country",
+   "rule": "harm_region product (coarse values, table long_region)",
+   "period": "2021",
+   "n": 2236,
+   "coverage_pct": 90.4
+  },
+  {
+   "level": "country",
+   "rule": "harm_region product (coarse values, table long_region)",
+   "period": "2021-2025",
+   "n": 11040,
+   "coverage_pct": 89.7
+  },
+  {
+   "level": "country",
+   "rule": "cell-sum rule (fine values, table long)",
+   "period": "2013-2020",
+   "n": 17262,
+   "coverage_pct": 88.5
+  },
+  {
+   "level": "country",
+   "rule": "cell-sum rule (fine values, table long)",
+   "period": "2021",
+   "n": 2236,
+   "coverage_pct": 89.0
+  },
+  {
+   "level": "country",
+   "rule": "cell-sum rule (fine values, table long)",
+   "period": "2021-2025",
+   "n": 11040,
+   "coverage_pct": 88.0
+  },
+  {
+   "level": "continent (GFED groups)",
+   "rule": "harm_region product (coarse values, table long_region)",
+   "period": "2013-2020",
+   "n": 570,
+   "coverage_pct": 94.7
+  },
+  {
+   "level": "continent (GFED groups)",
+   "rule": "harm_region product (coarse values, table long_region)",
+   "period": "2021",
+   "n": 72,
+   "coverage_pct": 95.8
+  },
+  {
+   "level": "continent (GFED groups)",
+   "rule": "harm_region product (coarse values, table long_region)",
+   "period": "2021-2025",
+   "n": 360,
+   "coverage_pct": 94.7
+  },
+  {
+   "level": "continent (GFED groups)",
+   "rule": "cell-sum rule (fine values, table long)",
+   "period": "2013-2020",
+   "n": 570,
+   "coverage_pct": 91.4
+  },
+  {
+   "level": "continent (GFED groups)",
+   "rule": "cell-sum rule (fine values, table long)",
+   "period": "2021",
+   "n": 72,
+   "coverage_pct": 93.1
+  },
+  {
+   "level": "continent (GFED groups)",
+   "rule": "cell-sum rule (fine values, table long)",
+   "period": "2021-2025",
+   "n": 360,
+   "coverage_pct": 92.2
+  },
+  {
+   "level": "world",
+   "rule": "harm_region product (coarse values, table long_region)",
+   "period": "2013-2020",
+   "n": 95,
+   "coverage_pct": 92.6
+  },
+  {
+   "level": "world",
+   "rule": "harm_region product (coarse values, table long_region)",
+   "period": "2021",
+   "n": 12,
+   "coverage_pct": 75.0
+  },
+  {
+   "level": "world",
+   "rule": "harm_region product (coarse values, table long_region)",
+   "period": "2021-2025",
+   "n": 60,
+   "coverage_pct": 93.3
+  },
+  {
+   "level": "world",
+   "rule": "cell-sum rule (fine values, table long)",
+   "period": "2013-2020",
+   "n": 95,
+   "coverage_pct": 90.5
+  },
+  {
+   "level": "world",
+   "rule": "cell-sum rule (fine values, table long)",
+   "period": "2021",
+   "n": 12,
+   "coverage_pct": 83.3
+  },
+  {
+   "level": "world",
+   "rule": "cell-sum rule (fine values, table long)",
+   "period": "2021-2025",
+   "n": 60,
+   "coverage_pct": 93.3
+  }
+ ],
+ "annual_scatter_summary": {
+  "2013-2020": {
+   "region_median_abs_pct": 1.7,
+   "region_mean_abs_pct": 2.4,
+   "region_max_abs_pct": 14.5,
+   "world_mean_abs_pct": 0.4,
+   "world_max_abs_pct": 1.1
+  },
+  "2021": {
+   "region_median_abs_pct": 3.9,
+   "region_mean_abs_pct": 3.8,
+   "region_max_abs_pct": 7.7,
+   "world_mean_abs_pct": 0.1,
+   "world_max_abs_pct": 0.1
+  },
+  "2021-2025": {
+   "region_median_abs_pct": 4.3,
+   "region_mean_abs_pct": 5.1,
+   "region_max_abs_pct": 24.3,
+   "world_mean_abs_pct": 1.9,
+   "world_max_abs_pct": 3.1
+  },
+  "world_by_year_pct": {
+   "2013": -0.1,
+   "2014": 0.3,
+   "2015": -0.4,
+   "2016": 1.1,
+   "2017": -0.4,
+   "2018": 0.0,
+   "2019": 0.2,
+   "2020": 0.4,
+   "2021": 0.1,
+   "2022": 3.1,
+   "2023": -2.0,
+   "2024": -2.8,
+   "2025": -1.5
+  }
+ },
+ "seam": {
+  "WORLD": {
+   "conv_vs_aqua_2021_pct": 0.1
+  },
+  "BONA": {
+   "conv_vs_aqua_2021_pct": -6.3
+  },
+  "SHAF": {
+   "conv_vs_aqua_2021_pct": 1.8
+  },
+  "EQAS": {
+   "conv_vs_aqua_2021_pct": -0.5
+  }
+ },
+ "check_vs_published_harm_region_2022_2025": {
+  "n": 672,
+  "median_rel_diff": 4.9835768684841294e-08,
+  "max_rel_diff": 1.0144308606202768e-05
+ },
+ "runtime_s": 86
+}

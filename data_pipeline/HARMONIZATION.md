@@ -66,3 +66,46 @@ python harmonize.py apply --from 2026-11
 `apply --from YYYY-MM` rewrites `harm_map.parquet` and `harm_region.parquet` from that month on and keeps earlier months untouched, but only if those files already exist: on a fresh checkout it writes only the months from `--from` on, so history must be merged by the caller. Run it with `--from 2003-01` (needs the full archive) to rebuild everything.
 
 `apply` stops with exit code 1 when the data in `data/parquet` do not cover the first days of the first month, because that month would silently be understated (monthly totals, level factors and outage detection need whole days). `--allow-partial` overrides the check with a warning.
+
+## Validation figures
+
+Public, re-runnable exhibit of the out-of-sample numbers above. Out of sample means: 2013-2020 leave-one-year-out (the calibration is refitted without the year being tested), 2021-2025 with the frozen coefficients (calibrated on 2013-2020). Reference: Aqua as observed. The script recomputes the S-NPP/Aqua calibration table and the monthly VIIRS predictor from the FIRMS archive, imports the helpers of `harmonize.py` (not modified), and checks itself against the frozen files (recomputed `r_glob` and number of `r_cell` rows equal `coefficients.parquet`; recomputed 2022-2025 GFED values equal `harm_region.parquet`, max relative difference 1e-5).
+
+```bash
+pip install -r data_pipeline/validation/requirements.txt    # matplotlib (the pipeline needs duckdb numpy pandas pyarrow)
+python data_pipeline/validation/make_validation.py          # about 90 seconds on 16 cores; --reuse skips the heavy step (10 s)
+```
+
+Inputs: `data/parquet` (FIRMS archive normalized by `firms_pipeline.py`, all four sensors, 2013-2025), `data/harmonized/coefficients.parquet`, `interval_table.json`, `harm_region.parquet`. Outputs in `docs/validation/`: four PNG figures, `monthly_series.csv`, `error_summary.csv`, `interval_coverage.csv`, `validation_numbers.json`.
+
+**1. Monthly series, world and three fire regimes (boreal, savanna, peat), with the 90% band**
+
+![Monthly Aqua vs VIIRS converted](../docs/validation/fig1_monthly_timeseries.png)
+
+**2. Annual totals per GFED region, converted vs Aqua**
+
+![Annual totals scatter](../docs/validation/fig2_annual_scatter.png)
+
+**3. The 2022-01 seam of the long series (2019-2024)**
+
+![Seam 2022-01](../docs/validation/fig3_seam_2022.png)
+
+**4. Observed coverage of the 90% intervals by aggregation level**
+
+![Interval coverage](../docs/validation/fig4_interval_coverage.png)
+
+Recomputed numbers (`error_summary.csv`, `interval_coverage.csv`):
+
+- Median monthly error per 1 deg cell, 2013-2020 / 2021-2025: 0.240 / 0.236 (table above: 0.241 / 0.241); within a factor of 2: 84.9% / 84.6% (table: 86% / 85%).
+- Annual totals, median absolute error, 2013-2020 / 2021-2025: 1 deg cell 11.1% / 13.4% and 2.5 deg cell 8.6% / 11.8% (cell-years with at least 20 Aqua detections in the year; the filter used for the table above is not recorded); GFED region 1.7% / 4.3% (maximum 14.5% / 24.3%); world 0.4% / 1.9% mean, maximum 1.1% / 3.1%.
+- Seam, 2021 (last full overlap year, converted with coefficients calibrated on 2013-2020): world +0.1% against Aqua; BONA -6.3%, SHAF +1.8%, EQAS -0.5%.
+- Interval coverage by the rule in `interval_table.json` (sum of cells, table `long`), 2013-2020 / 2021-2025: 1 deg cell 90.3% / 90.6%; 2.5 deg 89.1% / 88.4%; 10 deg block 88.5% / 87.2%; GFED region 90.7% / 90.0%; country 88.5% / 88.0%; world 90.5% / 93.3%.
+- The intervals published in `harm_region.parquet` (coarse values, table `long_region`) are wider and over-cover: GFED region 92.5% / 93.0%, country 89.1% / 89.7%, world 92.6% / 93.3%.
+
+Caveats:
+
+- After 2021 the comparison is partly circular and not clean. Aqua as observed drifts in overpass time (the grey dotted line in figures 1 and 3, hollow markers in figure 2); the exhibit does not correct it, so the 2022-2025 scatter is indicative only and the 2021-2025 errors above include that drift. The checks quoted at the top of this file for 2021-2025 use an Aqua corrected for the overpass shift, which the public pipeline does not contain.
+- Interval coverage is measured on area-months that are not independent (neighbouring cells, adjacent months); the world level rests on 95 and 60 months. The quantiles of the table were built from the same 2013-2020 leave-one-year-out residuals, so 2013-2020 coverage is not an independent test; 2021-2025 is, and it uses the drift term, which is an assumption.
+- Continents in the coverage figure are groups of GFED regions (North America including Central America, South America, Africa, Europe, Asia including the Middle East, Oceania), not a country-to-continent table.
+- The 2026 months are not shown: they are extrapolated (partly near-real-time, S-NPP ended 2026-11-02) and have no out-of-sample reference.
+- Not reproduced here: the correlation with GFED5 burned area (GFED5 is not part of the pipeline) and the per-country trend test (stress variant not available in `harmonize.py`).
