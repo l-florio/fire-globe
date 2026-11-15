@@ -154,7 +154,8 @@ async function main() {
     .map((b) => `<option value="${b}">${tOr(`basemap.${b}`, BASEMAPS[b].label)}</option>`)
     .join('');
 
-  let mode: Mode = 'BOTH';
+  // The app opens on the product, the harmonized series; MODIS / VIIRS / both stay one click away.
+  let mode: Mode = harmSensors.length ? 'HARM' : 'BOTH';
   /** Globe sources filter -> FIRMS type list for single detections, and the nearest calendar equivalent. */
   const SRC_TYPES: Record<string, string> = { veg: '0,-1', all: '0,1,2,3,-1', volcano: '1', static: '2', offshore: '3' };
   const SRC_CAL: Record<string, string> = { veg: 'veg', all: 'all', volcano: 'static', static: 'static', offshore: 'static' };
@@ -699,6 +700,7 @@ async function main() {
   const st = readShare();
   const has = (sel: HTMLSelectElement, v?: string) => !!v && [...sel.options].some((o) => o.value === v);
   if (st.mode && ['MODIS', 'VIIRS', 'BOTH', 'HARM'].includes(st.mode)) mode = st.mode as Mode;
+  else if (st.step === 'day' && mode === 'HARM') mode = 'BOTH'; // a day link without a mode: the harmonized series are monthly
   if (has(harmSel, st.harm)) harmSel.value = st.harm!;
   if (has(viirsSel, st.viirs)) viirsSel.value = st.viirs!;
   if (has(metricSel, st.metric)) metricSel.value = st.metric!;

@@ -33,6 +33,7 @@ const LIBS: [string, string, string, string][] = [
 document.getElementById('about-main')!.innerHTML = `
   <h1>${t('about.h1')}</h1>
   <section><h2>${t('about.what.h')}</h2>${p('about.what.p1')}${p('about.what.p2')}</section>
+  <section><h2>${t('about.start.h')}</h2><ol>${keys('about.start.', 6).map((s) => `<li>${s}</li>`).join('')}</ol></section>
   <section><h2>${t('about.src.h')}</h2>
     ${ul([
       ...SOURCES.map(([name, href, k]) => `${link(href, name)}: ${t(k)}`),
