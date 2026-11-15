@@ -51,6 +51,8 @@ export interface DataSource {
   kind: 'api' | 'static';
   /** Shown to the user, e.g. which region has single detections. */
   note: string;
+  /** Settles when the real source is known (lazySource only), so a shown note can be refreshed. */
+  ready?: Promise<void>;
   detections(sensor: string, period: { month?: string; date?: string }, bbox: number[] | null, limit: number, signal?: AbortSignal, types?: string): Promise<Detections>;
   calendar(sensor: string, area: Area, types: string): Promise<CalendarResult>;
   exportCsv(sensor: string, area: Area, from: string, to: string, types: string): Promise<Blob>;
@@ -90,7 +92,8 @@ export function apiSource(): DataSource {
 }
 
 export async function detectSource(): Promise<DataSource | undefined> {
-  const api = await fetch('/api/health')
+  // A short timeout: on a static host the request only has to fail, it must never hold the start.
+  const api = await fetch('/api/health', { signal: AbortSignal.timeout(4000) })
     .then((r) => r.ok && (r.headers.get('content-type') ?? '').includes('json'))
     .catch(() => false);
   if (api) return apiSource();
@@ -104,18 +107,28 @@ export async function detectSource(): Promise<DataSource | undefined> {
  */
 export function lazySource(p: Promise<DataSource | undefined>): DataSource {
   let real: DataSource | undefined;
+  let settled = false;
   const get = async () => {
     const d = real ?? (await p);
     if (!d) throw new Error(t('data.noSource'));
     return d;
   };
-  void p.then((d) => (real = d));
+  const ready = p.then(
+    (d) => {
+      real = d;
+      settled = true;
+    },
+    () => {
+      settled = true;
+    },
+  );
   return {
+    ready,
     get kind() {
       return real?.kind ?? 'static';
     },
     get note() {
-      return real?.note ?? t('data.loadingEngine');
+      return real?.note ?? (settled ? t('data.noSource') : t('data.loadingEngine'));
     },
     detections: async (...a) => (await get()).detections(...a),
     calendar: async (...a) => (await get()).calendar(...a),

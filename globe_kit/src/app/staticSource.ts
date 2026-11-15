@@ -49,7 +49,7 @@ const CSV_HEAD = 'latitude,longitude,acq_date,acq_time_utc,satellite,confidence,
  * so only the row groups needed by a query are downloaded.
  */
 export async function staticSource(baseUrl: string): Promise<DataSource | undefined> {
-  const res = await fetch(`${baseUrl}static.json`).catch(() => undefined);
+  const res = await fetch(`${baseUrl}static.json`, { signal: AbortSignal.timeout(20_000) }).catch(() => undefined);
   if (!res?.ok) return undefined;
   const man = (await res.json()) as StaticManifest;
   const url = (p: string) => (/^https?:\/\//.test(p) ? p : new URL(`${baseUrl}${p}`, document.baseURI).href);

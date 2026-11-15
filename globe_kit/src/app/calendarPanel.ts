@@ -190,6 +190,8 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
     })
     .catch(() => undefined);
   $<HTMLParagraphElement>('.cal-src').textContent = o.data.note;
+  // The note says "loading the data engine" until the source is known: refresh it then.
+  void o.data.ready?.then(() => ($<HTMLParagraphElement>('.cal-src').textContent = o.data.note));
 
   const picker = createAreaPicker(o.viewer);
   const heat = createCalendarHeatmap($('.cal-heat'), {
