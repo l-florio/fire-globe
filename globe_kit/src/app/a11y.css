@@ -274,3 +274,16 @@ html.a11y-motion-off *::after {
   animation: none !important;
   scroll-behavior: auto !important;
 }
+
+/* Easy-reading font: only fonts already on the device (EasyReading PRO's free licence covers installing it, not
+   hosting it on a website), then Verdana, which dyslexia style guides recommend. Code and SQL keep a monospace font. */
+html.a11y-font {
+  --gk-font: 'EasyReadingPRO', 'EasyReading PRO', 'EasyReading', Verdana, Tahoma, sans-serif;
+}
+html.a11y-font body,
+html.a11y-font :is(button, input, select, textarea, h1, h2, h3, p, li, label, td, th) {
+  font-family: var(--gk-font);
+}
+html.a11y-font :is(code, kbd, pre, .cm-editor, .cm-content) {
+  font-family: ui-monospace, Consolas, monospace;
+}

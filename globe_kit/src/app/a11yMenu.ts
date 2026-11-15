@@ -24,6 +24,7 @@ const SWITCHES: { id: string; label: Key; get: (p: A11yPrefs) => boolean; set: (
   { id: 'shortcuts', label: 'a11y.shortcuts', get: (p) => p.shortcuts, set: (v) => setA11y('shortcuts', v) },
   { id: 'text', label: 'a11y.text', get: (p) => p.largeText, set: (v) => setA11y('largeText', v) },
   { id: 'spacing', label: 'a11y.spacing', get: (p) => p.spacing, set: (v) => setA11y('spacing', v) },
+  { id: 'font', label: 'a11y.font', get: (p) => p.readableFont, set: (v) => setA11y('readableFont', v) },
 ];
 
 const ARROWS = '← ↑ → ↓';

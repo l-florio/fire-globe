@@ -66,7 +66,7 @@ The app reads the static Parquet files in `globe_kit/public/data` with DuckDB-WA
 
 The site is static (GitHub Pages, no server). Historical data are built once and committed in `site_data/`. A GitHub Action runs every night: it downloads the current year from the FIRMS API (repository secret `FIRMS_MAP_KEY`), applies the frozen harmonization (`harmonize.py apply`), rebuilds the recent part, merges it with the historical part and publishes. Standard-processing data replace near-real-time data when available.
 
-Worldwide single detections (about 4 GB) exceed the Pages limit, so past years are a public Hugging Face dataset (https://huggingface.co/datasets/xlordx/fire-globe-detections) read directly by the browser with HTTP range requests; the current year of the active sensors is on Pages.
+Worldwide single detections (about 6.6 GB) exceed the Pages limit, so past years are a public Hugging Face dataset (https://huggingface.co/datasets/xlordx/fire-globe-detections) read directly by the browser with HTTP range requests; the current year of the active sensors is on Pages.
 
 ## References
 

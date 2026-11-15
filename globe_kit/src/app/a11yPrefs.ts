@@ -2,7 +2,7 @@
  * Accessibility preferences of the app, saved in localStorage and applied on every page at load.
  * The Accessibility menu (a11yMenu.ts) changes them; other modules read them with a11y() or listen with onA11y().
  * Classes on <html>: a11y-hc (high contrast), a11y-motion-off (reduced motion), a11y-text-lg (larger text),
- * a11y-spacing (wider letter/line spacing). Palette and halo are read by the map code.
+ * a11y-spacing (wider letter/line spacing), a11y-font (easy-reading font). Palette and halo are read by the map code.
  */
 import { setReducedMotion, setShortcutsEnabled } from '../globe/a11y';
 
@@ -21,6 +21,8 @@ export interface A11yPrefs {
   largeText: boolean;
   /** Wider letter, word and line spacing (WCAG 1.4.12). */
   spacing: boolean;
+  /** Easy-reading font: EasyReading PRO when installed on the device (its licence does not allow us to host it), else Verdana. */
+  readableFont: boolean;
 }
 
 const KEY = 'fireglobe.a11y';
@@ -33,6 +35,7 @@ const DEFAULTS: A11yPrefs = {
   shortcuts: true,
   largeText: false,
   spacing: false,
+  readableFont: false,
 };
 
 function load(): A11yPrefs {
@@ -54,6 +57,7 @@ function apply() {
   c.toggle('a11y-motion-off', prefs.reducedMotion);
   c.toggle('a11y-text-lg', prefs.largeText);
   c.toggle('a11y-spacing', prefs.spacing);
+  c.toggle('a11y-font', prefs.readableFont);
   setReducedMotion(prefs.reducedMotion);
   setShortcutsEnabled(prefs.shortcuts);
 }
