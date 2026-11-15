@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium';
 import { viewRectangle } from './pointLayer';
+import { flightSeconds } from './a11y';
 import { cellCorners, cellsFrame, cellsKm2, outerRings, polygonKm2, type CellArea } from './cells';
 
 /** An area of interest: a lon/lat box, a circle (centre in degrees, radius in km) or a set of grid cells (a place). */
@@ -236,7 +237,7 @@ export function createAreaPicker(viewer: Cesium.Viewer, color = Cesium.Color.fro
     [w, e, s, n] = [w - fw * l, e + fw * r, Math.max(-89, s - fh * b), Math.min(89, n + fh * t)];
     const wrap = (x: number) => ((((x + 180) % 360) + 360) % 360) - 180;
     const rect = e - w >= 359 ? Cesium.Rectangle.fromDegrees(-180, s, 180, n) : Cesium.Rectangle.fromDegrees(wrap(w), s, wrap(e), n);
-    viewer.camera.flyTo({ destination: rect, duration: 1.2 });
+    viewer.camera.flyTo({ destination: rect, duration: flightSeconds(1.2) });
   }
 
   return { drawBox, fromView, show, clear, zoomTo, cancel: () => cancelDraw?.(), destroy: () => handler.destroy() };

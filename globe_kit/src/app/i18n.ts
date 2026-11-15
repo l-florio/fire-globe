@@ -1,14 +1,63 @@
 /**
  * Tiny i18n for the app (no library). English is the source of truth: every key lives in `en`;
- * `it` may omit keys and then falls back to English.
- * Language: ?lang=it|en in the URL, else the saved choice (localStorage), else English.
+ * the other languages may omit keys and then fall back to English. Italian is written by hand here; the other
+ * languages are machine translations made with a local model (scripts/i18n_translate.py) and live in
+ * src/app/locales/<lang>.json, loaded only for the active language.
+ * Language: ?lang=<code> in the URL, else the saved choice (localStorage), else English.
  * Changing the language saves it and reloads the page (modules build their strings at load).
  * The generic globe library (src/globe) never imports this: the app passes translated labels to it.
  */
-export type Lang = 'en' | 'it';
+/** Language menu groups, by the region where most speakers live (the menu shows them in this order). */
+export const LANG_GROUPS = {
+  americas: ['en', 'es', 'pt'],
+  europe: ['en-GB', 'it', 'fr', 'de', 'nl', 'pl', 'el', 'sq', 'sv', 'nb', 'fi', 'ru', 'tr'],
+  africaMideast: ['ar', 'fa', 'sw'],
+  asia: ['hi', 'ur', 'bn', 'zh', 'ja', 'ko', 'vi', 'th', 'id'],
+} as const;
+export const LANGS = Object.values(LANG_GROUPS).flat();
+export type Lang = (typeof LANG_GROUPS)[keyof typeof LANG_GROUPS][number];
+/** Language names in their own language, for the language menu. 'en' is US English (the source text). */
+export const LANG_NAMES: Record<Lang, string> = {
+  en: 'English (US)',
+  'en-GB': 'English (UK)',
+  fa: 'فارسی',
+  ur: 'اردو',
+  sw: 'Kiswahili',
+  vi: 'Tiếng Việt',
+  th: 'ไทย',
+  bn: 'বাংলা',
+  it: 'Italiano',
+  es: 'Español',
+  fr: 'Français',
+  pt: 'Português',
+  de: 'Deutsch',
+  ru: 'Русский',
+  zh: '中文',
+  ja: '日本語',
+  ko: '한국어',
+  hi: 'हिन्दी',
+  ar: 'العربية',
+  tr: 'Türkçe',
+  nl: 'Nederlands',
+  pl: 'Polski',
+  el: 'Ελληνικά',
+  sq: 'Shqip',
+  sv: 'Svenska',
+  nb: 'Norsk',
+  fi: 'Suomi',
+  id: 'Bahasa Indonesia',
+};
+/** Languages written right to left: their text runs RTL inside its box, the page layout is not mirrored. */
+export const RTL_LANGS: readonly Lang[] = ['ar', 'fa', 'ur'];
+/** Languages translated by machine (shown with a note in the About page). */
+export const MACHINE_LANGS: readonly Lang[] = LANGS.filter((l) => l !== 'en' && l !== 'it' && l !== 'en-GB');
+/** Short code shown in the closed language menu. */
+export const langShort = (l: Lang) => (l === 'en' ? 'EN-US' : l.toUpperCase());
 
 const STORE = 'fireglobe.lang';
-const isLang = (v: unknown): v is Lang => v === 'en' || v === 'it';
+const isLang = (v: unknown): v is Lang => typeof v === 'string' && (LANGS as readonly string[]).includes(v);
+
+// Note: 'en-GB' is made from the US source by a spelling map (scripts/i18n_en_gb.py), not by the model.
 
 function detectLang(): Lang {
   try {
@@ -28,7 +77,7 @@ function detectLang(): Lang {
 
 export const lang: Lang = detectLang();
 /** BCP 47 locale of the active language, for numbers and dates. */
-export const locale = lang === 'it' ? 'it-IT' : 'en';
+export const locale = ({ en: 'en-US', 'en-GB': 'en-GB', fa: 'fa-u-nu-latn', ur: 'ur-u-nu-latn', sw: 'sw-KE', vi: 'vi-VN', th: 'th-TH', bn: 'bn-u-nu-latn', it: 'it-IT', es: 'es-ES', fr: 'fr-FR', pt: 'pt-BR', de: 'de-DE', ru: 'ru-RU', zh: 'zh-CN', ja: 'ja-JP', ko: 'ko-KR', hi: 'hi-IN', ar: 'ar-u-nu-latn', tr: 'tr-TR', id: 'id-ID', nl: 'nl-NL', pl: 'pl-PL', el: 'el-GR', sq: 'sq-AL', sv: 'sv-SE', nb: 'nb-NO', fi: 'fi-FI' } as const)[lang];
 
 /** Save the choice and reload. The ?lang= parameter is dropped so that it cannot override the new choice. */
 export function setLang(next: Lang) {
@@ -58,6 +107,10 @@ const en = {
   'panel.hide': 'Hide',
   'panel.controls': 'Controls',
   'lang.label': 'Language',
+  'lang.group.americas': 'Americas',
+  'lang.group.europe': 'Europe',
+  'lang.group.africaMideast': 'Africa and Middle East',
+  'lang.group.asia': 'Asia and Pacific',
   'sub.raw': 'NASA FIRMS, monthly, 0.25° grid.',
   'sub.harm': 'NASA FIRMS, monthly, 1° cells.',
   'badge.raw': 'Raw per-sensor data, not harmonized',
@@ -115,6 +168,53 @@ const en = {
   'view.table.title': 'Harmonized data by country or region, as a table',
   'view.climatology': 'Climatology',
   'view.climatology.title': 'Typical range of fire detections for this time of year, by area',
+  // ---- app bar and About page
+  'bar.nav.aria': 'Views',
+  'bar.about': 'About',
+  'bar.about.title': 'Credits, data sources, licences and method notes',
+  'about.link': 'Sources, licences and method notes',
+  'about.title': 'Fire Globe - About',
+  'about.h1': 'About Fire Globe',
+  'about.what.h': 'What this is',
+  'about.what.p1': 'Fire Globe was built for the NASA Space Apps Challenge 2026, challenge "Harmonization of MODIS and VIIRS Hot Spots". It turns the MODIS (2000-) and VIIRS (2012-) active-fire records of NASA FIRMS into harmonized series that can be compared across sensors and years, and lets anyone explore them on a 3D globe, for any area, with uncertainty intervals and exports.',
+  'about.what.p2': 'Globe: monthly and daily maps and single detections. Table: data explorer. Climatology: typical range of fire detections for this time of year, by area. The interface is in English, Italian, Spanish, French, Portuguese, German, Dutch, Polish, Greek, Albanian, Swedish, Norwegian, Finnish, Russian, Turkish, Arabic, Persian, Swahili, Hindi, Urdu, Bengali, Chinese, Japanese, Korean, Vietnamese, Thai and Indonesian (US and UK English); languages other than English and Italian are machine translations made with a local open model and may contain errors.',
+  'about.src.h': 'Data sources',
+  'about.src.firms': 'Active fire detections: MODIS Collection 6.1 (Terra, Aqua) and VIIRS 375 m (S-NPP, NOAA-20, NOAA-21).',
+  'about.src.gibs': 'Basemaps: Blue Marble, Black Marble, VIIRS corrected reflectance, coastlines and labels.',
+  'about.src.esri': 'World Imagery (imagery when zoomed in) and World Boundaries and Places (labels).',
+  'about.src.osm': 'Basemap option and Nominatim place search in the area calendar. Outlines found by place search may differ slightly from the basemap borders, drawn by Esri.',
+  'about.src.ne': 'Continent boundaries.',
+  'about.src.gfed': 'GFED basis regions: Giglio, L., Randerson, J. T., van der Werf, G. R. (2013), Analysis of daily, monthly, and annual burned area using the fourth-generation Global Fire Emissions Database (GFED4), J. Geophys. Res. Biogeosci., 118.',
+  'about.src.gfed5': 'GFED5 burned area (Global Fire Emissions Database, version 5): used only to check annual totals, 2003-2020.',
+  'about.src.note': 'Each data source keeps its own terms.',
+  'about.method.h': 'Method and caveats',
+  'about.m.1': 'Harmonized series. "Long": Aqua-equivalent MODIS 1 km detections from 2003-01 (Aqua as observed to 2021-12; VIIRS converted to Aqua units after that and in 2020-08), with 90% intervals. "Detail": VIIRS 375 m detections from 2013-01 at S-NPP level, harmonizing S-NPP, NOAA-20 and NOAA-21; its band is the spread between satellites, not a confidence interval. The unit is detections, not burned area; FRP is not harmonized.',
+  'about.m.2': 'The harmonized series are monthly: the Day step and single detections are available in the MODIS and VIIRS views only. Values are on 1 degree cells, so a small area counts every cell it overlaps, whole; cell values are noisy, use regional totals for statements.',
+  'about.m.3': 'The newest month is partial (data up to today) and is not compared with full months: it is excluded from the medians of the calendar. 2026 data are partly near-real-time and can be revised.',
+  'about.m.4': 'Sources filter, from the FIRMS type field: 0 vegetation fire, 1 volcano, 2 other static land source, 3 offshore. Single detections follow the filter exactly. The monthly map at global zoom shows vegetation fires only, and so do the harmonized series (static sources are masked with one rule for all sensors).',
+  'about.m.5': 'Harmonization in short: VIIRS detections of one overpass in a cell of about 1 km are clustered and weighted to mimic what a 1 km MODIS pixel detects; VIIRS is converted to Aqua units with a ratio per 2.5 degree block, calendar month and day/night; calibration uses S-NPP against Aqua in 2013-2020, before the orbit drift of Aqua, and nothing is recalibrated after 2020; the 90% intervals come from out-of-sample residuals, with a drift term after 2020.',
+  'about.m.6': 'The climatology is a typical range, not a forecast: for each day, the 5th to 95th percentile and the median of the 7-day total of VIIRS S-NPP vegetation-fire detections, in a window of +-15 days around the same date in each year 2012-2025. The band does not know the weather or the fuel of the current year. The current year is NOAA-20 at raw level; near-real-time days are provisional.',
+  'about.m.7': 'Check of the climatology: leaving each year out in turn, the band contains about 90% of the weekly totals of that year. This is a descriptive check (it uses later years too), not a causal backtest.',
+  'about.val.h': 'Validation summary',
+  'about.val.intro': 'Out of sample, against Aqua, 2013-2025. Full method, figures and limits: data_pipeline/HARMONIZATION.md in the project repository.',
+  'about.v.1': 'Annual totals differ from Aqua by 2% (leave-one-year-out, 2013-2020) and 5% (calibrated 2013-2020, tested 2021-2025) per GFED region; for the world, by 1% and 3%.',
+  'about.v.2': 'Step at the 2022-01 seam, world: below 1%.',
+  'about.v.3': 'Correlation of annual totals with GFED5 burned area, 2003-2020: 0.93.',
+  'about.v.4': 'Out-of-sample coverage of the 90% intervals: 88-93% across GFED regions, countries, continents and the world.',
+  'about.v.5': 'Per-country trends keep the sign of the single-sensor record in 89-90% of 136 countries (stress variant, VIIRS converted from 2013).',
+  'about.lim.h': 'Known limits',
+  'about.l.1': 'Small fires get less weight in the Aqua-equivalent series (clusters under 10 MW are two thirds of VIIRS clusters but about a third of the weight). Regional trends can differ in sign (Middle East, Europe); the detail series keeps them.',
+  'about.l.2': 'No harmonized series before 2003.',
+  'about.l.3': 'After 2021, checks use an Aqua corrected for its overpass shift, which is partly circular (VIIRS is the stable witness). The drift term in the intervals is an assumption.',
+  'about.l.4': 'S-NPP ended on 2026-11-02; the measured step at that seam rests on 11 days of data and must be recomputed.',
+  'about.lic.h': 'Licences',
+  'about.lic.project': 'Fire Globe code: Apache License 2.0 (files LICENSE and NOTICE of the project repository). Data keep the terms of their sources.',
+  'about.lic.libs': 'Main libraries:',
+  'about.lic.insp': 'The globe viewer setup without Cesium ion was inspired by gods-eye-view (MIT, Bilawal Sidhu); no code was copied verbatim. The app uses no Cesium ion service.',
+  'src.static.noteWorld': 'Online version: calendar worldwide on the 0.25 degree grid; single detections worldwide.',
+  'src.static.noteRegion': 'Online version: calendar worldwide on the 0.25 degree grid; single detections for {region}.',
+  'about.ai.h': 'Use of AI',
+  'about.ai.p': 'AI assistants (Claude by Anthropic, Codex by OpenAI) were used to write code, run analyses and draft documentation; a local open model (Qwen, via Ollama) translated the interface into the languages other than English and Italian. The harmonization method and the design choices were selected by the team from the tests; AI was not used to ideate the solution (Space Apps rule).',
   'cal.climLink': 'Climatology for this area',
   'cal.climLink.title': 'Typical weekly fire detections for this time of year (descriptive, not a forecast)',
   'clim.title': 'Fire Globe - Climatology',
@@ -159,7 +259,7 @@ const en = {
   'clim.csv.title': 'Download the plotted series as CSV',
   'clim.method.title': 'Method',
   'clim.method.1': 'Typical range: for each day, the total of VIIRS S-NPP detections of vegetation fires in the 7 days ending on that day, taken in a window of +-15 days around the same calendar date in each year 2012-2025; band = 5th to 95th percentile, line = median.',
-  'clim.method.2': 'Check: leaving each year out in turn, the band contains about 90% of the weekly totals of that year. This is a descriptive check (it uses later years too), not a causal backtest. The band does not know this year\'s weather or fuel: it is not a forecast.',
+  'clim.method.2': 'Leaving each year out in turn, the band contains about 90% of the weekly totals of that year (descriptive check, not a causal backtest). It is not a forecast: it does not know this year\'s weather or fuel.',
   'clim.method.3': 'Current year: NOAA-20 at raw level (about +-10% on weekly totals compared with S-NPP). Near-real-time days are provisional (dashed) and the last 2 days are incomplete, so they are not offered as the date of interest. Static sources (volcanoes, industry) are masked in near-real-time data. The first 6 days of the year have no full 7-day window and are not drawn.',
   'clim.method.credit': 'Data: NASA FIRMS (VIIRS). Last data day: {last}.',
 
@@ -294,7 +394,7 @@ const en = {
   'cal.exportFailed': 'Export failed: {msg}',
   'cal.raw': 'Raw counts of one sensor. MODIS and VIIRS are not comparable until harmonized.',
   'cal.credits':
-    'Place search: {nominatim}, data &copy; {osm} (outlines may differ slightly from the basemap borders, drawn by Esri). Continents: Natural Earth. Fire regions: GFED basis regions (Giglio et al. 2013).',
+    'Place search: {nominatim}, data &copy; {osm}. Credits and licences: {about}.',
   'cal.loading': 'Loading...',
   'cal.loadError': 'Could not load the calendar: {msg}',
   'cal.src.harmLong':
@@ -412,6 +512,20 @@ const en = {
   'heat.tip.years.one': '{n} other year',
   'heat.tip.years.other': '{n} other years',
   'heat.medianTip': 'Median {month}: {value}',
+  // a11yb: accessibility of the calendar, tables and climatology page
+  'a11yb.cal.caption': 'Fire detections by month and year. Arrow keys move between months, Page Up and Page Down change the year.',
+  'a11yb.cal.hint': 'Hover or focus a month to read its value here. Arrow keys: month and year. Home, End: first and last month of the year. Page Up, Page Down: year. Enter: select.',
+  'a11yb.cal.outside': '{month} {year}: outside the selected period',
+  'a11yb.cal.significant': 'Significant: the 90% interval does not include the median.',
+  'a11yb.cal.legend.sig': ' A dot marks a month whose 90% interval does not include the median; faded colour: within the uncertainty.',
+  'a11yb.det.hint': 'Focus or hover a row to mark the detection on the globe; press Enter or Space, or click, to fly there.',
+  'a11yb.clim.summary': '{area}, week ending {date}: 7-day total {cur}; typical {med} (range {lo} to {hi}). {pos}.',
+  'a11yb.clim.summary.none': '{area}, week ending {date}: no current-year value.',
+  'a11yb.clim.table.toggle': 'Show the chart data as a table',
+  'a11yb.clim.table.caption': 'Typical range (5-95%) and 7-day total of the current year, for the 1st and 15th of each month',
+  'a11yb.clim.col.date': 'Week ending',
+  'a11yb.clim.col.lo': 'Typical low (5%)',
+  'a11yb.clim.col.hi': 'Typical high (95%)',
 
   // ---- export (exporter.ts)
   'exp.button': 'Export',
@@ -424,7 +538,7 @@ const en = {
   'exp.to': 'To',
   'exp.fps': 'Frames/s',
   'exp.resolution': 'Resolution',
-  'exp.resCurrent': 'Current view ({w}x{h})',
+  'exp.resCurrent': 'Current {w}x{h}',
   'exp.frames.one': '{n} frame, about {sec} s of video',
   'exp.frames.other': '{n} frames, about {sec} s of video',
   'exp.rangeInvalid': 'End must not precede start.',
@@ -442,6 +556,25 @@ const en = {
   'exp.popLabel': 'Export options',
   'exp.err.canvas': 'Empty canvas',
   'exp.err.blob': 'Image rendering failed',
+  'exp.modeLabel': 'Export type',
+  'exp.modeImage': 'Image',
+  'exp.modeVideo': 'Video',
+  'exp.format': 'Format',
+  'exp.fmt.cur': 'Current view',
+  'exp.fmt.169': '16:9 landscape',
+  'exp.fmt.43': '4:3',
+  'exp.fmt.11': '1:1 square',
+  'exp.fmt.916': '9:16 vertical (phone)',
+  'exp.resPreset': '{p}p ({w} x {h})',
+  'exp.resPreset4k': '{p}p 4K ({w} x {h})',
+  'exp.hint4k': 'High resolution video is slow and the file is large.',
+  'exp.capNote': 'Globe rendered at {w}x{h} (device limit); the rest is upscaled.',
+  'exp.err.videoSize': 'This browser cannot record video at {w}x{h}. Choose a lower resolution.',
+  'exp.dlImage': 'Download PNG',
+  'exp.dlVideo': 'Download video',
+  'exp.share': 'Share',
+  'exp.shareReady': 'Ready - tap to share',
+  'exp.shared': 'Shared.',
   // ---- explorer: explorer
   'ex.explorer.title': 'Data explorer',
   'ex.explorer.modes': 'Explorer mode',
@@ -689,6 +822,59 @@ const en = {
   'ex.results.rows.one': '{n} row',
   'ex.results.rows.other': '{n} rows',
 
+  // ---- kb: keyboard, landmarks, live regions (globe page)
+  'kb.skip': 'Skip to map controls',
+  'kb.bottom.label': 'Time and legend',
+  'kb.globe.hint': 'Interactive globe. Arrow keys pan. Plus and minus zoom. Shift with the arrow keys rotates and tilts. Home resets the view.',
+  'kb.globe.name': 'Fire map: {layer}, {period}.',
+  'kb.split.name': 'Comparison divider between the two sensors',
+  'kb.split.value': '{p}% from the left edge',
+  'kb.gain.value': 'Upper limit {v}',
+  'kb.live.period': 'Period: {period}',
+  'kb.live.label': 'Map updates',
+
+  // ---- accessibility menu (a11y)
+  'a11y.button': 'Accessibility',
+  'a11y.title': 'Accessibility options',
+  'a11y.close': 'Close',
+  'a11y.motion': 'Reduce motion',
+  'a11y.contrast': 'High contrast',
+  'a11y.palette': 'Colour-blind safe palette',
+  'a11y.halo': 'Outline detection points',
+  'a11y.shortcuts': 'Single-key shortcuts',
+  'a11y.text': 'Larger text',
+  'a11y.spacing': 'Wider spacing',
+  'a11y.reset': 'Reset',
+  'a11y.keys': 'Keyboard shortcuts',
+  'a11y.describe': 'Describe this view',
+  'a11y.describe.title': 'View description',
+  'a11y.read': 'Read aloud',
+  'a11y.stop': 'Stop reading',
+  'a11y.k.pan': 'Globe focused: pan',
+  'a11y.k.zoom': 'Globe focused: zoom in / out',
+  'a11y.k.rotate': 'Globe focused: rotate and tilt',
+  'a11y.k.home': 'Reset the view',
+  'a11y.k.split': 'Comparison splitter focused: move it',
+  'a11y.k.time': 'Previous / next period (outside text fields)',
+  'a11y.k.play': 'Play or pause the time slider',
+  'a11y.k.cal': 'Calendar: move between days',
+  'a11y.k.calEnds': 'Calendar: first / last day',
+  'a11y.k.calPage': 'Calendar: previous / next month',
+  'a11y.k.esc': 'Close a menu or panel',
+  'a11y.k.note': 'The single-key shortcuts (+, -, 0, Space, arrows on the slider) can be turned off with the switch above.',
+  'a11y.d.harm': 'Harmonized fire detections (1 degree cells)',
+  'a11y.d.layer1': 'The map shows {layer} from {a}, for {period}.',
+  'a11y.d.layer2': 'The map compares {a} and {b} side by side: {layer}, for {period}.',
+  'a11y.d.view': 'The view is centred near {lat}, {lon}, at an altitude of about {km} km.',
+  'a11y.d.n': 'N',
+  'a11y.d.s': 'S',
+  'a11y.d.e': 'E',
+  'a11y.d.w': 'W',
+  'a11y.d.noDet': 'No single detections are loaded in this view.',
+  'a11y.d.det': '{n} single detections are loaded in this view. The strongest has a fire radiative power of {frp} MW, at {lat}, {lon}, on {date}.',
+  'a11y.d.scale': 'Colours run from none up to {max} or more.',
+  'a11y.d.zoom': 'Zoom in to load single detections and find the strongest fire.',
+  'a11y.d.area': 'The area fire calendar is open for the selected area.',
 } as const;
 
 export type Key = keyof typeof en;
@@ -702,6 +888,10 @@ const it: Partial<Record<Key, string>> = {
   'panel.hide': 'Nascondi',
   'panel.controls': 'Controlli',
   'lang.label': 'Lingua',
+  'lang.group.americas': 'Americhe',
+  'lang.group.europe': 'Europa',
+  'lang.group.africaMideast': 'Africa e Medio Oriente',
+  'lang.group.asia': 'Asia e Pacifico',
   'sub.raw': 'NASA FIRMS, mensile, griglia a 0,25°.',
   'sub.harm': 'NASA FIRMS, mensile, celle da 1°.',
   'badge.raw': 'Dati grezzi per sensore, non armonizzati',
@@ -758,6 +948,53 @@ const it: Partial<Record<Key, string>> = {
   'view.table.title': 'Dati armonizzati per paese o regione, in tabella',
   'view.climatology': 'Climatologia',
   'view.climatology.title': 'Intervallo tipico dei rilevamenti di incendio in questo periodo dell\'anno, per area',
+  // ---- barra e pagina Informazioni
+  'bar.nav.aria': 'Viste',
+  'bar.about': 'Info',
+  'bar.about.title': 'Crediti, fonti dei dati, licenze e note sul metodo',
+  'about.link': 'Fonti, licenze e note sul metodo',
+  'about.title': 'Fire Globe - Informazioni',
+  'about.h1': 'Informazioni su Fire Globe',
+  'about.what.h': 'Che cos\'è',
+  'about.what.p1': 'Fire Globe è stata realizzata per la NASA Space Apps Challenge 2026, sfida "Harmonization of MODIS and VIIRS Hot Spots". Trasforma i dati di incendi attivi MODIS (dal 2000) e VIIRS (dal 2012) di NASA FIRMS in serie armonizzate, confrontabili tra sensori e anni, e permette a chiunque di esplorarle su un globo 3D, per qualsiasi area, con intervalli di incertezza ed esportazioni.',
+  'about.what.p2': 'Globo: mappe mensili e giornaliere e singoli rilevamenti. Tabella: esplorazione dei dati. Climatologia: intervallo tipico dei rilevamenti di incendio in questo periodo dell\'anno, per area. L\'interfaccia è in inglese, italiano, spagnolo, francese, portoghese, tedesco, olandese, polacco, greco, albanese, svedese, norvegese, finlandese, russo, turco, arabo, persiano, swahili, hindi, urdu, bengalese, cinese, giapponese, coreano, vietnamita, thailandese e indonesiano (inglese USA e UK); le lingue diverse da inglese e italiano sono traduzioni automatiche fatte con un modello aperto locale e possono contenere errori.',
+  'about.src.h': 'Fonti dei dati',
+  'about.src.firms': 'Rilevamenti di incendi attivi: MODIS Collection 6.1 (Terra, Aqua) e VIIRS 375 m (S-NPP, NOAA-20, NOAA-21).',
+  'about.src.gibs': 'Mappe di base: Blue Marble, Black Marble, riflettanza corretta VIIRS, coste ed etichette.',
+  'about.src.esri': 'World Imagery (immagini con zoom ravvicinato) e World Boundaries and Places (etichette).',
+  'about.src.osm': 'Mappa di base opzionale e ricerca luoghi Nominatim nel calendario d\'area. I contorni trovati con la ricerca luoghi possono differire leggermente dai confini della mappa di base, disegnati da Esri.',
+  'about.src.ne': 'Confini dei continenti.',
+  'about.src.gfed': 'Regioni di base GFED: Giglio, L., Randerson, J. T., van der Werf, G. R. (2013), Analysis of daily, monthly, and annual burned area using the fourth-generation Global Fire Emissions Database (GFED4), J. Geophys. Res. Biogeosci., 118.',
+  'about.src.gfed5': 'Area bruciata GFED5 (Global Fire Emissions Database, versione 5): usata solo per verificare i totali annui, 2003-2020.',
+  'about.src.note': 'Ogni fonte di dati mantiene i propri termini d\'uso.',
+  'about.method.h': 'Metodo e avvertenze',
+  'about.m.1': 'Serie armonizzate. "Long": rilevamenti MODIS 1 km equivalenti Aqua dal 2003-01 (Aqua osservato fino al 2021-12; VIIRS convertito in unità Aqua dopo e nel 2020-08), con intervalli al 90%. "Detail": rilevamenti VIIRS 375 m dal 2013-01 a livello S-NPP, che armonizzano S-NPP, NOAA-20 e NOAA-21; la sua banda è la dispersione tra i satelliti, non un intervallo di confidenza. L\'unità sono i rilevamenti, non l\'area bruciata; la FRP non è armonizzata.',
+  'about.m.2': 'Le serie armonizzate sono mensili: il passo Giorno e i singoli rilevamenti sono disponibili solo nelle viste MODIS e VIIRS. I valori sono su celle di 1 grado: un\'area piccola conta per intero ogni cella che interseca; i valori delle singole celle sono rumorosi, per le affermazioni usa i totali regionali.',
+  'about.m.3': 'Il mese più recente è parziale (dati fino a oggi) e non viene confrontato con mesi completi: è escluso dalle mediane del calendario. I dati 2026 sono in parte near-real-time e possono essere rivisti.',
+  'about.m.4': 'Filtro Fonti, dal campo type di FIRMS: 0 incendio di vegetazione, 1 vulcano, 2 altra fonte statica sulla terraferma, 3 offshore. I singoli rilevamenti seguono esattamente il filtro. La mappa mensile a zoom globale mostra solo incendi di vegetazione, come le serie armonizzate (le fonti statiche sono mascherate con un\'unica regola per tutti i sensori).',
+  'about.m.5': 'L\'armonizzazione in breve: i rilevamenti VIIRS di un passaggio in una cella di circa 1 km sono raggruppati e pesati per imitare ciò che rileva un pixel MODIS da 1 km; VIIRS è convertito in unità Aqua con un rapporto per blocco di 2,5 gradi, mese e giorno/notte; la calibrazione confronta S-NPP con Aqua nel 2013-2020, prima della deriva orbitale di Aqua, e dopo il 2020 non si ricalibra nulla; gli intervalli al 90% derivano dai residui fuori campione, con un termine di deriva dopo il 2020.',
+  'about.m.6': 'La climatologia è un intervallo tipico, non una previsione: per ogni giorno, dal 5° al 95° percentile e mediana del totale su 7 giorni dei rilevamenti VIIRS S-NPP di incendi di vegetazione, in una finestra di +-15 giorni attorno alla stessa data in ciascun anno 2012-2025. La banda non conosce meteo e combustibile dell\'anno corrente. L\'anno corrente è NOAA-20 a livello grezzo; i giorni near-real-time sono provvisori.',
+  'about.m.7': 'Verifica della climatologia: escludendo a turno ogni anno, la banda contiene circa il 90% dei totali settimanali di quell\'anno. È una verifica descrittiva (usa anche anni successivi), non un backtest causale.',
+  'about.val.h': 'Sintesi della validazione',
+  'about.val.intro': 'Fuori campione, rispetto ad Aqua, 2013-2025. Metodo completo, figure e limiti: data_pipeline/HARMONIZATION.md nel repository del progetto.',
+  'about.v.1': 'I totali annui differiscono da Aqua del 2% (leave-one-year-out, 2013-2020) e del 5% (calibrazione 2013-2020, test 2021-2025) per regione GFED; per il mondo, dell\'1% e del 3%.',
+  'about.v.2': 'Salto alla giunzione 2022-01, mondo: sotto l\'1%.',
+  'about.v.3': 'Correlazione dei totali annui con l\'area bruciata GFED5, 2003-2020: 0,93.',
+  'about.v.4': 'Copertura fuori campione degli intervalli al 90%: 88-93% tra regioni GFED, paesi, continenti e mondo.',
+  'about.v.5': 'I trend per paese mantengono il segno della serie del singolo sensore nell\'89-90% di 136 paesi (variante di stress, VIIRS convertito dal 2013).',
+  'about.lim.h': 'Limiti noti',
+  'about.l.1': 'Gli incendi piccoli pesano meno nella serie equivalente Aqua (i cluster sotto 10 MW sono due terzi dei cluster VIIRS ma circa un terzo del peso). I trend regionali possono differire di segno (Medio Oriente, Europa); la serie detail li conserva.',
+  'about.l.2': 'Nessuna serie armonizzata prima del 2003.',
+  'about.l.3': 'Dopo il 2021 le verifiche usano un Aqua corretto per lo spostamento del passaggio, il che è in parte circolare (VIIRS è il testimone stabile). Il termine di deriva negli intervalli è un\'ipotesi.',
+  'about.l.4': 'S-NPP è terminato il 2026-11-02; il salto misurato a quella giunzione poggia su 11 giorni di dati e va ricalcolato.',
+  'about.lic.h': 'Licenze',
+  'about.lic.project': 'Codice di Fire Globe: Apache License 2.0 (file LICENSE e NOTICE del repository del progetto). I dati mantengono i termini delle loro fonti.',
+  'about.lic.libs': 'Librerie principali:',
+  'about.lic.insp': 'La configurazione del visualizzatore senza Cesium ion è ispirata a gods-eye-view (MIT, Bilawal Sidhu); nessun codice è stato copiato alla lettera. L\'app non usa servizi Cesium ion.',
+  'src.static.noteWorld': 'Versione online: calendario in tutto il mondo sulla griglia a 0,25 gradi; singoli rilevamenti in tutto il mondo.',
+  'src.static.noteRegion': 'Versione online: calendario in tutto il mondo sulla griglia a 0,25 gradi; singoli rilevamenti per {region}.',
+  'about.ai.h': 'Uso dell\'IA',
+  'about.ai.p': 'Assistenti IA (Claude di Anthropic, Codex di OpenAI) sono stati usati per scrivere codice, eseguire analisi e redigere la documentazione; un modello aperto locale (Qwen, tramite Ollama) ha tradotto l\'interfaccia nelle lingue diverse da inglese e italiano. Il metodo di armonizzazione e le scelte di progetto sono stati selezionati dal team in base ai test; l\'IA non è stata usata per ideare la soluzione (regola Space Apps).',
   'cal.climLink': 'Climatologia di quest\'area',
   'cal.climLink.title': 'Rilevamenti settimanali tipici di incendio in questo periodo dell\'anno (descrittivo, non una previsione)',
   'clim.title': 'Fire Globe - Climatologia',
@@ -802,7 +1039,7 @@ const it: Partial<Record<Key, string>> = {
   'clim.csv.title': 'Scarica le serie del grafico in CSV',
   'clim.method.title': 'Metodo',
   'clim.method.1': 'Intervallo tipico: per ogni giorno, il totale dei rilevamenti VIIRS S-NPP di incendi di vegetazione nei 7 giorni che terminano in quel giorno, preso in una finestra di +-15 giorni attorno alla stessa data in ciascun anno 2012-2025; banda = dal 5° al 95° percentile, linea = mediana.',
-  'clim.method.2': 'Verifica: escludendo a turno ogni anno, la banda contiene circa il 90% dei totali settimanali di quell\'anno. È una verifica descrittiva (usa anche anni successivi), non un backtest causale. La banda non conosce meteo e combustibile di quest\'anno: non è una previsione.',
+  'clim.method.2': "Escludendo a turno ogni anno, la banda contiene circa il 90% dei totali settimanali di quell'anno (verifica descrittiva, non un backtest causale). Non è una previsione: non conosce meteo e combustibile di quest'anno.",
   'clim.method.3': 'Anno corrente: NOAA-20 a livello grezzo (circa +-10% sui totali settimanali rispetto a S-NPP). I giorni near-real-time sono provvisori (tratteggio) e gli ultimi 2 giorni sono incompleti, quindi non si possono scegliere come data di interesse. Le sorgenti statiche (vulcani, industria) sono mascherate nei dati near-real-time. I primi 6 giorni dell\'anno non hanno una finestra completa di 7 giorni e non sono disegnati.',
   'clim.method.credit': 'Dati: NASA FIRMS (VIIRS). Ultimo giorno con dati: {last}.',
 
@@ -922,7 +1159,7 @@ const it: Partial<Record<Key, string>> = {
   'cal.exportFailed': 'Esportazione non riuscita: {msg}',
   'cal.raw': 'Conteggi grezzi di un solo sensore. MODIS e VIIRS non sono confrontabili finché non vengono armonizzati.',
   'cal.credits':
-    'Ricerca luoghi: {nominatim}, dati &copy; {osm} (i contorni possono differire leggermente dai confini della mappa di base, disegnati da Esri). Continenti: Natural Earth. Regioni di fuoco: regioni di base GFED (Giglio et al. 2013).',
+    'Ricerca luoghi: {nominatim}, dati &copy; {osm}. Crediti e licenze: {about}.',
   'cal.loading': 'Caricamento...',
   'cal.loadError': 'Impossibile caricare il calendario: {msg}',
   'cal.src.harmLong':
@@ -1027,6 +1264,20 @@ const it: Partial<Record<Key, string>> = {
   'heat.tip.years.one': '{n} altro anno',
   'heat.tip.years.other': '{n} altri anni',
   'heat.medianTip': 'Mediana {month}: {value}',
+  // a11yb: accessibilita di calendario, tabelle e pagina di climatologia
+  'a11yb.cal.caption': 'Rilevamenti di incendio per mese e anno. I tasti freccia spostano tra i mesi, Pagina su e Pagina giu cambiano anno.',
+  'a11yb.cal.hint': "Passa o sposta il focus su un mese per leggerne il valore qui. Frecce: mese e anno. Home, Fine: primo e ultimo mese dell'anno. Pagina su, Pagina giu: anno. Invio: seleziona.",
+  'a11yb.cal.outside': '{month} {year}: fuori dal periodo selezionato',
+  'a11yb.cal.significant': "Significativo: l'intervallo al 90% non include la mediana.",
+  'a11yb.cal.legend.sig': " Un punto segna un mese il cui intervallo al 90% non include la mediana; colore attenuato: entro l'incertezza.",
+  'a11yb.det.hint': 'Porta il focus o il mouse su una riga per segnare il rilevamento sul globo; premi Invio o Spazio, o clicca, per volare li.',
+  'a11yb.clim.summary': '{area}, settimana che termina il {date}: totale su 7 giorni {cur}; tipico {med} (intervallo da {lo} a {hi}). {pos}.',
+  'a11yb.clim.summary.none': "{area}, settimana che termina il {date}: nessun valore dell'anno corrente.",
+  'a11yb.clim.table.toggle': 'Mostra i dati del grafico come tabella',
+  'a11yb.clim.table.caption': "Intervallo tipico (5-95%) e totale su 7 giorni dell'anno corrente, per il 1 e il 15 di ogni mese",
+  'a11yb.clim.col.date': 'Settimana che termina il',
+  'a11yb.clim.col.lo': 'Tipico basso (5%)',
+  'a11yb.clim.col.hi': 'Tipico alto (95%)',
 
   'exp.button': 'Esporta',
   'exp.buttonTitle': 'Esporta immagine o video',
@@ -1038,7 +1289,7 @@ const it: Partial<Record<Key, string>> = {
   'exp.to': 'A',
   'exp.fps': 'Fotogrammi/s',
   'exp.resolution': 'Risoluzione',
-  'exp.resCurrent': 'Vista attuale ({w}x{h})',
+  'exp.resCurrent': 'Attuale {w}x{h}',
   'exp.frames.one': '{n} fotogramma, circa {sec} s di video',
   'exp.frames.other': '{n} fotogrammi, circa {sec} s di video',
   'exp.rangeInvalid': 'La fine non può precedere l\'inizio.',
@@ -1056,6 +1307,25 @@ const it: Partial<Record<Key, string>> = {
   'exp.popLabel': 'Opzioni di esportazione',
   'exp.err.canvas': 'Canvas vuoto',
   'exp.err.blob': 'Rendering dell\'immagine non riuscito',
+  'exp.modeLabel': 'Tipo di esportazione',
+  'exp.modeImage': 'Immagine',
+  'exp.modeVideo': 'Video',
+  'exp.format': 'Formato',
+  'exp.fmt.cur': 'Vista attuale',
+  'exp.fmt.169': '16:9 orizzontale',
+  'exp.fmt.43': '4:3',
+  'exp.fmt.11': '1:1 quadrato',
+  'exp.fmt.916': '9:16 verticale (telefono)',
+  'exp.resPreset': '{p}p ({w} x {h})',
+  'exp.resPreset4k': '{p}p 4K ({w} x {h})',
+  'exp.hint4k': 'Il video ad alta risoluzione e\' lento e il file e\' pesante.',
+  'exp.capNote': 'Globo renderizzato a {w}x{h} (limite del dispositivo); il resto e\' ingrandito.',
+  'exp.err.videoSize': 'Questo browser non riesce a registrare video a {w}x{h}. Scegli una risoluzione piu\' bassa.',
+  'exp.dlImage': 'Scarica PNG',
+  'exp.dlVideo': 'Scarica video',
+  'exp.share': 'Condividi',
+  'exp.shareReady': 'Pronto - tocca per condividere',
+  'exp.shared': 'Condiviso.',
   // ---- explorer: explorer
   'ex.explorer.title': 'Esplora dati',
   'ex.explorer.modes': 'Modalità di esplorazione',
@@ -1303,28 +1573,87 @@ const it: Partial<Record<Key, string>> = {
   'ex.results.rows.one': '{n} riga',
   'ex.results.rows.other': '{n} righe',
 
+  // ---- kb: tastiera, landmark, regioni live (pagina globo)
+  'kb.skip': 'Vai ai controlli della mappa',
+  'kb.bottom.label': 'Tempo e legenda',
+  'kb.globe.hint': 'Globo interattivo. Le frecce spostano la mappa. Più e meno ingrandiscono. Maiusc con le frecce ruota e inclina. Home ripristina la vista.',
+  'kb.globe.name': 'Mappa degli incendi: {layer}, {period}.',
+  'kb.split.name': 'Divisore di confronto tra i due sensori',
+  'kb.split.value': '{p}% dal bordo sinistro',
+  'kb.gain.value': 'Limite superiore {v}',
+  'kb.live.period': 'Periodo: {period}',
+  'kb.live.label': 'Aggiornamenti della mappa',
+
+  // ---- accessibility menu (a11y)
+  'a11y.button': 'Accessibilità',
+  'a11y.title': 'Opzioni di accessibilità',
+  'a11y.close': 'Chiudi',
+  'a11y.motion': 'Riduci il movimento',
+  'a11y.contrast': 'Contrasto elevato',
+  'a11y.palette': 'Palette per daltonici',
+  'a11y.halo': 'Contorno ai punti di rilevamento',
+  'a11y.shortcuts': 'Scorciatoie a tasto singolo',
+  'a11y.text': 'Testo più grande',
+  'a11y.spacing': 'Spaziatura più ampia',
+  'a11y.reset': 'Ripristina',
+  'a11y.keys': 'Scorciatoie da tastiera',
+  'a11y.describe': 'Descrivi questa vista',
+  'a11y.describe.title': 'Descrizione della vista',
+  'a11y.read': 'Leggi ad alta voce',
+  'a11y.stop': 'Interrompi la lettura',
+  'a11y.k.pan': 'Globo attivo: sposta',
+  'a11y.k.zoom': 'Globo attivo: avvicina / allontana',
+  'a11y.k.rotate': 'Globo attivo: ruota e inclina',
+  'a11y.k.home': 'Ripristina la vista',
+  'a11y.k.split': 'Divisore del confronto attivo: spostalo',
+  'a11y.k.time': 'Periodo precedente / successivo (fuori dai campi di testo)',
+  'a11y.k.play': 'Avvia o ferma lo slider del tempo',
+  'a11y.k.cal': 'Calendario: spostati tra i giorni',
+  'a11y.k.calEnds': 'Calendario: primo / ultimo giorno',
+  'a11y.k.calPage': 'Calendario: mese precedente / successivo',
+  'a11y.k.esc': 'Chiudi un menu o un pannello',
+  'a11y.k.note': "Le scorciatoie a tasto singolo (+, -, 0, Spazio, frecce sullo slider) si disattivano con l'interruttore qui sopra.",
+  'a11y.d.harm': 'Rilevamenti di incendio armonizzati (celle da 1 grado)',
+  'a11y.d.layer1': 'La mappa mostra {layer} da {a}, per {period}.',
+  'a11y.d.layer2': 'La mappa confronta {a} e {b} affiancati: {layer}, per {period}.',
+  'a11y.d.view': 'La vista è centrata vicino a {lat}, {lon}, a una quota di circa {km} km.',
+  'a11y.d.n': 'N',
+  'a11y.d.s': 'S',
+  'a11y.d.e': 'E',
+  'a11y.d.w': 'O',
+  'a11y.d.noDet': 'In questa vista non sono caricati rilevamenti singoli.',
+  'a11y.d.det': 'In questa vista sono caricati {n} rilevamenti singoli. Il più intenso ha una potenza radiativa di {frp} MW, a {lat}, {lon}, il {date}.',
+  'a11y.d.scale': 'I colori vanno da nessuno fino a {max} o più.',
+  'a11y.d.zoom': "Avvicina la vista per caricare i rilevamenti singoli e trovare l'incendio più forte.",
+  'a11y.d.area': "Il calendario incendi per area è aperto sull'area selezionata.",
 };
 
-const DICT: Record<Lang, Partial<Record<Key, string>>> = { en, it };
+// Machine-translated dictionaries: one JSON file per language, fetched only for the active one (top-level await).
+const LOADERS = import.meta.glob<Partial<Record<Key, string>>>('./locales/*.json', { import: 'default' });
+const loader = LOADERS[`./locales/${lang}.json`];
+const machine: Partial<Record<Key, string>> = loader ? await loader() : {};
+
+const DICT: Partial<Record<Lang, Partial<Record<Key, string>>>> = { en, it, [lang]: lang === 'it' ? it : lang === 'en' ? en : machine };
 
 type Params = Record<string, string | number>;
 const fill = (s: string, p?: Params) => (p ? s.replace(/\{(\w+)\}/g, (m, k: string) => (k in p ? String(p[k]) : m)) : s);
 
 /** Translate a key; `{name}` placeholders are filled from params. Missing keys fall back to English. */
 export function t(key: Key, p?: Params): string {
-  return fill(DICT[lang][key] ?? en[key] ?? key, p);
+  return fill(DICT[lang]?.[key] ?? en[key] ?? key, p);
 }
 
 /** Like t() for keys built at run time (manifest ids, region codes): returns `fallback` when the key does not exist. */
 export function tOr(key: string, fallback: string, p?: Params): string {
   const k = key as Key;
-  return fill(DICT[lang][k] ?? en[k] ?? fallback, p);
+  return fill(DICT[lang]?.[k] ?? en[k] ?? fallback, p);
 }
 
-/** Plural helper: uses `<key>.one` when n is 1, else `<key>.other`; `{n}` is the formatted count. */
+/** Plural helper: `<key>.one` when the language's plural rule says "one" for n, else `<key>.other`; `{n}` is the formatted count. */
+const plural = new Intl.PluralRules(lang === 'en' ? 'en' : lang);
 export function tn(key: PluralKey, n: number, p?: Params): string {
-  const k = `${key}.${n === 1 ? 'one' : 'other'}` as Key;
-  return fill(DICT[lang][k] ?? en[k] ?? k, { n: fmtInt(n), ...p });
+  const k = `${key}.${plural.select(n) === 'one' ? 'one' : 'other'}` as Key;
+  return fill(DICT[lang]?.[k] ?? en[k] ?? k, { n: fmtInt(n), ...p });
 }
 
 // ------------------------------------------------------------------ number and date formats
@@ -1346,6 +1675,8 @@ export const monthInitials: string[] = monthsShort.map((m) => m[0]);
  */
 export function applyI18n(root: ParentNode = document) {
   document.documentElement.lang = lang;
+  // Right-to-left scripts: only the text runs RTL (see appBar.css); the layout (bar, tabs, panels, map) stays as it is.
+  document.documentElement.classList.toggle('rtl-text', RTL_LANGS.includes(lang));
   document.title = t('app.title');
   const each = (attr: string, fn: (el: HTMLElement, text: string) => void) => {
     for (const el of root.querySelectorAll<HTMLElement>(`[${attr}]`)) fn(el, t(el.getAttribute(attr) as Key));

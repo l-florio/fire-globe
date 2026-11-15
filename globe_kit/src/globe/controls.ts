@@ -1,22 +1,34 @@
 import * as Cesium from 'cesium';
 import { cssGradient, type Stop } from './colormaps';
+import { flightSeconds } from './a11y';
+import { isActivatable, shortcutBlocked } from './keyboard';
 
 /** Draggable vertical divider driving scene.splitPosition (layers set splitDirection LEFT/RIGHT). */
 export function createSplitter(
   viewer: Cesium.Viewer,
   parent: HTMLElement,
   onMove?: (fraction: number) => void,
-  labels: { drag?: string } = {},
+  labels: { drag?: string; name?: string; valueText?: (percent: number) => string } = {},
 ) {
   const el = document.createElement('div');
   el.className = 'gk-splitter';
   el.innerHTML = `<div class="gk-splitter-handle" title="${labels.drag ?? 'Drag to compare'}"></div>`;
+  // Keyboard operable slider (WCAG 2.1.1, 2.5.7): arrows move it, Home/End go to the ends.
+  el.tabIndex = 0;
+  el.setAttribute('role', 'slider');
+  el.setAttribute('aria-label', labels.name ?? labels.drag ?? 'Comparison divider');
+  el.setAttribute('aria-orientation', 'horizontal');
+  el.setAttribute('aria-valuemin', '2');
+  el.setAttribute('aria-valuemax', '98');
   parent.appendChild(el);
   const scene = viewer.scene;
   const place = (f: number) => {
     const p = Math.min(0.98, Math.max(0.02, f));
     scene.splitPosition = p;
     el.style.left = `${p * 100}%`;
+    const pct = Math.round(p * 100);
+    el.setAttribute('aria-valuenow', String(pct));
+    el.setAttribute('aria-valuetext', labels.valueText ? labels.valueText(pct) : `${pct}%`);
     scene.requestRender();
     onMove?.(p);
   };
@@ -31,6 +43,22 @@ export function createSplitter(
     place((e.clientX - r.left) / r.width);
   });
   el.addEventListener('pointerup', () => (dragging = false));
+  el.addEventListener('keydown', (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const f = scene.splitPosition;
+    const big = e.shiftKey ? 0.1 : 0.02;
+    let next: number | undefined;
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') next = f - big;
+    else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') next = f + big;
+    else if (e.key === 'PageDown') next = f - 0.1;
+    else if (e.key === 'PageUp') next = f + 0.1;
+    else if (e.key === 'Home') next = 0;
+    else if (e.key === 'End') next = 1;
+    if (next === undefined) return;
+    e.preventDefault();
+    e.stopPropagation();
+    place(next);
+  });
   place(0.5);
   return {
     setVisible(v: boolean) {
@@ -83,7 +111,7 @@ export function createTimeSlider(parent: HTMLElement, o: TimeSliderOptions) {
   el.innerHTML = `
     <button class="gk-play" type="button" aria-label="${L.play}">&#9654;</button>
     <input class="gk-range" type="range" min="0" step="1" aria-label="${L.time}" />
-    <span class="gk-picker" aria-label="${L.date}"></span>
+    <span class="gk-picker" role="group" aria-label="${L.date}"></span>
     <select class="gk-speed" aria-label="${L.speed}">
       <option value="2">0.5x</option><option value="4" selected>1x</option><option value="8">2x</option><option value="16">4x</option>
     </select>`;
@@ -102,6 +130,7 @@ export function createTimeSlider(parent: HTMLElement, o: TimeSliderOptions) {
   async function go(i: number) {
     idx = Math.min(keys.length - 1, Math.max(0, i));
     range.value = String(idx);
+    range.setAttribute('aria-valuetext', fmt(keys[idx] ?? ''));
     renderPicker();
     busy = true;
     try {
@@ -181,11 +210,12 @@ export function createTimeSlider(parent: HTMLElement, o: TimeSliderOptions) {
       play();
     }
   };
+  // Single-key shortcuts: off when disabled in the Accessibility menu and never inside fields, sliders or dialogs.
   const onKey = (e: KeyboardEvent) => {
-    if ((e.target as HTMLElement)?.closest('input, select, textarea')) return;
+    if (shortcutBlocked(e)) return;
     if (e.key === 'ArrowRight') void go(idx + 1);
     else if (e.key === 'ArrowLeft') void go(idx - 1);
-    else if (e.key === ' ') {
+    else if (e.key === ' ' && !isActivatable(e)) {
       e.preventDefault();
       timer ? stop() : play();
     }
@@ -278,7 +308,7 @@ export function createZoomControls(
     viewer.scene.requestRender();
   };
   const goHome = () =>
-    cam.flyTo({ destination: Cesium.Cartesian3.fromDegrees(home.lon, home.lat, home.height), duration: 1.2 });
+    cam.flyTo({ destination: Cesium.Cartesian3.fromDegrees(home.lon, home.lat, home.height), duration: flightSeconds(1.2) });
   el.addEventListener('click', (e) => {
     const z = (e.target as HTMLElement).closest('button')?.dataset.z;
     if (z === 'in') step(0.5);
@@ -286,7 +316,7 @@ export function createZoomControls(
     else if (z === 'home') goHome();
   });
   const onKey = (e: KeyboardEvent) => {
-    if ((e.target as HTMLElement)?.closest('input, select, textarea')) return;
+    if (shortcutBlocked(e)) return;
     if (e.key === '+' || e.key === '=') step(0.5);
     else if (e.key === '-' || e.key === '_') step(2);
     else if (e.key === '0' || e.key === 'Home') goHome();

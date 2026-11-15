@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
 import { BASEMAPS, OVERLAYS, type BasemapId, type OverlayId } from './basemaps';
+import { flightSeconds } from './a11y';
 
 export interface GlobeOptions {
   container: HTMLElement | string;
@@ -66,11 +67,21 @@ export function createGlobe(opts: GlobeOptions): Globe {
     scene.requestRender();
   };
   // Touchpad pinch arrives as wheel + ctrlKey: Cesium ignores it and the browser would zoom the page.
+  // Ctrl held on the keyboard + wheel is the browser's page zoom (WCAG 1.4.4): left alone. A pinch sets ctrlKey
+  // without any Control key press, which tells the two apart.
   // Capture on the container so this runs before Cesium's own canvas listener.
+  let ctrlHeld = false;
+  window.addEventListener('keydown', (e) => e.key === 'Control' && (ctrlHeld = true));
+  window.addEventListener('keyup', (e) => e.key === 'Control' && (ctrlHeld = false));
+  window.addEventListener('blur', () => (ctrlHeld = false));
   viewer.container.addEventListener(
     'wheel',
     (e) => {
       if (!(e as WheelEvent).ctrlKey) return;
+      if (ctrlHeld) {
+        e.stopPropagation(); // page zoom of the browser: the globe does not zoom as well
+        return;
+      }
       e.preventDefault();
       e.stopPropagation();
       const dy = Math.max(-50, Math.min(50, (e as WheelEvent).deltaY));
@@ -85,7 +96,7 @@ export function createGlobe(opts: GlobeOptions): Globe {
     if (!p) return;
     const c = Cesium.Cartographic.fromCartesian(p);
     const h = Math.max(ctrl.minimumZoomDistance, viewer.camera.positionCartographic.height / 3);
-    viewer.camera.flyTo({ destination: Cesium.Cartesian3.fromRadians(c.longitude, c.latitude, h), duration: 0.8 });
+    viewer.camera.flyTo({ destination: Cesium.Cartesian3.fromRadians(c.longitude, c.latitude, h), duration: flightSeconds(0.8) });
   }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
 
   // Basemap is always layer 0; overlays sit above data layers added later (raised on toggle).
@@ -126,7 +137,7 @@ export function createGlobe(opts: GlobeOptions): Globe {
   }
 
   function flyTo(lon: number, lat: number, height: number, seconds = 1.5) {
-    viewer.camera.flyTo({ destination: Cesium.Cartesian3.fromDegrees(lon, lat, height), duration: seconds });
+    viewer.camera.flyTo({ destination: Cesium.Cartesian3.fromDegrees(lon, lat, height), duration: flightSeconds(seconds) });
   }
 
   setBasemap(opts.basemap ?? 'gibs-bluemarble');

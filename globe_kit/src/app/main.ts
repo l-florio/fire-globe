@@ -8,6 +8,7 @@ import {
   createSplitter,
   createTimeSlider,
   createZoomControls,
+  createGlobeKeyboard,
   createScaleBar,
   type BasemapId,
 } from '../globe';
@@ -15,10 +16,16 @@ import { createCalendarPanel } from './calendarPanel';
 import { createDetectionsPanel } from './detectionsPanel';
 import { createExporter } from './exporter';
 import { copyLink, readShare, writeShare } from './share';
-import { openClimatology, openTable, storeGlobeHash } from './nav';
+import { mountAppBar } from './appBar';
+import { enhanceRadioGroup } from './radioGroup';
+import { managePopup } from './popupFocus';
+import { explainDisabled } from './disabledNote';
+import { a11y, onA11y } from './a11yPrefs';
+import { setDescribeProvider } from './a11yMenu';
+import { storeGlobeHash } from './nav';
 import { detectSource, lazySource } from './dataSource';
 import { createDetail, DETECTION_FRP_TOP, type Pass, type Sat, type Step } from './detail';
-import { applyI18n, fmtFixed, locale, monthsShort, t, tOr } from './i18n';
+import { applyI18n, fmtFixed, fmtInt, locale, monthsShort, t, tOr } from './i18n';
 import './app.css';
 
 declare const CESIUM_BASE_URL: string;
@@ -56,9 +63,37 @@ function daysOf(months: string[]): string[] {
 const fmtNum = (x: number) =>
   x >= 1e6 ? `${fmtFixed(x / 1e6, 1)}M` : x >= 1e3 ? `${fmtFixed(x / 1e3, x >= 1e4 ? 0 : 1)}k` : x >= 10 ? fmtFixed(x, 0) : fmtFixed(x, 1);
 const HOME = { lon: 12, lat: 30, height: 18_000_000 };
+/** Fire ramp for the raster layers, legend and points: the colour-blind safe one when chosen in the Accessibility menu. */
+const fireRamp = () => (a11y().palette === 'cvd' ? RAMPS.cvdFire : RAMPS.fire);
 
 async function main() {
+  mountAppBar({ current: 'globe', beforeLeave: () => storeGlobeHash(location.hash), timeKey: () => slider.key });
   applyI18n();
+  // ---- accessibility scaffolding: skip link (first focusable element), live region, globe hint
+  const skip = document.createElement('a');
+  skip.className = 'kb-skip';
+  skip.href = '#panel';
+  skip.textContent = t('kb.skip');
+  skip.addEventListener('click', (e) => {
+    e.preventDefault();
+    setPanel(true);
+    $('panel').focus();
+  });
+  document.body.prepend(skip);
+  const live = document.createElement('div');
+  live.className = 'kb-sr';
+  live.setAttribute('role', 'status');
+  live.setAttribute('aria-live', 'polite');
+  live.setAttribute('aria-atomic', 'true');
+  live.setAttribute('aria-label', t('kb.live.label'));
+  document.body.appendChild(live);
+  let liveTimer: number | undefined;
+  /** Polite announcement; `delay` debounces bursts (stepping or playing through time). */
+  const announce = (text: string, delay = 0) => {
+    window.clearTimeout(liveTimer);
+    liveTimer = window.setTimeout(() => (live.textContent = text), delay);
+  };
+  $('globe-hint').textContent = t('kb.globe.hint');
   const base = `${import.meta.env.BASE_URL}frames`;
   const manifest: Manifest = await (await fetch(`${base}/manifest.json`)).json();
   // Names from the data manifest are English: use the translated ones when the dictionary has them.
@@ -81,7 +116,7 @@ async function main() {
   const zoomBox = document.createElement('div');
   zoomBox.id = 'zoom';
   document.body.appendChild(zoomBox);
-  createZoomControls(viewer, zoomBox, HOME, {
+  const zoom = createZoomControls(viewer, zoomBox, HOME, {
     zoomIn: t('zoom.in'),
     zoomInTitle: t('zoom.in.title'),
     zoomOut: t('zoom.out'),
@@ -89,6 +124,11 @@ async function main() {
     home: t('zoom.home'),
     homeTitle: t('zoom.home.title'),
   });
+  // The globe is one focusable application region (Cesium's canvas is taken out of the tab order).
+  const globeEl = $<HTMLElement>('globe');
+  viewer.canvas.removeAttribute('tabindex');
+  viewer.canvas.setAttribute('aria-hidden', 'true');
+  createGlobeKeyboard(viewer, globeEl, { zoomIn: zoom.zoomIn, zoomOut: zoom.zoomOut, home: zoom.home });
   const scaleBox = document.createElement('div');
   scaleBox.id = 'scale';
   document.body.appendChild(scaleBox);
@@ -155,7 +195,7 @@ async function main() {
       frameUrl: frameUrl(sensor),
       keys: manifest.sensors[sensor].months,
       rectangle: manifest.rectangle,
-      ramp: RAMPS.fire,
+      ramp: fireRamp(),
       transfer: transfer(sensor),
     });
   const [s0, s1] = shown();
@@ -173,8 +213,9 @@ async function main() {
       labR.style.left = `${f * 100}%`;
       labR.style.marginLeft = '12px';
     },
-    { drag: t('split.drag') },
+    { drag: t('split.drag'), name: t('kb.split.name'), valueText: (p) => t('kb.split.value', { p }) },
   );
+
 
   const legend = createLegend($('legend'));
   const note = $<HTMLParagraphElement>('note');
@@ -184,13 +225,22 @@ async function main() {
     return step === 'month' ? months : daysOf(months);
   }
 
+  /** Text alternative of the globe: layer and period, kept current for screen readers. */
+  function refreshGlobeLabel(key = slider?.key) {
+    if (!key) return;
+    const layer = [...new Set(shown().map((s) => manifest.sensors[s].label))].join(' | ');
+    const what = mode === 'HARM' ? '' : `, ${manifest.metrics[metricSel.value].label}`;
+    globeEl.setAttribute('aria-label', t('kb.globe.name', { layer: layer + what, period: key.length > 7 ? fmtDay(key) : fmtMonth(key) }));
+  }
+
   function refreshLegend() {
+    gain.setAttribute('aria-valuetext', t('kb.gain.value', { v: fmtNum(displayMax()) }));
     if (detail?.active || step === 'day') {
       const ticks = [0, 0.25, 0.5, 0.75, 1].map((t) => ({
         at: t,
         label: `${t === 1 ? '≥ ' : ''}${fmtNum(Math.expm1(t * Math.log1p(DETECTION_FRP_TOP)))}`,
       }));
-      legend.update(t('legend.detection'), RAMPS.fire, ticks);
+      legend.update(t('legend.detection'), fireRamp(), ticks);
       return;
     }
     const s0 = shown()[0];
@@ -201,11 +251,11 @@ async function main() {
     }));
     if (isHarm(s0)) {
       const unit = s0 === 'HARM_LONG' ? t('legend.harm.long') : t('legend.harm.detail');
-      legend.update(t('legend.harm', { unit }), RAMPS.fire, ticks);
+      legend.update(t('legend.harm', { unit }), fireRamp(), ticks);
       return;
     }
     const m = manifest.metrics[metricSel.value];
-    legend.update(t('legend.metric', { label: m.label, unit: m.unit }), RAMPS.fire, ticks);
+    legend.update(t('legend.metric', { label: m.label, unit: m.unit }), fireRamp(), ticks);
   }
 
   function refreshLabels(key: string) {
@@ -275,6 +325,9 @@ async function main() {
     metricSel.disabled = mode === 'HARM';
     srcSel.disabled = mode === 'HARM'; // harmonized series are built on vegetation fires only
     srcSel.title = t(mode === 'HARM' ? 'ctl.sources.harm' : 'ctl.sources.title');
+    explainDisabled(srcSel, mode === 'HARM' ? t('ctl.sources.harm') : undefined);
+    if (mode === 'HARM') metricSel.setAttribute('aria-describedby', 'sub-text');
+    else metricSel.removeAttribute('aria-describedby');
     if (mode === 'HARM' && step === 'day') {
       step = 'month';
       slider.setKeys(allKeys());
@@ -303,6 +356,7 @@ async function main() {
     slider.setKeys(allKeys());
     refreshControls();
     refreshZoomNote();
+    refreshGlobeLabel();
     // Single detections exist for the sensors, not for the harmonized series.
     detail?.setSides(
       shown().filter((s) => !isHarm(s)).map((s, k) => ({
@@ -338,6 +392,7 @@ async function main() {
       if (btn.dataset.step === 'day') {
         btn.disabled = !apiOk || mode === 'HARM';
         btn.title = t(mode === 'HARM' ? 'ctl.stepDay.harm' : apiOk ? 'ctl.stepDay.ok' : 'ctl.stepDay.noData');
+        explainDisabled(btn, btn.disabled ? btn.title : undefined);
       }
     }
     for (const btn of passSeg.querySelectorAll<HTMLButtonElement>('button'))
@@ -358,6 +413,7 @@ async function main() {
     detail?.setFilters({ day: keep });
   };
 
+  let announceReady = false; // no announcement for the start-up state
   const slider = createTimeSlider($('time'), {
     keys: allKeys(),
     format: (k) => (k.length > 7 ? fmtDay(k) : fmtMonth(k)),
@@ -375,6 +431,8 @@ async function main() {
     onChange: async (key) => {
       syncUrl();
       refreshLabels(key);
+      refreshGlobeLabel(key);
+      if (announceReady) announce(t('kb.live.period', { period: key.length > 7 ? fmtDay(key) : fmtMonth(key) }), 700);
       calPanel?.select(key);
       detail?.setPeriod(step, key);
       if (step === 'day') return;
@@ -387,6 +445,7 @@ async function main() {
   });
 
   // ---- wiring
+  for (const g of [modeSeg, stepSeg, passSeg]) enhanceRadioGroup(g);
   // Collapsible control panel: starts collapsed on phones so the globe stays visible.
   const panelEl = $<HTMLElement>('panel');
   const panelToggle = $<HTMLButtonElement>('panel-toggle');
@@ -465,6 +524,7 @@ async function main() {
         if (!text) return;
         detailNote.classList.remove('warn');
         detailNote.textContent = text;
+        announce(text); // loading, loaded and error states of the detections fetch
         // Loaded detections: a button opens the list (strongest first, linked to the globe).
         if (detail?.active && !busy) {
           const b = document.createElement('button');
@@ -474,6 +534,7 @@ async function main() {
           b.title = t('ctl.list.title');
           b.onclick = () => {
             calPanel?.toggle(false);
+            detFocus?.opening(b);
             detPanel.toggle(true);
           };
           detailNote.append(' ', b);
@@ -488,6 +549,15 @@ async function main() {
     highlight: (r) => detail?.highlight(r),
   });
   daySel.onchange = () => detail?.setFilters({ day: Number(daySel.value) });
+  // Popups (detections list, area calendar): focus goes in on opening, Esc closes, focus returns to the opener.
+  const detEl = document.querySelector<HTMLElement>('.detpanel');
+  const detFocus = detEl
+    ? managePopup(detEl, {
+        close: () => detPanel.toggle(false),
+        fallback: () => document.querySelector<HTMLElement>('.det-open') ?? calBtn,
+        otherOpen: () => !!calPanel?.visible,
+      })
+    : undefined;
 
   // ---- area fire calendar
   calPanel = createCalendarPanel({
@@ -505,13 +575,26 @@ async function main() {
   calBtn.textContent = t('cal.button');
   calBtn.disabled = !apiOk;
   calBtn.title = apiOk ? t('cal.button.title', { note: ds!.note }) : t('ctl.stepDay.noData');
+  explainDisabled(calBtn, apiOk ? undefined : t('ctl.stepDay.noData'), { visible: false });
+  calBtn.setAttribute('aria-haspopup', 'dialog');
   calBtn.onclick = () => {
+    calFocus?.opening(calBtn);
     if (calPanel?.toggle()) detPanel.toggle(false);
   };
+  const calEl = document.querySelector<HTMLElement>('.calpanel:not(.detpanel)');
+  const calFocus = calEl
+    ? managePopup(calEl, {
+        label: t('cal.title'),
+        close: () => void calPanel?.toggle(false),
+        fallback: () => calBtn,
+        otherOpen: () => detPanel.visible,
+      })
+    : undefined;
   void dsReady.then((d) => {
     apiOk = !!d;
     calBtn.disabled = !apiOk;
     calBtn.title = apiOk ? t('cal.button.title', { note: d!.note }) : t('ctl.stepDay.noData');
+    explainDisabled(calBtn, apiOk ? undefined : t('ctl.stepDay.noData'), { visible: false });
     refreshControls();
   });
   // ---- top-right actions: export, area calendar
@@ -547,23 +630,67 @@ async function main() {
   document.body.appendChild(actions);
   calPanel.select(slider.key);
 
-  // ---- Globe | Table | Climatology: separate pages (table.html, climatology.html); the globe state is kept for the way back
-  const tabs = document.createElement('div');
-  tabs.id = 'view-tabs';
-  tabs.className = 'seg seg3';
-  tabs.setAttribute('role', 'tablist');
-  tabs.innerHTML = `<button type="button" role="tab" aria-selected="true">${t('view.globe')}</button><button type="button" role="tab" aria-selected="false" title="${t('view.table.title')}">${t('view.table')}</button><button type="button" role="tab" aria-selected="false" title="${t('view.climatology.title')}">${t('view.climatology')}</button>`;
-  tabs.children[1].addEventListener('click', () => {
-    storeGlobeHash(location.hash);
-    openTable(slider.key);
-  });
-  tabs.children[2].addEventListener('click', () => {
-    storeGlobeHash(location.hash);
-    openClimatology(/^\d{4}-\d{2}(-\d{2})?$/.test(slider.key) ? `t=${slider.key}` : '');
-  });
-  document.body.appendChild(tabs);
+  // Globe | Table | Climatology tabs live in the shared app bar (appBar.ts); the globe state is kept for the way back
   detail.setPeriod(step, slider.key);
   refreshControls();
+
+  // ---- Accessibility menu: palette and halo apply without reloading; "Describe this view"
+  detail.setLook({ ramp: fireRamp(), halo: a11y().halo });
+  onA11y((p, changed) => {
+    if (changed === undefined || changed === 'palette') {
+      const ramp = fireRamp();
+      left.restyle({ ramp });
+      if (shown().length > 1) right.restyle({ ramp });
+      detail?.setLook({ ramp });
+      refreshLegend();
+    }
+    if (changed === undefined || changed === 'halo') detail?.setLook({ halo: p.halo });
+  });
+  const compass = (v: number, pos: string, neg: string) => `${fmtFixed(Math.abs(v), 1)}° ${v >= 0 ? pos : neg}`;
+  setDescribeProvider(() => {
+    const parts: string[] = [];
+    const [a, b] = shown();
+    const label = (s: string) => manifest.sensors[s].label;
+    const key = slider.key;
+    const period = key.length > 7 ? fmtDay(key) : fmtMonth(key);
+    const layerName = isHarm(a)
+      ? t('a11y.d.harm')
+      : `${manifest.metrics[metricSel.value]?.label} (${manifest.metrics[metricSel.value]?.unit})`;
+    parts.push(
+      t(b ? 'a11y.d.layer2' : 'a11y.d.layer1', { layer: layerName, a: label(a), b: b ? label(b) : '', period }),
+    );
+    const c = viewer.camera.positionCartographic;
+    parts.push(
+      t('a11y.d.view', {
+        lat: compass(Cesium.Math.toDegrees(c.latitude), t('a11y.d.n'), t('a11y.d.s')),
+        lon: compass(Cesium.Math.toDegrees(c.longitude), t('a11y.d.e'), t('a11y.d.w')),
+        km: fmtInt(c.height / 1000),
+      }),
+    );
+    if (detail?.active || step === 'day') {
+      const { rows, total } = detail?.list(1) ?? { rows: [], total: 0 };
+      if (!rows.length) parts.push(t('a11y.d.noDet'));
+      else {
+        const r = rows[0];
+        parts.push(
+          t('a11y.d.det', {
+            n: fmtInt(total),
+            frp: fmtFixed(r.frp, 1),
+            lat: compass(r.lat, t('a11y.d.n'), t('a11y.d.s')),
+            lon: compass(r.lon, t('a11y.d.e'), t('a11y.d.w')),
+            date: r.date,
+          }),
+        );
+      }
+    } else {
+      const top = displayMax(a);
+      parts.push(t('a11y.d.scale', { max: fmtNum(top) }));
+      parts.push(t('a11y.d.zoom'));
+    }
+    const area = calPanel?.state;
+    if (area?.open && area.area) parts.push(t('a11y.d.area'));
+    return parts.join(' ');
+  });
 
   applySelection();
   refreshLegend();
@@ -602,6 +729,7 @@ async function main() {
     if (st.q && !st.area) calPanel.searchPlace(st.q, 'country');
   }
   urlReady = true;
+  announceReady = true;
   syncUrl();
   // Debug handle for the browser console.
   Object.assign(window, { globe, left, right, slider });

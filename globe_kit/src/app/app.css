@@ -9,7 +9,7 @@ body {
 }
 #globe {
   position: absolute;
-  inset: 0;
+  inset: var(--bar-h) 0 0 0;
 }
 .panel {
   position: absolute;
@@ -22,17 +22,17 @@ body {
   box-sizing: border-box;
 }
 #panel {
-  top: 16px;
+  top: calc(var(--bar-h) + 12px);
   left: 16px;
   width: 300px;
   max-width: calc(100vw - 32px);
   display: flex;
   flex-direction: column;
   gap: 10px;
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 #panel h1 {
-  font-size: 17px;
+  font-size: 1.0625rem;
   margin: 0;
   line-height: 1.25;
 }
@@ -48,7 +48,7 @@ body {
   border-radius: 9px;
   background: rgba(255, 138, 61, 0.15);
   color: var(--gk-accent);
-  font-size: 11px;
+  font-size: 0.75rem;
 }
 #panel label {
   display: flex;
@@ -65,7 +65,7 @@ body {
 #panel select {
   background: rgba(255, 255, 255, 0.06);
   color: var(--gk-text);
-  border: 1px solid var(--gk-border);
+  border: 1px solid var(--gk-ctl, #7f8ea3);
   border-radius: 6px;
   padding: 5px 6px;
   font: inherit;
@@ -90,13 +90,13 @@ body {
 .seg {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  border: 1px solid var(--gk-border);
+  border: 1px solid var(--gk-ctl, #7f8ea3);
   border-radius: 7px;
   overflow: hidden;
 }
 .seg button {
   border: 0;
-  border-right: 1px solid var(--gk-border);
+  border-right: 1px solid var(--gk-ctl, #7f8ea3);
   background: rgba(255, 255, 255, 0.04);
   color: var(--gk-text);
   font: inherit;
@@ -126,7 +126,7 @@ body {
   margin-left: auto;
   background: rgba(255, 255, 255, 0.06);
   color: var(--gk-text);
-  border: 1px solid var(--gk-border);
+  border: 1px solid var(--gk-ctl, #7f8ea3);
   border-radius: 6px;
   padding: 4px 8px;
   font: inherit;
@@ -134,22 +134,23 @@ body {
 }
 #zoom {
   position: absolute;
-  top: 16px;
+  top: calc(var(--bar-h) + 12px);
   right: 16px;
   z-index: 10;
 }
 .note {
   margin: 0;
   color: var(--gk-muted);
-  font-size: 12px;
+  font-size: 0.75rem;
   min-height: 1em;
 }
 .bottom {
   left: 16px;
   right: 16px;
-  bottom: 28px;
+  bottom: 22px;
+  padding: 8px 14px;
   display: flex;
-  gap: 24px;
+  gap: 16px;
   align-items: center;
 }
 #time {
@@ -158,7 +159,7 @@ body {
 }
 #side-labels {
   position: absolute;
-  bottom: 118px;
+  bottom: 100px;
   left: 0;
   right: 0;
   pointer-events: none;
@@ -170,7 +171,7 @@ body {
   padding: 4px 10px;
   border-radius: 6px;
   background: var(--gk-panel);
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -187,7 +188,7 @@ body {
   .bottom {
     flex-direction: column;
     align-items: stretch;
-    gap: 10px;
+    gap: 6px;
   }
   #side-labels {
     display: none;
@@ -207,7 +208,7 @@ body {
   align-items: center;
   gap: 6px;
   color: var(--gk-muted);
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 .day[hidden] {
   display: none;
@@ -215,7 +216,7 @@ body {
 .day select {
   background: rgba(255, 255, 255, 0.06);
   color: var(--gk-text);
-  border: 1px solid var(--gk-border);
+  border: 1px solid var(--gk-ctl, #7f8ea3);
   border-radius: 6px;
   padding: 4px 6px;
   font: inherit;
@@ -252,7 +253,7 @@ body {
 #scale {
   position: absolute;
   right: 16px;
-  bottom: 112px;
+  bottom: 100px;
   z-index: 6;
   text-align: right;
 }
@@ -261,36 +262,36 @@ body {
 }
 
 #panel {
-  max-height: calc(100vh - 150px);
+  max-height: calc(100vh - var(--bar-h) - 120px);
   overflow-y: auto;
   scrollbar-width: thin;
 }
 
 #cal-toggle {
   position: absolute;
-  top: 16px;
+  top: calc(var(--bar-h) + 12px);
   right: 66px;
   z-index: 10;
   height: 38px;
   padding: 0 14px;
   border-radius: 8px;
-  border: 1px solid var(--gk-border);
+  border: 1px solid var(--gk-ctl, #7f8ea3);
   background: var(--gk-accent);
   color: #111;
-  font: 600 13px var(--gk-font);
+  font: 600 0.8125rem var(--gk-font);
   cursor: pointer;
 }
 .calpanel {
-  top: 64px;
+  top: calc(var(--bar-h) + 60px);
   right: 16px;
   width: 470px;
   max-width: calc(100vw - 32px);
-  max-height: calc(100vh - 190px);
+  max-height: calc(100vh - var(--bar-h) - 160px);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  font-size: 13px;
+  font-size: 0.8125rem;
   z-index: 11;
 }
 .calpanel[hidden] {
@@ -303,13 +304,13 @@ body {
 }
 .cal-head h2 {
   margin: 0;
-  font-size: 16px;
+  font-size: 1rem;
 }
 .cal-x {
   background: none;
   border: 0;
   color: var(--gk-text);
-  font-size: 22px;
+  font-size: 1.375rem;
   cursor: pointer;
 }
 .cal-sec {
@@ -327,7 +328,7 @@ body {
 .calpanel select {
   background: rgba(255, 255, 255, 0.06);
   color: var(--gk-text);
-  border: 1px solid var(--gk-border);
+  border: 1px solid var(--gk-ctl, #7f8ea3);
   border-radius: 6px;
   padding: 5px 6px;
   font: inherit;
@@ -359,7 +360,7 @@ body {
   font-weight: 400 !important;
   white-space: normal;
   overflow-wrap: anywhere;
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 .cal-results b {
   text-transform: capitalize;
@@ -435,20 +436,14 @@ body {
   align-items: flex-start;
   gap: 6px;
 }
-#panel .lang-sel {
-  width: auto;
-  padding: 2px 3px;
-  font: 600 12px var(--gk-font);
-  cursor: pointer;
-}
 #panel-toggle {
   flex: none;
   background: rgba(255, 255, 255, 0.06);
   color: var(--gk-text);
-  border: 1px solid var(--gk-border);
+  border: 1px solid var(--gk-ctl, #7f8ea3);
   border-radius: 6px;
   padding: 3px 8px;
-  font: 600 12px var(--gk-font);
+  font: 600 0.75rem var(--gk-font);
   cursor: pointer;
 }
 #panel.collapsed > :not(.panel-head) {
@@ -461,22 +456,22 @@ body {
   #panel {
     left: 12px;
     right: 62px;
-    top: 12px;
+    top: calc(var(--bar-h) + 8px);
     width: auto;
     max-height: 55vh;
     padding: 10px 12px;
   }
   #panel h1 {
-    font-size: 15px;
+    font-size: 0.9375rem;
   }
   #zoom {
-    top: 12px;
+    top: calc(var(--bar-h) + 8px);
     right: 12px;
   }
   #cal-toggle {
     top: auto;
     right: 12px;
-    bottom: 160px;
+    bottom: 154px;
   }
   .cal-row3 {
     grid-template-columns: 1fr 1fr;
@@ -491,14 +486,14 @@ body {
     grid-column: 1 / -1;
   }
   .calpanel {
-    top: 12px;
+    top: calc(var(--bar-h) + 8px);
     left: 12px;
     right: 12px;
     width: auto;
-    max-height: calc(100vh - 200px);
+    max-height: calc(100vh - var(--bar-h) - 170px);
   }
   #scale {
-    bottom: 160px;
+    bottom: 154px;
     right: auto;
     left: 12px;
     text-align: left;
@@ -509,26 +504,12 @@ body {
   .bottom {
     left: 12px;
     right: 12px;
-    bottom: 22px;
-    padding: 10px 12px;
+    bottom: 34px;
+    padding: 6px 12px;
   }
 }
 
-/* ---- Globe | Table view */
-#view-tabs {
-  position: absolute;
-  top: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 14;
-  width: 270px;
-  background: var(--gk-panel);
-  font: 600 13px var(--gk-font);
-}
-#view-tabs button[aria-selected='true'] {
-  background: var(--gk-accent);
-  color: #111;
-}
+/* ---- Globe page: the shared app bar (appBar.css) sits on top, everything else starts below it. */
 body.view-table #panel,
 body.view-table .calpanel,
 body.view-table #cal-toggle,
@@ -549,7 +530,7 @@ body.view-table .gk-splitter {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  font-size: 13px;
+  font-size: 0.8125rem;
   overflow: hidden;
 }
 .tablepanel[hidden] {
@@ -564,7 +545,7 @@ body.view-table .gk-splitter {
 }
 .tb-head h2 {
   margin: 0;
-  font-size: 16px;
+  font-size: 1rem;
 }
 .tb-ctrl {
   display: flex;
@@ -577,7 +558,7 @@ body.view-table .gk-splitter {
 .tb-ctrl button {
   background: rgba(255, 255, 255, 0.06);
   color: var(--gk-text);
-  border: 1px solid var(--gk-border);
+  border: 1px solid var(--gk-ctl, #7f8ea3);
   border-radius: 6px;
   padding: 5px 6px;
   font: inherit;
@@ -653,15 +634,8 @@ body.view-table .gk-splitter {
   color: var(--gk-muted);
 }
 @media (max-width: 760px) {
-  #view-tabs {
-    top: auto;
-    left: 12px;
-    bottom: 160px;
-    transform: none;
-    width: 230px;
-  }
   #scale {
-    bottom: 200px;
+    bottom: 154px;
   }
   .tablepanel {
     top: 12px;
@@ -673,7 +647,7 @@ body.view-table .gk-splitter {
   .tablepanel th,
   .tablepanel td {
     padding: 4px 4px;
-    font-size: 12px;
+    font-size: 0.75rem;
   }
   .tablepanel .tb-int,
   .tablepanel .tb-pct {
@@ -705,9 +679,13 @@ body.view-table .gk-splitter {
   display: block;
   color: var(--gk-text);
 }
+/* The keyboard/hover readout line is for the live page only. */
+.cal-body.exporting .gk-cal-read {
+  display: none;
+}
 #top-actions {
   position: absolute;
-  top: 16px;
+  top: calc(var(--bar-h) + 12px);
   right: 66px;
   z-index: 10;
   display: flex;
@@ -721,10 +699,10 @@ body.view-table .gk-splitter {
   height: 38px;
   padding: 0 14px;
   border-radius: 8px;
-  border: 1px solid var(--gk-border);
+  border: 1px solid var(--gk-ctl, #7f8ea3);
   background: var(--gk-panel);
   color: var(--gk-text);
-  font: 600 13px var(--gk-font);
+  font: 600 0.8125rem var(--gk-font);
   cursor: pointer;
 }
 body.view-table #top-actions {
@@ -736,7 +714,7 @@ body.view-table #top-actions {
   border: 0;
   border-radius: 5px;
   padding: 1px 8px;
-  font: 600 12px var(--gk-font);
+  font: 600 0.75rem var(--gk-font);
   cursor: pointer;
 }
 .det-actions {
@@ -752,7 +730,7 @@ body.view-table #top-actions {
 .detpanel table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
 }
 .detpanel td:nth-child(-n + 2) {
@@ -800,10 +778,10 @@ body.view-table #top-actions {
   min-width: 0;
   box-sizing: border-box;
   padding: 1px 3px;
-  font: 12px var(--gk-font);
+  font: 0.75rem var(--gk-font);
   color: var(--gk-text);
   background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--gk-border);
+  border: 1px solid var(--gk-ctl, #7f8ea3);
   border-radius: 4px;
 }
 .det-minmax {
@@ -821,7 +799,7 @@ body.view-table #top-actions {
 }
 .det-tools button {
   padding: 1px 8px;
-  font: 600 12px var(--gk-font);
+  font: 600 0.75rem var(--gk-font);
   cursor: pointer;
 }
 .det-none {
@@ -841,7 +819,7 @@ body.view-table #top-actions {
   #top-actions {
     top: auto;
     right: 12px;
-    bottom: 160px;
+    bottom: 154px;
     flex-direction: column-reverse;
     align-items: flex-end;
   }
@@ -853,22 +831,11 @@ body.view-table #top-actions {
   }
 }
 
-/* Globe | Table sits right of the control panel (not over the split line); compact top actions on medium screens. */
-@media (min-width: 761px) {
-  #view-tabs {
-    left: 332px;
-    transform: none;
-  }
-}
+/* Compact top actions on medium screens. */
 @media (min-width: 761px) and (max-width: 1100px) {
   #top-actions button {
     padding: 0 10px;
-    font-size: 12px;
-  }
-}
-@media (min-width: 761px) and (max-width: 900px) {
-  #view-tabs {
-    top: 62px;
+    font-size: 0.75rem;
   }
 }
 
@@ -918,9 +885,211 @@ body.view-table #top-actions {
   margin: 0;
 }
 
-/* Three view tabs at the bottom left on phones: the action buttons stack above them on the right. */
+/* Map credits: no Cesium ion logo (the app uses no ion service); the imagery attributions stay, as one small
+   muted line in the strip under the footer (it wraps on narrow screens). */
+.cesium-credit-logoContainer {
+  display: none !important;
+}
+.cesium-viewer-bottom {
+  bottom: 3px;
+  left: 16px !important; /* Cesium sets left/right inline */
+  right: 16px !important;
+  padding: 0;
+  text-align: right;
+  font: 0.75rem/1.25 var(--gk-font);
+  pointer-events: none;
+}
+.cesium-viewer-bottom .cesium-widget-credits {
+  position: static;
+  display: inline-block;
+  max-width: 100%;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(5, 8, 15, 0.55);
+  color: var(--gk-muted);
+  font-size: 0.75rem;
+  text-shadow: none;
+  pointer-events: auto;
+}
+.cesium-viewer-bottom .cesium-credit-textContainer,
+.cesium-viewer-bottom .cesium-credit-textContainer * {
+  font-size: 0.75rem;
+  color: var(--gk-muted);
+}
+.cesium-viewer-bottom .cesium-credit-textContainer a {
+  text-decoration: underline;
+}
 @media (max-width: 760px) {
-  #top-actions {
-    bottom: 204px;
+  .cesium-viewer-bottom {
+    left: 12px !important;
+    right: 12px !important;
+    text-align: left;
   }
+  .cesium-viewer-bottom .cesium-widget-credits,
+  .cesium-viewer-bottom .cesium-credit-textContainer,
+  .cesium-viewer-bottom .cesium-credit-textContainer * {
+    font-size: 0.75rem;
+  }
+}
+
+/* ---- Keyboard and screen reader support (kb): skip link, hidden text, focus ring, globe focus. */
+.kb-sr {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.kb-skip {
+  position: fixed;
+  left: 8px;
+  top: -100px;
+  z-index: 100;
+  padding: 10px 16px;
+  border-radius: 6px;
+  background: var(--gk-accent);
+  color: #111;
+  font: 600 0.875rem var(--gk-font);
+  text-decoration: none;
+}
+.kb-skip:focus {
+  top: 8px;
+  outline: 3px solid #fff;
+  outline-offset: 0;
+  box-shadow: 0 0 0 6px #000;
+}
+main {
+  display: block;
+}
+/* One visible focus style for every interactive element: 2 px accent ring, offset so it is not hidden by borders. */
+a[href]:focus-visible,
+button:focus-visible,
+select:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--gk-accent);
+  outline-offset: 2px;
+}
+/* Segmented controls clip their content (overflow:hidden): the ring goes inside each button, in two tones so it shows
+   on the dark panel and on the accent background of the checked one. */
+.seg button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -4px;
+  box-shadow: inset 0 0 0 5px #000;
+}
+/* The globe takes the whole window: the ring is drawn inside its edge. */
+#globe:focus-visible {
+  outline: 3px solid var(--gk-accent);
+  outline-offset: -3px;
+}
+
+/* ---- a11yb: target size (2.5.8), reflow (1.4.10) and the text options of the Accessibility menu ---- */
+.gk-speed,
+#panel-toggle,
+.cal-x,
+.det-open,
+.det-tools button,
+.sides button,
+.calpanel button:not(.gk-cal-c),
+.tb-ctrl button {
+  min-width: 24px;
+  min-height: 28px;
+}
+.gk-speed {
+  min-height: 32px;
+}
+.det-f input,
+.det-minmax input {
+  min-height: 24px;
+}
+.det-open {
+  min-height: 24px;
+}
+.det-sort {
+  display: inline-block;
+  min-height: 24px;
+  line-height: 24px;
+}
+.calpanel input[type='checkbox'],
+#panel input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+}
+/* Disabled controls: the reason is written next to them (explainDisabled), not only in a tooltip. */
+.a11yb-why {
+  display: block;
+  margin-top: 2px;
+}
+.a11yb-why[hidden] {
+  display: none;
+}
+.calpanel button:disabled,
+#panel button:disabled,
+#panel select:disabled,
+.calpanel select:disabled {
+  opacity: 0.55;
+}
+/* Narrow screens: panels and rows wrap instead of overflowing the page. */
+@media (max-width: 480px) {
+  .calpanel {
+    padding: 10px 8px;
+  }
+  .cal-btns {
+    grid-template-columns: 1fr 1fr;
+  }
+  .cal-btns [data-a='clear'] {
+    grid-column: 1 / -1;
+  }
+  .bottom {
+    flex-wrap: wrap;
+  }
+}
+#time,
+.gk-time {
+  flex-wrap: wrap;
+}
+.gk-time .gk-range {
+  flex: 1 1 8rem;
+  min-width: 6rem;
+}
+.gk-time .gk-picker {
+  flex-wrap: wrap;
+}
+
+/* Text size option (root font-size: every rem size follows). */
+html.a11y-text-lg {
+  font-size: 125%;
+}
+html.a11y-text-lg #panel {
+  width: min(24rem, calc(100vw - 32px));
+}
+html.a11y-text-lg .calpanel {
+  width: min(33rem, calc(100vw - 32px));
+}
+/* Text spacing option (WCAG 1.4.12): spacing is allowed to grow, nothing has a fixed height that clips text. */
+html.a11y-spacing,
+html.a11y-spacing body,
+html.a11y-spacing * {
+  letter-spacing: 0.12em !important;
+  word-spacing: 0.16em !important;
+  line-height: 1.5 !important;
+}
+html.a11y-spacing :is(.seg button, .sides button, #cal-toggle, #share-btn, #export-toggle, .gk-export-btn, .gk-export-act, .calpanel button) {
+  height: auto;
+  white-space: normal;
+}
+html.a11y-spacing .gk-cal-c,
+html.a11y-spacing .gk-cal-grid {
+  letter-spacing: 0 !important;
+  word-spacing: 0 !important;
+}
+html.a11y-spacing .gk-cal-med {
+  overflow: visible;
 }

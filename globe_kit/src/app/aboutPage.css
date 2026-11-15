@@ -1,0 +1,53 @@
+/* The About page (about.html): a readable column below the app bar. Base layout comes from tablePage.css. */
+body.about-page {
+  overflow: auto;
+  height: auto;
+  min-height: 100%;
+  display: block;
+}
+html:has(body.about-page) {
+  height: auto;
+}
+#about-main {
+  max-width: 800px;
+  margin: 0 auto;
+  min-width: 0;
+  padding-bottom: 24px;
+  line-height: 1.55;
+  font-size: 0.875rem;
+}
+#about-main h1 {
+  margin: 0 0 8px;
+  font-size: 1.375rem;
+}
+#about-main h2 {
+  margin: 22px 0 6px;
+  font-size: 1rem;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--gk-border);
+}
+#about-main h3 {
+  margin: 14px 0 4px;
+  font-size: 0.875rem;
+  color: var(--gk-muted);
+}
+#about-main p {
+  margin: 6px 0;
+}
+#about-main ul {
+  margin: 6px 0;
+  padding-left: 20px;
+}
+#about-main li {
+  margin: 4px 0;
+  overflow-wrap: anywhere;
+}
+#about-main a {
+  color: var(--gk-accent);
+  text-underline-offset: 2px;
+}
+#about-main a:focus-visible {
+  outline: 2px solid var(--gk-accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}

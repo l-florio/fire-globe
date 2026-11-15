@@ -29,6 +29,26 @@ export const RAMPS: Record<string, Stop[]> = {
   ],
 };
 
+// Colour-vision-deficiency safe ramps (selected by the Accessibility menu). Lightness rises monotonically, so order
+// survives red-green confusion; hue runs along the blue to yellow axis (cividis-like). The low end is a bright enough
+// blue to stay visible over dark and green imagery; alpha rises like the fire ramp.
+RAMPS.cvdFire = [
+  [0.0, 30, 72, 150, 170],
+  [0.2, 75, 83, 125, 200],
+  [0.4, 112, 113, 115, 215],
+  [0.6, 166, 157, 117, 230],
+  [0.8, 228, 207, 91, 242],
+  [1.0, 255, 248, 170, 255],
+];
+// Diverging blue - white - orange (t = 0.5 neutral), safe for the common colour confusions.
+RAMPS.cvdDiverging = [
+  [0.0, 24, 80, 160, 255],
+  [0.35, 125, 175, 220, 220],
+  [0.5, 247, 247, 247, 60],
+  [0.65, 250, 195, 110, 220],
+  [1.0, 190, 90, 0, 255],
+];
+
 export function lut(stops: Stop[]): Uint8ClampedArray {
   const out = new Uint8ClampedArray(256 * 4);
   for (let i = 0; i < 256; i++) {

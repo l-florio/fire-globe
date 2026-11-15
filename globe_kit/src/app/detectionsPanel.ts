@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium';
 import type { DetectionRecord } from './detail';
+import { flightSeconds } from '../globe/a11y';
 import { fmtFixed, fmtInt, t, tn } from './i18n';
 
 const TEXT = {
@@ -16,7 +17,7 @@ const TEXT = {
   min: t('det.min'),
   max: t('det.max'),
   noMatch: t('det.noMatch'),
-  hint: t('det.hint'),
+  hint: t('a11yb.det.hint'),
   cols: [t('det.col.date'), t('det.col.utc'), t('det.col.type'), t('det.col.sat'), t('det.col.frp'), t('det.col.conf'), t('det.col.pass'), t('det.col.pos')],
   day: t('det.day'),
   night: t('det.night'),
@@ -77,7 +78,7 @@ export function createDetectionsPanel(o: DetectionsPanelOptions) {
       <tr>${COLS.map((c, i) => `<th aria-sort="none"><button type="button" class="det-sort" data-s="${i}" title="${esc(TEXT.sortBy(c.label))}">${c.label}<span class="det-arrow" aria-hidden="true"></span></button></th>`).join('')}</tr>
       <tr class="det-frow">${COLS.map(filterCell).join('')}</tr>
     </thead><tbody></tbody></table></div>
-    <p class="note">${TEXT.hint}</p>`;
+    <p class="note" id="det-hint">${TEXT.hint}</p>`;
   document.body.appendChild(el);
   const tbody = el.querySelector('tbody')!;
   const thead = el.querySelector('thead')!;
@@ -157,10 +158,14 @@ export function createDetectionsPanel(o: DetectionsPanelOptions) {
   const fly = (r: DetectionRecord | undefined) => {
     if (!r) return;
     o.highlight(r);
-    o.viewer.camera.flyTo({ destination: Cesium.Cartesian3.fromDegrees(r.lon, r.lat, 25_000), duration: 1.2 });
+    o.viewer.camera.flyTo({ destination: Cesium.Cartesian3.fromDegrees(r.lon, r.lat, 25_000), duration: flightSeconds(1.2) });
   };
   tbody.addEventListener('click', (e) => fly(rowOf(e)));
-  tbody.addEventListener('keydown', (e) => e.key === 'Enter' && fly(rowOf(e)));
+  tbody.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    e.preventDefault(); // Space would scroll the list
+    fly(rowOf(e));
+  });
   el.querySelector<HTMLButtonElement>('.cal-x')!.onclick = () => panel.toggle(false);
   csvBtn.onclick = () => {
     // the rows currently shown (filtered and sorted)

@@ -2,7 +2,8 @@ import { Chart, registerables, type ChartConfiguration, type Plugin } from 'char
 import { loadClimatology, matchCountry, regionKey, type BandPoint, type Climatology, type Region } from './climatologyData';
 import { saveBlob, toCsv } from './explorer/util';
 import { applyI18n, fmtInt, locale, monthsShort, t, tOr } from './i18n';
-import { openGlobe, openTable } from './nav';
+import { mountAppBar } from './appBar';
+import { aboutHref } from './nav';
 import { readShare, writeShare } from './share';
 import './tablePage.css';
 import './climatologyPage.css';
@@ -11,6 +12,7 @@ Chart.register(...registerables);
 
 // Climatology page: typical range (5-95%) of the 7-day total of fire detections for each day of the year, from the
 // years 2012-2025, with the current year over it. Descriptive, not a forecast. No Cesium.
+mountAppBar({ current: 'climatology', timeKey: () => state.t.slice(0, 7) });
 applyI18n();
 document.title = t('clim.title');
 
@@ -36,11 +38,6 @@ const fmtDay = (ms: number) => new Date(ms).toLocaleDateString(locale, { day: 'n
 const MONTH_STARTS = Array.from({ length: 12 }, (_, m) => refDoy(Date.UTC(2000, m, 1)));
 const num = (v: number) => fmtInt(v);
 
-// ------------------------------------------------------------------ tabs
-document.getElementById('tab-globe')!.addEventListener('click', openGlobe);
-document.getElementById('tab-table')!.addEventListener('click', () => openTable(state.t.slice(0, 7)));
-document.getElementById('tab-climatology')!.setAttribute('aria-current', 'page');
-
 // ------------------------------------------------------------------ layout
 const main = document.getElementById('clim-main')!;
 main.innerHTML = `
@@ -59,6 +56,10 @@ main.innerHTML = `
     <p class="clim-next" id="clim-next"></p>
     <p class="clim-prov" id="clim-prov"></p>
     <div class="clim-chartbox"><canvas id="clim-canvas" role="img" aria-label="${t('clim.chart.aria')}"></canvas></div>
+    <details class="clim-data">
+      <summary>${t('a11yb.clim.table.toggle')}</summary>
+      <div class="clim-tabwrap"><table id="clim-table"></table></div>
+    </details>
     <div class="clim-actions">
       <button type="button" id="clim-png" title="${t('clim.png.title')}">${t('clim.png')}</button>
       <button type="button" id="clim-csv" title="${t('clim.csv.title')}">${t('clim.csv')}</button>
@@ -69,7 +70,7 @@ main.innerHTML = `
     <p>${t('clim.method.1')}</p>
     <p>${t('clim.method.2')}</p>
     <p>${t('clim.method.3')}</p>
-    <p id="clim-credit"></p>
+    <p><span id="clim-credit"></span> <a href="${aboutHref()}" target="_blank" rel="noopener">${t('about.link')}</a></p>
   </section>`;
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 const filterIn = $<HTMLInputElement>('clim-filter');
@@ -78,6 +79,7 @@ const dateIn = $<HTMLInputElement>('clim-date');
 const statusEl = $('clim-status');
 const bodyEl = $('clim-body');
 const canvas = $<HTMLCanvasElement>('clim-canvas');
+const tableEl = $<HTMLTableElement>('clim-table');
 
 // ------------------------------------------------------------------ state
 const state: { area: string; t: string } = { area: DEFAULT_AREA, t: '' };
@@ -194,12 +196,47 @@ function renderSummary() {
     $('clim-cards').innerHTML = cards.join('');
     $('clim-prov').textContent = series.prov[i] ? t('clim.sum.prov') : '';
   }
+  // text alternative of the chart: the same facts as the cards, in one sentence
+  const sum =
+    c === null || !b
+      ? t('a11yb.clim.summary.none', { area: regionName(), date: fmtDate(tm) })
+      : t('a11yb.clim.summary', {
+          area: regionName(),
+          date: fmtDate(tm),
+          cur: num(c),
+          med: num(b.q50),
+          lo: num(b.q05),
+          hi: num(b.q95),
+          pos: t(`clim.pos.${c < b.q05 ? 'below' : c > b.q95 ? 'above' : 'within'}` as 'clim.pos.below'),
+        });
+  canvas.setAttribute('aria-label', `${t('clim.chart.aria')} ${sum}`);
   const n7 = series.band[refDoy(tm + 7 * DAY) - 1];
   $('clim-next').textContent = n7
     ? t('clim.sum.next', { from: fmtDay(tm + DAY), to: fmtDay(tm + 7 * DAY), q50: num(n7.q50), q05: num(n7.q05), q95: num(n7.q95) })
     : '';
   mk.idx = i;
   mk.idxEnd = refDoy(tm + 7 * DAY) - 1;
+}
+
+/** The plotted series as a table (1st and 15th of each month): the text alternative of the chart. */
+function renderTable() {
+  if (!series) return;
+  const s = series;
+  const th = (x: string, scope = 'col') => `<th scope="${scope}">${x}</th>`;
+  const rows: string[] = [];
+  for (let m = 0; m < 12; m++) {
+    for (const d of [1, 15]) {
+      const ms = Date.UTC(2000, m, d);
+      const i = refDoy(ms) - 1;
+      const b = s.band[i];
+      const c = s.cur[i];
+      const cell = (v: number | null | undefined) => `<td>${v === null || v === undefined ? '-' : num(v)}</td>`;
+      rows.push(`<tr>${th(fmtDay(ms), 'row')}${cell(c)}${cell(b?.q50)}${cell(b?.q05)}${cell(b?.q95)}</tr>`);
+    }
+  }
+  tableEl.innerHTML =
+    `<caption>${t('a11yb.clim.table.caption')}</caption><thead><tr>${th(t('a11yb.clim.col.date'))}${th(`${t('clim.sum.current')} ${year}`)}` +
+    `${th(t('clim.sum.typical'))}${th(t('a11yb.clim.col.lo'))}${th(t('a11yb.clim.col.hi'))}</tr></thead><tbody>${rows.join('')}</tbody>`;
 }
 
 // ------------------------------------------------------------------ chart
@@ -236,7 +273,7 @@ const marker: Plugin = {
     ctx.stroke();
     ctx.setLineDash([]);
     ctx.fillStyle = '#ffffff';
-    ctx.font = '11px sans-serif';
+    ctx.font = '12px sans-serif';
     const text = `${t('clim.marker')}: ${fmtDay(parse(state.t))}`;
     const w = ctx.measureText(text).width;
     ctx.textAlign = x0 + w + 8 > right ? 'right' : 'left';
@@ -299,7 +336,7 @@ function drawChart() {
             color: INK,
             autoSkip: false,
             maxRotation: 0,
-            font: { size: small ? 10 : 12 },
+            font: { size: 12 },
             callback: (_v: unknown, i: number) => {
               const m = MONTH_STARTS.indexOf(i + 1);
               return m >= 0 && (!small || m % 2 === 0) ? monthsShort[m] : '';
@@ -317,7 +354,7 @@ function drawChart() {
       plugins: {
         title: { display: true, color: '#ffffff', font: { size: small ? 12 : 14 }, text: [`${regionName()}`, t('clim.badge')] },
         legend: {
-          labels: { color: INK, boxWidth: 16, font: { size: small ? 10 : 12 }, filter: (item: { text: string }) => item.text !== 'q05' },
+          labels: { color: INK, boxWidth: 16, font: { size: 12 }, filter: (item: { text: string }) => item.text !== 'q05' },
         },
         tooltip: {
           filter: (item: { dataset: { label?: string } }) => item.dataset.label !== 'q05',
@@ -371,6 +408,7 @@ function apply(spec: string) {
   statusEl.textContent = [...clim.current(region)].length ? '' : t('clim.noCurrent');
   bodyEl.hidden = false;
   renderSummary();
+  renderTable();
   drawChart();
   sync();
 }

@@ -222,10 +222,20 @@ export function createGrid(host: HTMLElement, onChange: () => void): Grid {
       headerFilterLiveFilterDelay: 300,
       placeholder: TEXT.empty,
     });
+    // Keyboard: sortable headers get a tab stop, and Enter or Space sorts (Shift: add to a multi-column sort), like a click.
+    const focusable = () => el.querySelectorAll<HTMLElement>('.tabulator-col.tabulator-sortable').forEach((c) => (c.tabIndex = 0));
+    el.addEventListener('keydown', (e) => {
+      const col = e.target as HTMLElement;
+      if ((e.key !== 'Enter' && e.key !== ' ') || !col.classList.contains('tabulator-col') || !col.classList.contains('tabulator-sortable')) return;
+      e.preventDefault();
+      col.dispatchEvent(new MouseEvent('click', { bubbles: true, shiftKey: e.shiftKey, ctrlKey: e.ctrlKey }));
+    });
     table.on('tableBuilt', () => {
       built = true;
+      focusable();
       onChange();
     });
+    table.on('renderComplete', focusable);
     table.on('dataFiltered', onChange);
     table.on('columnMoved', () => {
       save();

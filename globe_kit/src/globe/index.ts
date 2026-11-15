@@ -8,3 +8,5 @@ export { PointLayer, viewRectangle, cameraHeight, type PointLayerOptions, type P
 export { createAreaPicker, areaQuery, areaLabel, areaKm2, type Area, type AreaLabels } from './areaPicker';
 export { cellsFromGeoJson, coarsen, toCells, cellId, cellIdSql, type CellArea } from './cells';
 export { createCalendarHeatmap, type CalendarOptions, type CalendarLabels, type MonthStats } from './calendar';
+export { createGlobeKeyboard, shortcutBlocked, type GlobeKeyboardOptions } from './keyboard';
+export { flightSeconds, reducedMotion, shortcutsEnabled } from './a11y';

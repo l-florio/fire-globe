@@ -1,0 +1,276 @@
+/* Accessibility menu (a11yMenu.ts) and the two themes it switches: html.a11y-hc and html.a11y-motion-off. */
+
+/* ---------------------------------------------------------------- button and popover */
+#a11y-slot {
+  display: flex;
+  align-items: center;
+}
+.a11y-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--gk-text, #e8edf5);
+  border: 1px solid var(--gk-border, rgba(255, 255, 255, 0.12));
+  border-radius: 6px;
+  cursor: pointer;
+}
+.a11y-btn:hover,
+.a11y-btn[aria-expanded='true'] {
+  background: rgba(255, 255, 255, 0.16);
+}
+.a11y-btn:focus-visible,
+.a11y-pop :is(button, input):focus-visible {
+  outline: 2px solid var(--gk-accent, #ff8a3d);
+  outline-offset: 2px;
+}
+.a11y-pop {
+  position: fixed;
+  top: calc(var(--bar-h, 48px) + 4px);
+  right: 8px;
+  z-index: 1000;
+  box-sizing: border-box;
+  width: min(360px, calc(100vw - 16px));
+  max-height: calc(100vh - var(--bar-h, 48px) - 12px);
+  max-height: calc(100dvh - var(--bar-h, 48px) - 12px);
+  overflow: auto;
+  padding: 12px 14px;
+  background: rgba(12, 18, 30, 0.97);
+  color: var(--gk-text, #e8edf5);
+  border: 1px solid var(--gk-border, rgba(255, 255, 255, 0.2));
+  border-radius: 10px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+  font: 13px/1.4 var(--gk-font, system-ui, sans-serif);
+  line-height: 1.4;
+}
+.a11y-pop[hidden],
+.a11y-pop [hidden] {
+  display: none;
+}
+.a11y-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.a11y-head h2 {
+  margin: 0;
+  font: 700 15px var(--gk-font, system-ui, sans-serif);
+}
+.a11y-x {
+  width: 32px;
+  height: 32px;
+  font-size: 22px;
+  line-height: 1;
+  background: none;
+  color: inherit;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.a11y-x:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+.a11y-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 36px;
+  padding: 2px 0;
+  cursor: pointer;
+}
+.a11y-row span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+/* Switch: the native checkbox with role=switch, drawn as a track and a knob. */
+.a11y-row input[role='switch'] {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: none;
+  position: relative;
+  width: 40px;
+  height: 22px;
+  margin: 0;
+  border-radius: 11px;
+  background: #3a465c;
+  border: 2px solid #9fb0c8;
+  cursor: pointer;
+}
+.a11y-row input[role='switch']::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #e8edf5;
+  transition: transform 0.15s;
+}
+.a11y-row input[role='switch']:checked {
+  background: #b85a12;
+  border-color: #ffb27a;
+}
+.a11y-row input[role='switch']:checked::before {
+  transform: translateX(18px);
+}
+.a11y-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+.a11y-pop button:not(.a11y-x):not(.a11y-link) {
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+  border: 1px solid #6b7f9e;
+  border-radius: 6px;
+  font: 600 13px var(--gk-font, system-ui, sans-serif);
+  cursor: pointer;
+}
+.a11y-pop button:not(.a11y-x):not(.a11y-link):hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+.a11y-link {
+  padding: 6px 2px;
+  background: none;
+  border: 0;
+  color: var(--gk-accent, #ff8a3d);
+  font: 600 13px var(--gk-font, system-ui, sans-serif);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.a11y-keys,
+.a11y-desc-sec {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+.a11y-keys dl {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+  gap: 6px 10px;
+  margin: 0;
+  align-items: baseline;
+}
+.a11y-keys dt {
+  white-space: nowrap;
+}
+.a11y-keys dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.a11y-keys kbd {
+  display: inline-block;
+  padding: 0 5px;
+  border: 1px solid #6b7f9e;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  font: 600 12px/18px var(--gk-font, system-ui, sans-serif);
+}
+.a11y-keys p {
+  margin: 8px 0 0;
+  color: var(--gk-muted, #9aa7ba);
+  font-size: 12px;
+}
+.a11y-desc {
+  margin-top: 8px;
+  overflow-wrap: anywhere;
+}
+.a11y-desc:not(:empty) {
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+}
+@media (max-width: 760px) {
+  #app-bar .ab-slot {
+    flex: none;
+  }
+  .a11y-btn {
+    width: 30px;
+    height: 30px;
+  }
+}
+
+/* ---------------------------------------------------------------- high contrast */
+html.a11y-hc {
+  --gk-panel: #0b111c;
+  --gk-border: #9fb0c8;
+  --gk-text: #ffffff;
+  --gk-muted: #d3dcea; /* about 12:1 on the panel */
+  --gk-accent: #ffb04a;
+  --ex-edge: #9fb0c8;
+}
+html.a11y-hc body {
+  background: #000;
+}
+html.a11y-hc :is(.panel, .calpanel, .detpanel, .tablepanel, #app-bar, .a11y-pop, .gk-legend-wrap, #bottom) {
+  background: #0b111c;
+  backdrop-filter: none;
+  border-color: #9fb0c8;
+}
+html.a11y-hc .a11y-pop {
+  background: #0b111c;
+  border-color: #c9d4e4;
+}
+/* Controls: 3:1 borders against the panel */
+html.a11y-hc :is(button, select, input:not([type='range']):not([type='checkbox']):not([type='radio']), textarea, .seg) {
+  border-color: #9fb0c8;
+}
+html.a11y-hc :is(button, select):not(.a11y-x):not(.a11y-link) {
+  border-width: 1px;
+  border-style: solid;
+}
+html.a11y-hc :is(.seg button[aria-checked='true'], #view-tabs button[aria-selected='true']) {
+  background: #ffb04a;
+  color: #000;
+  border-color: #ffffff;
+}
+/* 2 px bright focus ring everywhere */
+html.a11y-hc :focus-visible {
+  outline: 2px solid #ffe08a !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px #000;
+}
+html.a11y-hc :is(tr, td, th, [tabindex]):focus-visible {
+  outline-offset: -2px !important;
+}
+/* Muted text, badges, notes, legend */
+html.a11y-hc :is(.sub, .note, .field-label, .gk-legend-title, .cal-stats p, .det-none, .a11y-keys p) {
+  color: #d3dcea;
+}
+html.a11y-hc .badge {
+  background: #3a2200;
+  color: #ffd08a;
+  border: 1px solid #ffb04a;
+}
+html.a11y-hc .gk-legend {
+  color: #fff;
+}
+html.a11y-hc .gk-legend-bar {
+  border-color: #fff;
+}
+html.a11y-hc .panel a,
+html.a11y-hc a {
+  color: #ffd08a;
+}
+html.a11y-hc .a11y-row input[role='switch'] {
+  border-color: #c9d4e4;
+}
+
+/* ---------------------------------------------------------------- reduced motion */
+html.a11y-motion-off *,
+html.a11y-motion-off *::before,
+html.a11y-motion-off *::after {
+  transition: none !important;
+  animation: none !important;
+  scroll-behavior: auto !important;
+}

@@ -1,4 +1,5 @@
 import { getDb } from './duckdb';
+import { t } from './i18n';
 import { cellIdSql, type Area } from '../globe';
 import { areaFor, type CalendarResult, type DataSource, type Detections, type MonthRow, type RegionRow } from './dataSource';
 
@@ -78,7 +79,7 @@ export async function staticSource(baseUrl: string): Promise<DataSource | undefi
 
   return {
     kind: 'static',
-    note: `Online version: calendar worldwide on the 0.25 degree grid; single detections ${regionText === 'worldwide' ? 'worldwide' : `for ${regionText}`}.`,
+    note: regionText === 'worldwide' ? t('src.static.noteWorld') : t('src.static.noteRegion', { region: regionText }),
 
     async detections(sensor, period, bbox, limit, _signal, types = '0,-1'): Promise<Detections> {
       const typeList = types.split(',').map(Number).filter((x) => Number.isInteger(x) && x >= -1 && x <= 3);

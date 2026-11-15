@@ -1,8 +1,8 @@
 .gk-export-btn {
-  font: 600 13px var(--gk-font);
+  font: 600 0.8125rem var(--gk-font);
   color: var(--gk-text);
   background: var(--gk-panel);
-  border: 1px solid var(--gk-border);
+  border: 1px solid var(--gk-ctl, #7f8ea3);
   border-radius: 8px;
   padding: 6px 12px;
   cursor: pointer;
@@ -23,13 +23,13 @@
   position: fixed;
   z-index: 10000;
   box-sizing: border-box;
-  width: 300px;
+  width: 320px;
   max-width: calc(100vw - 16px);
   max-height: calc(100vh - 16px);
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 12px;
-  font: 13px/1.35 var(--gk-font);
+  padding: 10px;
+  font: 0.8125rem/1.35 var(--gk-font);
   color: var(--gk-text);
   background: rgba(12, 18, 30, 0.96);
   border: 1px solid var(--gk-border);
@@ -45,13 +45,13 @@
 .gk-export-act {
   display: block;
   width: 100%;
-  margin: 0 0 8px;
-  padding: 8px 10px;
-  text-align: left;
-  font: 600 13px var(--gk-font);
+  margin: 0;
+  padding: 7px 10px;
+  text-align: center;
+  font: 600 0.8125rem var(--gk-font);
   color: var(--gk-text);
   background: transparent;
-  border: 1px solid var(--gk-border);
+  border: 1px solid var(--gk-ctl, #7f8ea3);
   border-radius: 8px;
   cursor: pointer;
 }
@@ -66,59 +66,116 @@
   color: #111;
   background: var(--gk-accent);
   border-color: var(--gk-accent);
-  text-align: center;
-  margin-bottom: 0;
 }
 .gk-export-act.primary:disabled {
   color: #111;
 }
-.gk-export-sec {
-  margin: 12px 0 6px;
-  padding-top: 10px;
-  border-top: 1px solid var(--gk-border);
-  font-weight: 700;
-  color: var(--gk-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  font-size: 11px;
+.gk-export-act.ready {
+  border-color: var(--gk-accent);
+  color: var(--gk-accent);
 }
-.gk-export-row {
+.gk-export-seg {
   display: grid;
-  grid-template-columns: 84px minmax(0, 1fr);
-  gap: 6px 8px;
-  align-items: center;
-  margin-bottom: 6px;
-}
-.gk-export-row label {
-  color: var(--gk-muted);
-}
-.gk-export-row select,
-.gk-export-row input {
-  width: 100%;
-  min-width: 0;
-  font: 13px var(--gk-font);
-  color: var(--gk-text);
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  padding: 2px;
+  margin-bottom: 8px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid var(--gk-border);
-  border-radius: 6px;
-  padding: 5px 6px;
+  border-radius: 8px;
 }
-.gk-export-row select option {
+.gk-export-seg button {
+  padding: 5px 8px;
+  font: 600 0.8125rem var(--gk-font);
+  color: var(--gk-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.gk-export-seg button[aria-checked='true'] {
+  color: var(--gk-text);
+  background: rgba(255, 138, 61, 0.22);
+  box-shadow: inset 0 0 0 1px var(--gk-accent);
+}
+.gk-export-seg button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.gk-export-grid,
+.gk-export-vid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 8px;
+}
+.gk-export-vid {
+  grid-column: 1 / -1;
+}
+.gk-export-vid[hidden] {
+  display: none;
+}
+.gk-export-field {
+  min-width: 0;
+}
+.gk-export-field label {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 0.75rem;
+  color: var(--gk-muted);
+}
+.gk-export-field select {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  font: 0.8125rem var(--gk-font);
+  color: var(--gk-text);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--gk-ctl, #7f8ea3);
+  border-radius: 6px;
+  padding: 4px 6px;
+}
+.gk-export-field select option {
   color: #111;
 }
-.gk-export-info,
-.gk-export-status {
-  margin: 6px 0 8px;
+.gk-export-info {
+  margin: 6px 0 0;
   color: var(--gk-muted);
-  font-size: 12px;
+  font-size: 0.75rem;
+  line-height: 1.3;
+}
+.gk-export-info[hidden] {
+  display: none;
+}
+.gk-export-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.gk-export-actions .gk-export-act {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.gk-export-actions .gk-export-act.primary {
+  flex: 1.4 1 0;
+}
+.gk-export-actions .gk-export-act[hidden] {
+  display: none;
+}
+.gk-export-status {
+  margin: 6px 0 0;
+  color: var(--gk-muted);
+  font-size: 0.75rem;
   overflow-wrap: anywhere;
+}
+.gk-export-status:empty {
+  display: none;
 }
 .gk-export-status.error {
   color: #ff8080;
 }
 .gk-export-progress {
   display: none;
-  margin: 8px 0;
+  margin: 8px 0 0;
 }
 .gk-export-progress.on {
   display: block;

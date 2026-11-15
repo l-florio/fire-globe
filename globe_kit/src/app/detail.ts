@@ -1,5 +1,5 @@
 import * as Cesium from 'cesium';
-import { PointLayer, cameraHeight, viewRectangle, type TimeRasterLayer } from '../globe';
+import { PointLayer, cameraHeight, viewRectangle, type Stop, type TimeRasterLayer } from '../globe';
 import type { DataSource } from './dataSource';
 import { fmtInt, t as tr } from './i18n';
 
@@ -263,6 +263,13 @@ export function createDetail(viewer: Cesium.Viewer, labels: Record<string, strin
       types = next;
       for (const s of sides) s.raster.setOpacity(rasterOpacity());
       if (active) schedule(0);
+    },
+    /** Accessibility look of the detection points: colour ramp and dark outline (no reload). */
+    setLook(look: { ramp?: Stop[]; halo?: boolean }) {
+      for (const l of layers) {
+        if (look.ramp) l.setRamp(look.ramp);
+        if (look.halo !== undefined) l.setHalo(look.halo);
+      }
     },
     setFilters(f: { day?: number; pass?: Pass; sat?: Sat }) {
       if (f.day !== undefined) day = f.day;

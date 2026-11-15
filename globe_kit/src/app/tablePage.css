@@ -1,4 +1,4 @@
-/* The data table page (table.html): header with the Globe | Table tabs, the explorer below it. */
+/* The data table page (table.html) and shared base of the other plain pages: the app bar (appBar.css) on top, content below. */
 :root {
   --gk-panel: rgba(12, 18, 30, 0.82);
   --gk-border: rgba(255, 255, 255, 0.12);
@@ -19,54 +19,9 @@ body.table-page {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 12px 16px 16px;
+  padding: calc(var(--bar-h) + 12px) 16px 16px;
   box-sizing: border-box;
   overflow: hidden;
-}
-#table-head {
-  flex: none;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-#view-tabs {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  width: 270px;
-  background: var(--gk-panel);
-  border: 1px solid var(--gk-border);
-  border-radius: 7px;
-  overflow: hidden;
-  font: 600 13px var(--gk-font);
-}
-#view-tabs button {
-  border: 0;
-  border-right: 1px solid var(--gk-border);
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--gk-text);
-  font: inherit;
-  padding: 7px 0;
-  cursor: pointer;
-}
-#view-tabs button:last-child {
-  border-right: 0;
-}
-#view-tabs button[aria-selected='true'] {
-  background: var(--gk-accent);
-  color: #111;
-}
-.lang-sel {
-  margin-left: auto;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--gk-text);
-  border: 1px solid var(--gk-border);
-  border-radius: 6px;
-  padding: 3px 4px;
-  font: 600 12px var(--gk-font);
-  cursor: pointer;
-}
-.lang-sel option {
-  color: #111;
 }
 #table-main {
   flex: 1;
@@ -79,9 +34,6 @@ body.table-page {
 }
 @media (max-width: 760px) {
   body.table-page {
-    padding: 8px;
-  }
-  #view-tabs {
-    width: 230px;
+    padding: calc(var(--bar-h) + 8px) 8px 8px;
   }
 }

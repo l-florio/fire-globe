@@ -6,9 +6,11 @@
     <title>Fire Globe</title>
   </head>
   <body>
-    <div id="globe"></div>
-    <aside id="panel" class="panel">
-      <div class="panel-head"><h1 data-i18n="panel.title">Active fires from space, 2000-2026</h1><span class="head-ctl"><select id="lang" class="lang-sel" data-i18n-aria="lang.label" data-i18n-title="lang.label" aria-label="Language" title="Language"><option value="en">EN</option><option value="it">IT</option></select><button type="button" id="panel-toggle" aria-expanded="true" aria-controls="panel">Hide</button></span></div>
+    <main id="main">
+    <div id="globe" tabindex="0" role="application" aria-describedby="globe-hint"></div>
+    <p id="globe-hint" class="kb-sr"></p>
+    <aside id="panel" class="panel" tabindex="-1" data-i18n-aria="panel.title" aria-label="Active fires from space, 2000-2026">
+      <div class="panel-head"><h1 data-i18n="panel.title">Active fires from space, 2000-2026</h1><span class="head-ctl"><button type="button" id="panel-toggle" aria-expanded="true" aria-controls="panel">Hide</button></span></div>
       <p class="sub"><span id="sub-text">NASA FIRMS, monthly, 0.25&deg; grid.</span> <span class="badge" id="data-badge">Raw per-sensor data, not harmonized</span></p>
       <label><span data-i18n="ctl.variable">Variable</span>
         <select id="metric"></select>
@@ -76,13 +78,14 @@
       <p class="note" id="note"></p>
       <p class="note detail" id="detail-note">Zoom in below 2,500 km to see individual detections.</p>
     </aside>
-    <footer id="bottom" class="panel bottom">
+    <footer id="bottom" class="panel bottom" role="region" data-i18n-aria="kb.bottom.label" aria-label="Time and legend">
       <div id="time"></div>
       <label id="day-wrap" class="day" hidden><span data-i18n="ctl.dayLabel">Day</span>
         <select id="day"></select>
       </label>
       <div id="legend"></div>
     </footer>
+    </main>
     <div id="side-labels"><span id="lab-left"></span><span id="lab-right"></span></div>
     <script type="module" src="/src/app/main.ts"></script>
   </body>

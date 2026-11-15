@@ -6,6 +6,8 @@ export interface PointLayerOptions {
   /** Base size in pixels; scaled down when the camera is far. */
   pixelSize?: number;
   split?: Cesium.SplitDirection;
+  /** Dark outline around every point, so they stand out on red soil or forest imagery. */
+  halo?: boolean;
 }
 
 export interface PointInput {
@@ -22,6 +24,7 @@ export interface PointInput {
 export class PointLayer {
   private coll: Cesium.PointPrimitiveCollection;
   private points: Cesium.PointPrimitive[] = [];
+  private ts: number[] = [];
   private colors: Cesium.Color[];
   private split: Cesium.SplitDirection;
 
@@ -37,18 +40,39 @@ export class PointLayer {
     this.points = new Array(n);
     const size = this.o.pixelSize ?? 4;
     const scale = new Cesium.NearFarScalar(2e4, 1.6, 4e6, 0.6);
-    const outline = Cesium.Color.BLACK.withAlpha(0.35);
+    this.ts = new Array(n);
     for (let i = 0; i < n; i++) {
       const p = get(i);
+      this.ts[i] = p.t;
       this.points[i] = this.coll.add({
         position: Cesium.Cartesian3.fromDegrees(p.lon, p.lat, 0),
-        color: this.colors[Math.round(Math.min(1, Math.max(0, p.t)) * 255)],
+        color: this.colors[this.index(p.t)],
         pixelSize: size,
-        outlineColor: outline,
-        outlineWidth: 0.5,
+        outlineColor: this.outlineColor(),
+        outlineWidth: this.outlineWidth(),
         scaleByDistance: scale,
         splitDirection: this.split,
       });
+    }
+    this.viewer.scene.requestRender();
+  }
+
+  /** Switch to another colour ramp without reloading the points. */
+  setRamp(ramp: Stop[]) {
+    this.o.ramp = ramp;
+    this.colors = this.buildColors();
+    for (let i = 0; i < this.points.length; i++) this.points[i].color = this.colors[this.index(this.ts[i])];
+    this.viewer.scene.requestRender();
+  }
+
+  /** Dark outline around the points on or off. */
+  setHalo(on: boolean) {
+    this.o.halo = on;
+    const c = this.outlineColor();
+    const w = this.outlineWidth();
+    for (const p of this.points) {
+      p.outlineColor = c;
+      p.outlineWidth = w;
     }
     this.viewer.scene.requestRender();
   }
@@ -77,6 +101,7 @@ export class PointLayer {
   clear() {
     this.coll.removeAll();
     this.points = [];
+    this.ts = [];
     this.viewer.scene.requestRender();
   }
 
@@ -84,6 +109,10 @@ export class PointLayer {
     this.viewer.scene.primitives.remove(this.coll);
     this.points = [];
   }
+
+  private index = (t: number) => Math.round(Math.min(1, Math.max(0, t)) * 255);
+  private outlineColor = () => (this.o.halo ? Cesium.Color.BLACK.withAlpha(0.95) : Cesium.Color.BLACK.withAlpha(0.35));
+  private outlineWidth = () => (this.o.halo ? 2 : 0.5);
 
   private buildColors() {
     const t = lut(this.o.ramp ?? RAMPS.fire);

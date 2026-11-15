@@ -18,7 +18,7 @@ html:has(body.clim-page) {
 }
 #clim-main h1 {
   margin: 0;
-  font-size: 20px;
+  font-size: 1.25rem;
 }
 .clim-badge {
   margin: 0;
@@ -27,7 +27,7 @@ html:has(body.clim-page) {
   border-radius: 7px;
   background: rgba(255, 138, 61, 0.12);
   font-weight: 700;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 .clim-controls {
   display: flex;
@@ -39,7 +39,7 @@ html:has(body.clim-page) {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--gk-muted);
   min-width: 0;
 }
@@ -47,10 +47,10 @@ html:has(body.clim-page) {
 .clim-controls select {
   background: rgba(255, 255, 255, 0.06);
   color: var(--gk-text);
-  border: 1px solid var(--gk-border);
+  border: 1px solid var(--gk-ctl, #7f8ea3);
   border-radius: 6px;
   padding: 6px 8px;
-  font: 14px var(--gk-font);
+  font: 0.875rem var(--gk-font);
   max-width: 100%;
   box-sizing: border-box;
 }
@@ -62,7 +62,7 @@ html:has(body.clim-page) {
   min-width: 260px;
 }
 .clim-hint {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--gk-muted);
   align-self: center;
 }
@@ -73,7 +73,7 @@ html:has(body.clim-page) {
 .clim-status {
   margin: 0;
   color: var(--gk-muted);
-  font-size: 13px;
+  font-size: 0.8125rem;
   min-height: 1em;
 }
 .clim-cards {
@@ -90,18 +90,18 @@ html:has(body.clim-page) {
   min-width: 0;
 }
 .clim-card dt {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--gk-muted);
 }
 .clim-card dd {
   margin: 2px 0 0;
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 700;
   overflow-wrap: anywhere;
 }
 .clim-card dd small {
   display: block;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 400;
   color: var(--gk-muted);
 }
@@ -109,7 +109,7 @@ html:has(body.clim-page) {
 .clim-next,
 .clim-prov {
   margin: 0;
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 .clim-next {
   font-weight: 600;
@@ -133,20 +133,20 @@ html:has(body.clim-page) {
 .clim-actions button {
   background: rgba(255, 255, 255, 0.06);
   color: var(--gk-text);
-  border: 1px solid var(--gk-border);
+  border: 1px solid var(--gk-ctl, #7f8ea3);
   border-radius: 6px;
   padding: 6px 12px;
-  font: 600 13px var(--gk-font);
+  font: 600 0.8125rem var(--gk-font);
   cursor: pointer;
 }
 .clim-method {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--gk-muted);
   line-height: 1.45;
 }
 .clim-method h2 {
   margin: 0 0 4px;
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--gk-text);
 }
 .clim-method p {
@@ -154,7 +154,7 @@ html:has(body.clim-page) {
 }
 @media (max-width: 760px) {
   #clim-main h1 {
-    font-size: 17px;
+    font-size: 1.0625rem;
   }
   .clim-controls label,
   .clim-controls select,
@@ -165,4 +165,53 @@ html:has(body.clim-page) {
   .clim-chartbox {
     height: 340px;
   }
+}
+.clim-method a {
+  color: var(--gk-accent);
+  text-underline-offset: 2px;
+}
+
+/* Data table alternative of the chart */
+.clim-data {
+  font-size: 0.8125rem;
+}
+.clim-data summary {
+  cursor: pointer;
+  display: inline-block;
+  min-height: 24px;
+  padding: 3px 0;
+  color: var(--gk-accent);
+  font-weight: 600;
+}
+.clim-tabwrap {
+  overflow-x: auto;
+  margin-top: 6px;
+  border: 1px solid var(--gk-ctl, #7f8ea3);
+  border-radius: 7px;
+}
+.clim-data table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.clim-data caption {
+  padding: 6px 8px;
+  text-align: left;
+  color: var(--gk-muted);
+}
+.clim-data th,
+.clim-data td {
+  padding: 4px 8px;
+  text-align: right;
+  white-space: nowrap;
+  border-top: 1px solid var(--gk-border);
+}
+.clim-data thead th {
+  color: var(--gk-muted);
+  white-space: normal;
+}
+.clim-data th[scope='row'],
+.clim-data thead th:first-child {
+  text-align: left;
+  font-weight: 600;
 }

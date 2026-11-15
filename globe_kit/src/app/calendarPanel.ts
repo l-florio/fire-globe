@@ -1,7 +1,10 @@
 import type * as Cesium from 'cesium';
 import { areaLabel, cellsFromGeoJson, createAreaPicker, createCalendarHeatmap, type Area, type CellArea } from '../globe';
 import type { DataSource, MonthRow } from './dataSource';
-import { climatologyHref, storeGlobeHash } from './nav';
+import { aboutHref, climatologyHref, storeGlobeHash } from './nav';
+import { explainDisabled } from './disabledNote';
+import { a11y, onA11y } from './a11yPrefs';
+import { RAMPS } from '../globe/colormaps';
 import { fmtFixed, fmtInt, lang, locale, monthsShort, monthInitials, t, tOr, tn } from './i18n';
 
 interface IntervalBins {
@@ -74,6 +77,10 @@ const HEAT_LABELS = {
         })
       : ''),
   medianTip: (month: string, value: string) => t('heat.medianTip', { month, value }),
+  caption: t('a11yb.cal.caption'),
+  hint: t('a11yb.cal.hint'),
+  outside: (month: string, year: number) => t('a11yb.cal.outside', { month, year }),
+  significant: t('a11yb.cal.significant'),
 };
 
 export interface CalendarPanelOptions {
@@ -150,6 +157,7 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
     <p class="note">${t('cal.credits', {
       nominatim: '<a href="https://nominatim.openstreetmap.org/" target="_blank" rel="noopener">Nominatim</a>',
       osm: '<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>',
+      about: `<a href="${aboutHref()}" target="_blank" rel="noopener">${t('about.link')}</a>`,
     })}</p>`;
   document.body.appendChild(el);
 
@@ -189,6 +197,12 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
     format: (v) => (varSel.value === 'frp' ? fmtMw(v) : fmtInt(v)),
     locale,
     labels: HEAT_LABELS,
+  });
+  // Colour-blind safe palette (Accessibility menu): the anomaly colours follow it.
+  const applyPalette = () => heat.setDiverging(a11y().palette === 'cvd' ? RAMPS.cvdDiverging : undefined);
+  applyPalette();
+  onA11y((_p, changed) => {
+    if (changed === 'palette' || changed === undefined) applyPalette();
   });
   let area: Area | undefined;
   let rows: MonthRow[] = [];
@@ -293,6 +307,7 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
     legendEl.textContent =
       sourceNote +
       t(modeSel.value === 'anomaly' ? 'cal.legend.anomaly' : 'cal.legend.value') +
+      (modeSel.value === 'anomaly' ? t('a11yb.cal.legend.sig') : '') +
       (customRange() && modeSel.value === 'anomaly' ? t('cal.legend.baseline') : '');
     summary();
   }
@@ -684,9 +699,11 @@ export function createCalendarPanel(o: CalendarPanelOptions) {
     varSel.disabled = h;
     typesSel.disabled = h; // the static-source mask is already applied in the harmonized series
     typesSel.title = h ? t('cal.types.harm') : '';
+    explainDisabled(typesSel, h ? t('cal.types.harm') : undefined);
     const pts = $<HTMLButtonElement>('[data-a=csvpts]');
     pts.disabled = h;
     pts.title = h ? t('cal.csvPts.harm') : '';
+    explainDisabled(pts, h ? t('cal.csvPts.harm') : undefined);
   }
   refreshHarmControls();
   fillPeriodSelects();
