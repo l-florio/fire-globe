@@ -4,7 +4,7 @@
  */
 const GLOBE_HASH = 'fireglobe.globeHash';
 
-type Page = 'index.html' | 'table.html' | 'climatology.html' | 'about.html';
+type Page = 'index.html' | 'table.html' | 'climatology.html' | 'about.html' | 'guide.html';
 
 function pageUrl(page: Page, hash: string): string {
   const url = new URL(`${import.meta.env.BASE_URL}${page}`, location.href);
@@ -54,6 +54,7 @@ export const globeHref = () => pageUrl('index.html', storedGlobeHash());
 
 /** Link to the About page (notes, credits, licences). */
 export const aboutHref = () => pageUrl('about.html', '');
+export const guideHref = () => pageUrl('guide.html', '');
 export const openAbout = () => location.assign(aboutHref());
 
 /** Table page -> globe page with the calendar open on a region (GFED code) or country (name). */

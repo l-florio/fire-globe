@@ -1,9 +1,9 @@
 import { LANG_GROUPS, LANG_NAMES, lang, langShort, setLang, t, type Lang } from './i18n';
 import { mountA11yMenu } from './a11yMenu';
-import { aboutHref, climatologyPageHref, globeHref, openClimatology, openGlobe, openTable, tableHref } from './nav';
+import { aboutHref, guideHref, climatologyPageHref, globeHref, openClimatology, openGlobe, openTable, tableHref } from './nav';
 import './appBar.css';
 
-export type AppPage = 'globe' | 'table' | 'climatology' | 'about';
+export type AppPage = 'globe' | 'table' | 'climatology' | 'about' | 'guide';
 
 export interface AppBarOptions {
   current: AppPage;
@@ -33,7 +33,7 @@ export function mountAppBar(o: AppBarOptions): HTMLElement {
     const k = timeKey();
     return /^\d{4}-\d{2}(-\d{2})?$/.test(k) ? `t=${k}` : '';
   };
-  const tabs: { id: Exclude<AppPage, 'about'>; label: string; title?: string; go: () => void; href: () => string }[] = [
+  const tabs: { id: Exclude<AppPage, 'about' | 'guide'>; label: string; title?: string; go: () => void; href: () => string }[] = [
     { id: 'globe', label: t('view.globe'), go: openGlobe, href: globeHref },
     {
       id: 'table',
@@ -66,7 +66,10 @@ export function mountAppBar(o: AppBarOptions): HTMLElement {
   bar.innerHTML =
     `<nav class="ab-left" aria-label="${t('bar.nav.aria')}"><div id="view-tabs">${tabHtml}</div></nav>` +
     `<a class="ab-logo" id="app-logo" href="${globeHref()}"><img src="${logo}" alt="Fire Globe" width="59" height="32" /></a>` +
-    `<div class="ab-right"><a class="ab-about" id="about-link" href="${aboutHref()}" title="${t('bar.about.title')}"${o.current === 'about' ? ' aria-current="page"' : ''}>${t('bar.about')}</a>` +
+    `<div class="ab-right"><a class="ab-about ab-guide" id="guide-link" href="${guideHref()}" title="${t('about.start.h')}" aria-label="${t('about.start.h')}"${o.current === 'guide' ? ' aria-current="page"' : ''}>` +
+    `<svg class="ab-ico" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="8" r="6.5"/><path d="M6.2 6.2a1.9 1.9 0 1 1 2.6 1.8c-.5.2-.8.6-.8 1.1v.4"/><circle cx="8" cy="11.6" r=".4" fill="currentColor"/></svg>` +
+    `<span class="ab-txt">${t('about.start.h')}</span></a>` +
+    `<a class="ab-about" id="about-link" href="${aboutHref()}" title="${t('bar.about.title')}"${o.current === 'about' ? ' aria-current="page"' : ''}>${t('bar.about')}</a>` +
     `<span id="a11y-slot" class="ab-slot"></span>` +
     `<select id="lang" class="lang-sel" aria-label="${t('lang.label')}" title="${t('lang.label')}">${(Object.entries(LANG_GROUPS) as [keyof typeof LANG_GROUPS, readonly Lang[]][]).map(([g, ls]) => `<optgroup label="${t(`lang.group.${g}`)}">${ls.map((l) => `<option value="${l}" title="${LANG_NAMES[l]}">${langShort(l)}</option>`).join('')}</optgroup>`).join('')}</select></div>`;
   document.body.prepend(bar);
@@ -95,6 +98,9 @@ export function mountAppBar(o: AppBarOptions): HTMLElement {
   });
   bar.querySelector<HTMLAnchorElement>('#about-link')!.addEventListener('click', () => {
     if (o.current !== 'about') o.beforeLeave?.();
+  });
+  bar.querySelector<HTMLAnchorElement>('#guide-link')!.addEventListener('click', () => {
+    if (o.current !== 'guide') o.beforeLeave?.();
   });
   const sel = bar.querySelector<HTMLSelectElement>('#lang')!;
   sel.value = lang;

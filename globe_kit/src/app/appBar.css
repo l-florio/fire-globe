@@ -91,6 +91,15 @@
   padding: 6px 4px;
   border-bottom: 2px solid transparent;
 }
+#app-bar .ab-guide {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+#app-bar .ab-ico {
+  display: block;
+  flex: none;
+}
 #app-bar .ab-about:hover,
 #app-bar .ab-about[aria-current='page'] {
   border-bottom-color: var(--gk-accent, #ff8a3d);
@@ -163,6 +172,7 @@ select:has(optgroup) option,
   #view-tabs .vt-ico {
     display: block;
   }
+  #app-bar .ab-guide .ab-txt,
   #view-tabs .vt-txt {
     position: absolute;
     width: 1px;
@@ -179,4 +189,24 @@ select:has(optgroup) option,
 html.rtl-text :is(p, h1, h2, h3, h4, li, dd, dt, figcaption, summary, .note, .cal-results, .det-list td) {
   unicode-bidi: plaintext;
   text-align: start;
+}
+
+/* Very narrow phones (about 320-400 px): the Quick start icon needs a little room, so the right group gets tighter. */
+@media (max-width: 400px) {
+  #app-bar .ab-right {
+    gap: 3px;
+  }
+  #app-bar .lang-sel {
+    max-width: 54px;
+    font-size: 0.66rem;
+    padding: 4px 1px;
+  }
+  #app-bar .ab-guide {
+    padding: 6px 1px;
+  }
+}
+@media (max-width: 340px) {
+  #app-bar .lang-sel {
+    max-width: 52px;
+  }
 }

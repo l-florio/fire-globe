@@ -2,7 +2,7 @@
 
 NASA Space Apps Challenge 2026, challenge "Harmonization of MODIS and VIIRS Hot Spots".
 
-Live app (published on 15 November 2026): https://l-florio.github.io/fire-globe/
+Live app (published on 15 November 2026): https://l-florio.github.io/fire-globe/ (installable on phones: "Add to Home screen")
 
 Fire Globe turns the MODIS (2000-) and VIIRS (2012-) active-fire records of NASA FIRMS into harmonized series that can be compared across sensors and years, and lets anyone explore them on a 3D globe, for any area, with uncertainty intervals and exports.
 
@@ -82,6 +82,8 @@ Worldwide single detections (about 6.6 GB) exceed the Pages limit, so past years
 ## References
 
 - NASA FIRMS active fire data: MODIS Collection 6.1 (Terra, Aqua); VIIRS 375 m VNP14IMG (S-NPP), VJ114IMG (NOAA-20), VJ214IMG (NOAA-21). https://firms.modaps.eosdis.nasa.gov/
+  - Standard (archive) products: MODIS doi:10.5067/FIRMS/MODIS/MCD14ML; VIIRS S-NPP doi:10.5067/VIIRS/VNP14IMG.002, NOAA-20 doi:10.5067/VIIRS/VJ114IMG.002, NOAA-21 doi:10.5067/VIIRS/VJ214IMG.002.
+  - Near-real-time products: MODIS doi:10.5067/FIRMS/MODIS/MCD14DL.NRT.0061; VIIRS S-NPP doi:10.5067/FIRMS/VIIRS/VNP14IMGT_NRT.002, NOAA-20 doi:10.5067/FIRMS/VIIRS/VJ114IMGT_NRT.002, NOAA-21 doi:10.5067/FIRMS/VIIRS/VJ214IMGT_NRT.002.
 - NASA GIBS imagery (Blue Marble, Black Marble, VIIRS corrected reflectance, coastlines and labels). https://www.earthdata.nasa.gov/engage/open-data-services-software/earthdata-developer-portal/gibs-api
 - Esri World Imagery and World Boundaries and Places (reference labels).
 - OpenStreetMap contributors: basemap and Nominatim place search.
@@ -97,4 +99,4 @@ Code: Apache License 2.0 (see `LICENSE` and `NOTICE`). Data keep the terms of th
 
 ## Use of AI
 
-AI assistants (Claude by Anthropic, Codex by OpenAI) were used to write code, run analyses and draft documentation. Interface translations other than English and Italian are machine-made: a local open model (Qwen, via Ollama) for most languages, Claude Haiku for Swahili, Urdu, Bengali and Albanian. The harmonization method and the design choices were selected by the team from the tests; AI was not used to ideate the solution (Space Apps rule).
+AI assistants (Claude by Anthropic, Codex by OpenAI) were used to write code, run analyses and draft documentation. Interface translations other than English and Italian are machine-made: a local open model (Qwen, via Ollama) for most languages, Claude Haiku for Swahili, Urdu, Bengali and Albanian. Demo video: produced with AI assistance (Claude wrote the capture and editing scripts); the footage is captured from the app, the voice is AI-generated (Kokoro TTS), music and sound effects are synthesized by code, and the labels, highlights and closing animation were added in editing. The harmonization method and the design choices were selected by the team from the tests; AI was not used to ideate the solution (Space Apps rule).
