@@ -1,7 +1,8 @@
 /**
  * Tiny i18n for the app (no library). English is the source of truth: every key lives in `en`;
  * the other languages may omit keys and then fall back to English. Italian is written by hand here; the other
- * languages are machine translations made with a local model (scripts/i18n_translate.py) and live in
+ * languages are machine translations made with a local model (scripts/i18n_translate.py; sw, ur, bn, sq with
+ * Claude Haiku, merged into the same cache) and live in
  * src/app/locales/<lang>.json, loaded only for the active language.
  * Language: ?lang=<code> in the URL, else the saved choice (localStorage), else English.
  * Changing the language saves it and reloads the page (modules build their strings at load).
@@ -214,7 +215,7 @@ const en = {
   'src.static.noteWorld': 'Online version: calendar worldwide on the 0.25 degree grid; single detections worldwide.',
   'src.static.noteRegion': 'Online version: calendar worldwide on the 0.25 degree grid; single detections for {region}.',
   'about.ai.h': 'Use of AI',
-  'about.ai.p': 'AI assistants (Claude by Anthropic, Codex by OpenAI) were used to write code, run analyses and draft documentation; a local open model (Qwen, via Ollama) translated the interface into the languages other than English and Italian. The harmonization method and the design choices were selected by the team from the tests; AI was not used to ideate the solution (Space Apps rule).',
+  'about.ai.p': 'AI assistants (Claude by Anthropic, Codex by OpenAI) were used to write code, run analyses and draft documentation; a local open model (Qwen, via Ollama) translated the interface into the languages other than English and Italian, except Swahili, Urdu, Bengali and Albanian, translated with Claude Haiku. The harmonization method and the design choices were selected by the team from the tests; AI was not used to ideate the solution (Space Apps rule).',
   'cal.climLink': 'Climatology for this area',
   'cal.climLink.title': 'Typical weekly fire detections for this time of year (descriptive, not a forecast)',
   'clim.title': 'Fire Globe - Climatology',
@@ -995,7 +996,7 @@ const it: Partial<Record<Key, string>> = {
   'src.static.noteWorld': 'Versione online: calendario in tutto il mondo sulla griglia a 0,25 gradi; singoli rilevamenti in tutto il mondo.',
   'src.static.noteRegion': 'Versione online: calendario in tutto il mondo sulla griglia a 0,25 gradi; singoli rilevamenti per {region}.',
   'about.ai.h': 'Uso dell\'IA',
-  'about.ai.p': 'Assistenti IA (Claude di Anthropic, Codex di OpenAI) sono stati usati per scrivere codice, eseguire analisi e redigere la documentazione; un modello aperto locale (Qwen, tramite Ollama) ha tradotto l\'interfaccia nelle lingue diverse da inglese e italiano. Il metodo di armonizzazione e le scelte di progetto sono stati selezionati dal team in base ai test; l\'IA non è stata usata per ideare la soluzione (regola Space Apps).',
+  'about.ai.p': 'Assistenti IA (Claude di Anthropic, Codex di OpenAI) sono stati usati per scrivere codice, eseguire analisi e redigere la documentazione; un modello aperto locale (Qwen, tramite Ollama) ha tradotto l\'interfaccia nelle lingue diverse da inglese e italiano, tranne swahili, urdu, bengalese e albanese, tradotte con Claude Haiku. Il metodo di armonizzazione e le scelte di progetto sono stati selezionati dal team in base ai test; l\'IA non è stata usata per ideare la soluzione (regola Space Apps).',
   'cal.climLink': 'Climatologia di quest\'area',
   'cal.climLink.title': 'Rilevamenti settimanali tipici di incendio in questo periodo dell\'anno (descrittivo, non una previsione)',
   'clim.title': 'Fire Globe - Climatologia',
@@ -1664,8 +1665,13 @@ export const fmtInt = (v: number) => Math.round(v).toLocaleString(locale);
 /** Fixed number of decimals in the active locale (decimal comma in Italian). */
 export const fmtFixed = (v: number, digits: number) =>
   v.toLocaleString(locale, { minimumFractionDigits: digits, maximumFractionDigits: digits });
-/** Short month names, January first. */
-export const monthsShort: string[] = t('heat.months').split(',');
+/** Short month names, January first: hand-written for English and Italian, from the browser (Intl) for the
+ * machine-translated languages, which is more reliable than a model for calendar names. */
+export const monthsShort: string[] = MACHINE_LANGS.includes(lang)
+  ? Array.from({ length: 12 }, (_, m) =>
+      new Intl.DateTimeFormat(locale, { month: 'short', timeZone: 'UTC' }).format(Date.UTC(2020, m, 15)).replace(/\.$/, ''),
+    )
+  : t('heat.months').split(',');
 /** One-letter month initials for compact headers. */
 export const monthInitials: string[] = monthsShort.map((m) => m[0]);
 

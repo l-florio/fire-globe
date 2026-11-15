@@ -1,7 +1,7 @@
 """Write src/app/locales/<lang>.json from the translation cache made by i18n_translate.py.
 
 Only translations whose English source still matches the current text are written; missing keys fall back to
-English in the app.
+English in the app. Hand corrections in i18n_overrides.json are applied last.
 
 Steps (from globe_kit/):
   node scripts/i18n_extract.mjs src/app/i18n.ts <tmp>/dict.json
@@ -16,7 +16,10 @@ dict_path, cache_path, out_dir = sys.argv[1], sys.argv[2], Path(sys.argv[3])
 en = json.load(open(dict_path, encoding='utf-8'))['en']
 cache = json.load(open(cache_path, encoding='utf-8'))
 out_dir.mkdir(parents=True, exist_ok=True)
+overrides_path = Path(__file__).with_name('i18n_overrides.json')
+overrides = json.load(open(overrides_path, encoding='utf-8')) if overrides_path.exists() else {}
 for lang, entries in sorted(cache.items()):
     d = {k: entries[k]['tr'] for k in en if k in entries and entries[k]['src'] == en[k]}
+    d.update({k: v for k, v in overrides.get(lang, {}).items() if k in en})  # hand corrections win
     (out_dir / f'{lang}.json').write_text(json.dumps(d, ensure_ascii=False, indent=1, sort_keys=True) + '\n', encoding='utf-8')
     print(f'{lang}: {len(d)}/{len(en)} keys')

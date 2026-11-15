@@ -40,7 +40,7 @@ Rules:
 - Abbreviations: FRP stays FRP. Month abbreviations must follow the target language.
 - Short, natural UI wording, same tone and punctuation style as the source; keep sentence-final punctuation as in the source.
 - A list separated by commas must stay a list with the same number of items.
-- The Italian version is given only as a hint to disambiguate; translate from English."""
+- Translate from English only."""
 
 
 def ollama(messages, timeout=600):
@@ -79,9 +79,9 @@ def valid(lang, key, src, tr):
 
 def translate(lang, items, it):
     payload = {k: v for k, v in items}
-    hint = {k: it[k] for k, _ in items if k in it}
+    # No Italian hint: with it, the model often copied the Italian text instead of translating.
     msgs = [{'role': 'system', 'content': SYSTEM},
-            {'role': 'user', 'content': f'Target language: {NAMES[lang]}.\nItalian hint: {json.dumps(hint, ensure_ascii=False)}\n'
+            {'role': 'user', 'content': f'Target language: {NAMES[lang]}.\n'
                                         f'Translate these English strings:\n{json.dumps(payload, ensure_ascii=False)}'}]
     try:
         out = json.loads(ollama(msgs))
@@ -104,6 +104,11 @@ def main():
         c = cache.setdefault(lang, {})
         for k in [k for k, e in c.items() if k in en and e.get('src') == en[k] and valid(lang, k, en[k], e.get('tr'))]:
             del c[k]  # cached but invalid under the current rules: translate again
+        # Copied from the old Italian hint instead of translated: translate again without the hint. Kept if the
+        # model, with no Italian in the prompt, gives the same text again (e.g. 'Satellite MODIS' in French).
+        for k in [k for k, e in c.items() if not e.get('checked') and k in it and it[k] != en.get(k)
+                  and e.get('tr') == it[k] and any(ch.isalpha() for ch in it[k])]:
+            del c[k]
         todo = [(k, v) for k, v in en.items() if c.get(k, {}).get('src') != v]
         if limit:
             todo = todo[:limit]
@@ -118,7 +123,7 @@ def main():
                 if why:
                     bad.append((k, v))
                 else:
-                    c[k] = {'src': v, 'tr': out[k]}
+                    c[k] = {'src': v, 'tr': out[k], 'checked': True}
             json.dump(cache, open(cache_path, 'w', encoding='utf-8'), ensure_ascii=False, indent=0)
             print(f'  {min(i + BATCH, len(todo))}/{len(todo)}  {time.time() - t0:.0f}s', flush=True)
         failed = []
@@ -127,7 +132,7 @@ def main():
                 out = translate(lang, [(k, v)], it)
                 why = valid(lang, k, v, out.get(k))
                 if not why:
-                    c[k] = {'src': v, 'tr': out[k]}
+                    c[k] = {'src': v, 'tr': out[k], 'checked': True}
                     break
             else:
                 failed.append((k, why))

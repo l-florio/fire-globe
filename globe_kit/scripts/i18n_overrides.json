@@ -1,0 +1,39 @@
+{
+  "_note": "Hand corrections of machine translations found in spot checks (wrong meaning or wrong word). Applied last by i18n_write.py.",
+  "bn": {
+    "view.climatology": "জলবায়ুবিজ্ঞান"
+  },
+  "de": {
+    "about.v.3": "Die verbrannte Fläche (GFED5) wird nicht zur Validierung verwendet: Die veröffentlichte lange Reihe von 2003-2020 besteht fast ausschließlich aus Aqua-Daten, sodass eine Korrelation mit GFED5 Aqua testen würde, nicht die Harmonisierung."
+  },
+  "el": {
+    "view.globe": "Υδρόγειος"
+  },
+  "fi": {
+    "view.climatology": "Klimatologia"
+  },
+  "hi": {
+    "bar.about": "परिचय",
+    "about.ai.p": "कोड लिखने, विश्लेषण चलाने और दस्तावेज़ तैयार करने के लिए AI सहायक (एनथ्रोपिक द्वारा क्लॉड, ओपनआई द्वारा कोडेक्स) का उपयोग किया गया; इतालवी और अंग्रेजी के अलावा अन्य भाषाओं में इंटरफ़ेस को अनुवादित करने के लिए स्थानीय खुला मॉडल (क्वेन, ओलामा के माध्यम से) का उपयोग किया गया, जबकि स्वाहिली, उर्दू, बंगाली और अल्बानियाई को Claude Haiku द्वारा अनुवादित किया गया। समन्वय विधि और डिज़ाइन विकल्पों को टीम ने परीक्षणों से चुना; समाधान के लिए विचार करने के लिए AI का उपयोग नहीं किया गया (स्पेस ऐप्स नियम)।"
+  },
+  "nb": {
+    "view.globe": "Globus"
+  },
+  "sq": {
+    "view.globe": "Globi",
+    "a11y.button": "Aksesueshmëria"
+  },
+  "sw": {
+    "view.globe": "Tufe",
+    "view.climatology": "Tabianchi",
+    "a11y.button": "Ufikivu",
+    "a11y.palette": "Rangi salama kwa wenye upofu wa rangi"
+  },
+  "ur": {
+    "bar.about": "تعارف",
+    "view.climatology": "موسمیات"
+  },
+  "vi": {
+    "view.globe": "Quả địa cầu"
+  }
+}
