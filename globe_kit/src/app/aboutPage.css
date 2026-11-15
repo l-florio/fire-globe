@@ -1,4 +1,7 @@
-/* The About page (about.html): a readable column below the app bar. Base layout comes from tablePage.css. */
+/* The About page (about.html): a readable column below the app bar. Base layout comes from tablePage.css.
+   Two classes on purpose: body.table-page (same specificity as one class) blocks scrolling, and the build may
+   load tablePage.css after this file, so a single-class rule here lost and the page could not scroll. */
+body.about-page.table-page,
 body.about-page {
   overflow: auto;
   height: auto;

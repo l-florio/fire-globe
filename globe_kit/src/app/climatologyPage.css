@@ -1,4 +1,6 @@
-/* The climatology page (climatology.html): reuses the header of the table page (tablePage.css). */
+/* The climatology page (climatology.html): reuses the header of the table page (tablePage.css).
+   body.clim-page.table-page outranks body.table-page (overflow: hidden) whatever order the build loads the files in. */
+body.clim-page.table-page,
 body.clim-page {
   overflow: auto;
   height: auto;
