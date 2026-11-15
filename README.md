@@ -12,7 +12,7 @@ Numbers come from `data_pipeline/HARMONIZATION.md` (out of sample, against Aqua,
 
 - **Two harmonized series, one unit (detections, not burned area).** `long`: Aqua-equivalent MODIS 1 km detections from 2003-01 (Aqua as observed to 2021-12, VIIRS converted to Aqua units after that and in 2020-08), with 90% intervals. `detail`: VIIRS 375 m detections from 2013-01 at S-NPP level, harmonizing S-NPP, NOAA-20 and NOAA-21 (its band is the spread between satellites, not a confidence interval).
 - **Two products:** 1 degree cell maps (`harm_map`) and regional monthly series by country and GFED region (`harm_region`).
-- **Accuracy:** annual totals differ from Aqua by 2% / 5% per GFED region and 1% / 3% for the world (leave-one-year-out 2013-2020 / calibrated 2013-2020 and tested 2021-2025). Step at the 2022-01 seam, world: below 1%. Correlation of annual totals with GFED5 burned area 2003-2020: 0.93.
+- **Accuracy:** annual totals differ from Aqua by 2% / 5% per GFED region and 1% / 3% for the world (leave-one-year-out 2013-2020 / calibrated 2013-2020 and tested 2021-2025). Step at the 2022-01 seam, world: below 1%.
 - **Intervals:** out-of-sample coverage of the 90% intervals is 88-93% across GFED regions, countries, continents and the world (table in `HARMONIZATION.md`).
 - **Validation figures:** monthly series, annual scatter, 2022-01 seam and interval coverage, re-runnable with `python data_pipeline/validation/make_validation.py`: [docs/validation/](docs/validation/fig1_monthly_timeseries.png) (see "Validation figures" in `data_pipeline/HARMONIZATION.md`).
 - **Trends:** per-country trends keep the sign of the single-sensor record in 89-90% of 136 countries (stress variant, VIIRS converted from 2013).
@@ -76,7 +76,7 @@ Worldwide single detections (about 6.6 GB) exceed the Pages limit, so past years
 - OpenStreetMap contributors: basemap and Nominatim place search.
 - Natural Earth: continent boundaries.
 - GFED basis regions: Giglio, L., Randerson, J. T., van der Werf, G. R. (2013), Analysis of daily, monthly, and annual burned area using the fourth-generation Global Fire Emissions Database (GFED4), J. Geophys. Res. Biogeosci., 118.
-- GFED5 burned area (Global Fire Emissions Database, version 5): used only to check annual totals, 2003-2020.
+- GFED5 burned area (Global Fire Emissions Database, version 5): compared during development only; not a validation of the published series (see data_pipeline/HARMONIZATION.md, Limits).
 - Libraries: CesiumJS (Apache-2.0), DuckDB and DuckDB-WASM (MIT), Vite (MIT), Tabulator, Chart.js, html-to-image, TypeScript; Python: numpy, pandas, pyarrow, duckdb, requests, pillow.
 - Viewer setup without Cesium ion inspired by gods-eye-view (MIT, Bilawal Sidhu); no code copied verbatim.
 

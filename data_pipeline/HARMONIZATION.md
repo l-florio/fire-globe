@@ -37,7 +37,7 @@ Leave-one-year-out 2013-2020 / calibrated on 2013-2020 and tested on 2021-2025, 
 
 - median monthly error per 1 deg cell (median |ln((obs+1)/(pred+1))|): 0.241 / 0.241; 86% / 85% within a factor of 2;
 - annual totals per cell: 11% / 14% (1 deg), 9% / 12% (2.5 deg); per GFED region: 2% / 5%; world: 1% / 3%;
-- step at the 2022-01 seam, world: below 1% against Aqua; correlation of annual totals with GFED5 burned area 2003-2020: 0.93;
+- step at the 2022-01 seam, world: below 1% against Aqua;
 - trends per country against the single-sensor record (stress variant, VIIRS converted from 2013): same sign in 89-90% of 136 countries, rank correlation 0.94;
 - 90% intervals, out-of-sample coverage with the drift term, 2013-2020 / 2021-2025: 1 deg cell 90.3% / 90.6%; 2.5 deg cell 89.1% / 88.5%; 10 deg block 88.4% / 87.5%; GFED region 89.6% / 89.9%; country 88.4% / 88.6%; continent 89.8% / 91.3%; world 90.5% / 93.2%.
 
@@ -108,4 +108,5 @@ Caveats:
 - Interval coverage is measured on area-months that are not independent (neighbouring cells, adjacent months); the world level rests on 95 and 60 months. The quantiles of the table were built from the same 2013-2020 leave-one-year-out residuals, so 2013-2020 coverage is not an independent test; 2021-2025 is, and it uses the drift term, which is an assumption.
 - Continents in the coverage figure are groups of GFED regions (North America including Central America, South America, Africa, Europe, Asia including the Middle East, Oceania), not a country-to-continent table.
 - The 2026 months are not shown: they are extrapolated (partly near-real-time, S-NPP ended 2026-11-02) and have no out-of-sample reference.
-- Not reproduced here: the correlation with GFED5 burned area (GFED5 is not part of the pipeline) and the per-country trend test (stress variant not available in `harmonize.py`).
+- Not reproduced here: the per-country trend test (stress variant not available in `harmonize.py`).
+- GFED5 burned area is not used as validation. During development the annual totals of a variant record (Aqua to 2012, VIIRS converted after) correlated with GFED5 at 0.93 over 2003-2020, but the published `long` series is almost only Aqua as observed in 2003-2020, so that number would compare Aqua with GFED5, not test the harmonization; it is left out of the results.
