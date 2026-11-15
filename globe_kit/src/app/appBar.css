@@ -109,13 +109,16 @@
   cursor: pointer;
 }
 /* The open list is drawn by the browser on a light background: dark text for languages, region headings in a
-   darker blue-grey, bold, on a light tint, so they read as headings and stay legible. */
+   darker blue-grey, bold, on a light tint, so they read as headings and stay legible. Same for every menu with
+   groups (calendar continent / GFED region, climatology area), whose dark-theme text colour was inherited. */
+select optgroup,
 #app-bar .lang-sel optgroup {
   color: #2c4466;
   background: #e6ecf5;
   font-weight: 700;
   font-style: normal;
 }
+select:has(optgroup) option,
 #app-bar .lang-sel option {
   color: #111;
   background: #fff;

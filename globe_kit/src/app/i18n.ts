@@ -11,11 +11,12 @@
 /** Language menu groups, by the region where most speakers live (the menu shows them in this order). */
 export const LANG_GROUPS = {
   americas: ['en', 'es', 'pt'],
-  europe: ['en-GB', 'it', 'fr', 'de', 'nl', 'pl', 'el', 'sq', 'sv', 'nb', 'fi', 'ru', 'tr'],
-  africaMideast: ['ar', 'fa', 'sw'],
+  europe: ['en-GB', 'it', 'es', 'pt', 'fr', 'de', 'nl', 'pl', 'el', 'sq', 'sv', 'nb', 'fi', 'ru', 'tr'],
+  africaMideast: ['ar', 'fa', 'sw', 'fr', 'pt', 'es'],
   asia: ['hi', 'ur', 'bn', 'zh', 'ja', 'ko', 'vi', 'th', 'id'],
 } as const;
-export const LANGS = Object.values(LANG_GROUPS).flat();
+/** Every language once (es, pt and fr are listed under more than one region in the menu). */
+export const LANGS = [...new Set(Object.values(LANG_GROUPS).flat())];
 export type Lang = (typeof LANG_GROUPS)[keyof typeof LANG_GROUPS][number];
 /** Language names in their own language, for the language menu. 'en' is US English (the source text). */
 export const LANG_NAMES: Record<Lang, string> = {
@@ -178,7 +179,7 @@ const en = {
   'about.h1': 'About Fire Globe',
   'about.what.h': 'What this is',
   'about.what.p1': 'Fire Globe was built for the NASA Space Apps Challenge 2026, challenge "Harmonization of MODIS and VIIRS Hot Spots". It turns the MODIS (2000-) and VIIRS (2012-) active-fire records of NASA FIRMS into harmonized series that can be compared across sensors and years, and lets anyone explore them on a 3D globe, for any area, with uncertainty intervals and exports.',
-  'about.what.p2': 'Globe: monthly and daily maps and single detections. Table: data explorer. Climatology: typical range of fire detections for this time of year, by area. The interface is in English, Italian, Spanish, French, Portuguese, German, Dutch, Polish, Greek, Albanian, Swedish, Norwegian, Finnish, Russian, Turkish, Arabic, Persian, Swahili, Hindi, Urdu, Bengali, Chinese, Japanese, Korean, Vietnamese, Thai and Indonesian (US and UK English); languages other than English and Italian are machine translations made with a local open model and may contain errors.',
+  'about.what.p2': 'Globe: monthly and daily maps and single detections. Table: data explorer. Climatology: typical range of fire detections for this time of year, by area. The interface is in English, Italian, Spanish, French, Portuguese, German, Dutch, Polish, Greek, Albanian, Swedish, Norwegian, Finnish, Russian, Turkish, Arabic, Persian, Swahili, Hindi, Urdu, Bengali, Chinese, Japanese, Korean, Vietnamese, Thai and Indonesian (US and UK English); languages other than English and Italian are machine translations and may contain errors (see Use of AI below).',
   'about.src.h': 'Data sources',
   'about.src.firms': 'Active fire detections: MODIS Collection 6.1 (Terra, Aqua) and VIIRS 375 m (S-NPP, NOAA-20, NOAA-21).',
   'about.src.gibs': 'Basemaps: Blue Marble, Black Marble, VIIRS corrected reflectance, coastlines and labels.',
@@ -567,7 +568,8 @@ const en = {
   'exp.fmt.11': '1:1 square',
   'exp.fmt.916': '9:16 vertical (phone)',
   'exp.resPreset': '{p}p ({w} x {h})',
-  'exp.resPreset4k': '{p}p 4K ({w} x {h})',
+  'exp.resPreset2k': '2K ({w} x {h})',
+  'exp.resPreset4k': '4K ({w} x {h})',
   'exp.hint4k': 'High resolution video is slow and the file is large.',
   'exp.capNote': 'Globe rendered at {w}x{h} (device limit); the rest is upscaled.',
   'exp.err.videoSize': 'This browser cannot record video at {w}x{h}. Choose a lower resolution.',
@@ -959,7 +961,7 @@ const it: Partial<Record<Key, string>> = {
   'about.h1': 'Informazioni su Fire Globe',
   'about.what.h': 'Che cos\'è',
   'about.what.p1': 'Fire Globe è stata realizzata per la NASA Space Apps Challenge 2026, sfida "Harmonization of MODIS and VIIRS Hot Spots". Trasforma i dati di incendi attivi MODIS (dal 2000) e VIIRS (dal 2012) di NASA FIRMS in serie armonizzate, confrontabili tra sensori e anni, e permette a chiunque di esplorarle su un globo 3D, per qualsiasi area, con intervalli di incertezza ed esportazioni.',
-  'about.what.p2': 'Globo: mappe mensili e giornaliere e singoli rilevamenti. Tabella: esplorazione dei dati. Climatologia: intervallo tipico dei rilevamenti di incendio in questo periodo dell\'anno, per area. L\'interfaccia è in inglese, italiano, spagnolo, francese, portoghese, tedesco, olandese, polacco, greco, albanese, svedese, norvegese, finlandese, russo, turco, arabo, persiano, swahili, hindi, urdu, bengalese, cinese, giapponese, coreano, vietnamita, thailandese e indonesiano (inglese USA e UK); le lingue diverse da inglese e italiano sono traduzioni automatiche fatte con un modello aperto locale e possono contenere errori.',
+  'about.what.p2': 'Globo: mappe mensili e giornaliere e singoli rilevamenti. Tabella: esplorazione dei dati. Climatologia: intervallo tipico dei rilevamenti di incendio in questo periodo dell\'anno, per area. L\'interfaccia è in inglese, italiano, spagnolo, francese, portoghese, tedesco, olandese, polacco, greco, albanese, svedese, norvegese, finlandese, russo, turco, arabo, persiano, swahili, hindi, urdu, bengalese, cinese, giapponese, coreano, vietnamita, thailandese e indonesiano (inglese USA e UK); le lingue diverse da inglese e italiano sono traduzioni automatiche e possono contenere errori (vedi Uso dell\'IA più sotto).',
   'about.src.h': 'Fonti dei dati',
   'about.src.firms': 'Rilevamenti di incendi attivi: MODIS Collection 6.1 (Terra, Aqua) e VIIRS 375 m (S-NPP, NOAA-20, NOAA-21).',
   'about.src.gibs': 'Mappe di base: Blue Marble, Black Marble, riflettanza corretta VIIRS, coste ed etichette.',
@@ -1319,7 +1321,8 @@ const it: Partial<Record<Key, string>> = {
   'exp.fmt.11': '1:1 quadrato',
   'exp.fmt.916': '9:16 verticale (telefono)',
   'exp.resPreset': '{p}p ({w} x {h})',
-  'exp.resPreset4k': '{p}p 4K ({w} x {h})',
+  'exp.resPreset2k': '2K ({w} x {h})',
+  'exp.resPreset4k': '4K ({w} x {h})',
   'exp.hint4k': 'Il video ad alta risoluzione e\' lento e il file e\' pesante.',
   'exp.capNote': 'Globo renderizzato a {w}x{h} (limite del dispositivo); il resto e\' ingrandito.',
   'exp.err.videoSize': 'Questo browser non riesce a registrare video a {w}x{h}. Scegli una risoluzione piu\' bassa.',

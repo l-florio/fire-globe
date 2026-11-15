@@ -17,7 +17,8 @@ const TEXT = {
     '1:1': t('exp.fmt.11'),
     '9:16': t('exp.fmt.916'),
   } as Record<string, string>,
-  resPreset: (p: number, w: number, h: number) => t(p >= 2160 ? 'exp.resPreset4k' : 'exp.resPreset', { p, w, h }),
+  resPreset: (p: number, w: number, h: number) =>
+    t(p >= 2160 ? 'exp.resPreset4k' : p >= 1440 ? 'exp.resPreset2k' : 'exp.resPreset', { p, w, h }),
   hint4k: t('exp.hint4k'),
   capNote: (w: number, h: number) => t('exp.capNote', { w, h }),
   errVideoSize: (w: number, h: number) => t('exp.err.videoSize', { w, h }),

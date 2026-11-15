@@ -56,8 +56,7 @@ html:has(body.clim-page) {
   max-width: 100%;
   box-sizing: border-box;
 }
-.clim-controls option,
-.clim-controls optgroup {
+.clim-controls option {
   color: #111;
 }
 .clim-controls select {
