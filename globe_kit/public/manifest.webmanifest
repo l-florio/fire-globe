@@ -1,0 +1,17 @@
+{
+  "name": "Fire Globe",
+  "short_name": "Fire Globe",
+  "description": "Harmonized MODIS and VIIRS active-fire records from NASA FIRMS on a 3D globe, with an area fire calendar, climatology and data explorer.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#05080f",
+  "theme_color": "#05080f",
+  "lang": "en",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
